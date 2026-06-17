@@ -1,0 +1,34 @@
+List of research questions:
+• How accurately can employment outcomes of international graduates in the
+UK be predicted using statistical and machine learning classification
+models?
+• Which classification methods provide the best predictive performance for
+employment outcomes?
+• Which factors are the most important predictors of employment outcomes?
+• What factors determine salary levels among employed international
+graduates in the UK?
+
+11 characters, we cant really do scatter plots to see correlation
+
+ 
+
+For Employment status:
+the response variable is a categorical variable employement_status, we're trying to look at whta factors affect it
+some useful variables for analysis: education_level, visa_type, university_ranking, internship experience, GPA,
+would use classification method and logistic regression for this.
+
+For Salary Level:
+important one is years since graduation, GPA, 
+For Slaray, I fitted correlation matrix for the numerical variables and it seems like there's no correlation at all with Salary
+Couple boxplots where fitted with categorical variables, since the Employement status incluide students who are continuing education and unemployed, there's a lot of 0 Salarys that where counted leading in a 0 median in most of them
+1 suggestion would be filtering the data to have only employed people and then visualize the boxplots again
+
+After plotting boxplots, we can see that the salary of those who graduated 3 years and more has median 0
+After arranging the data and only filtering those who graduated >=3 ago, the data shows some inaccuracy where most of them graduates >=3 but still continuing education
+Maybe we filter out those rows? or ignore the whole continue education 
+
+We can perform group by for some rows, how is this useful?
+
+SAP raw notes: 
+first filtered the data to have UK rows only
+apply drop method to find the best fitted model with t#use boxplots instead causehe lowest AIC/BIC 
