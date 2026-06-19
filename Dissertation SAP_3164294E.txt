@@ -1,117 +1,97 @@
-﻿Mariam El Mawed- 3164294E
-
+Mariam El Mawed- 3164294E
 
 Dissertation Topic:  Predictive Modelling and Feature Analysis of Employment Outcomes of International Graduates in the UK 
 
-
 Context of Data and Variables:
-
 
 The dataset contains 74,901 observations of international graduates who studied in the UK.
 It includes variables related to:
-* Demographics (Age, Gender, Country_of_Origin)
-* Academic background (GPA, Education_Level, Field_of_Study, University_Ranking)
-* Post‑study outcomes (Employment_Status, Salary, Job_Sector, Years_Since_Graduation)
-* Visa & other factors (Visa_Type, Region_of_Study, Language_Proficiency)
-* Experience factors (Internship_Experience)
+Demographics (Age, Gender, Country_of_Origin)
+Academic background (GPA, Education_Level, Field_of_Study, University_Ranking)
+Post‑study outcomes (Employment_Status, Salary, Job_Sector, Years_Since_Graduation)
+Visa & other factors (Visa_Type, Region_of_Study, Language_Proficiency)
+Experience factors (Internship_Experience)
  
 Research Questions to be explored:
 
-
-* How accurately can employment outcomes of international graduates in the UK be predicted using statistical and machine learning classification Models?
-* Which classification methods provide the best predictive performance for employment outcomes?
-* Which factors are the most important predictors of employment outcomes?
-* What factors determine salary levels among employed international graduates in the UK?
-
+How accurately can employment outcomes of international graduates in the UK be predicted using statistical and machine learning classification Models?
+Which classification methods provide the best predictive performance for employment outcomes?
+Which factors are the most important predictors of employment outcomes?
+What factors determine salary levels among employed international graduates in the UK?
 
 Statistical Analysis Plan
 
-
 Population
-
 
 The original dataset contains international graduates from multiple global regions of study.
 For the purposes of this dissertation, the population was filtered to graduates whose Region_of_Study is UK, resulting in a filtered dataset of 74,901 observations to address the employability outcomes of international graduates who specifically studied in the UK
 During exploratory data analysis, it was observed that a number of graduates with Years_Since_Graduation ≥ 3 were classified under Employment_Status,Continuing Education, with Salary = 0. This subgroup results in distortion in the distribution of salary across years since graduation. For future analyses, these cases may be excluded when modelling salary outcomes to avoid bias introduced by structurally zero salaries.
 For employment status analysis, individuals classified as “Continuing Education” may be excluded to focus only on graduates who are employed or unemployed, rather than fitting a multinomial logistic regression with three categorical outcomes. 
 
-
 Primary Objective:
-
 
 To develop and evaluate predictive models that classify whether an international graduate becomes Employed or Unemployed after graduation. 
  
 Secondary Objectives:
 
-
-* To find the best classification method.
-* To identify the most influential predictors of employment outcomes.
-* To model salary levels among employed graduates and determine key influential factors.
-
+To find the best classification method.
+To identify the most influential predictors of employment outcomes.
+To model salary levels among employed graduates and determine key influential factors.
 
 Data Collection methods:
 Data was found on Kaggle and downloaded to the computer. 
 
-
 Variables under consideration:
-
 
 Response Variables
 
-
-* Employment_Status (Employed vs Unemployed)
-* Salary ( employed graduates only)
+Employment_Status (Employed vs Unemployed)
+Salary ( employed graduates only)
 Predictor Variables
-Age, Gender, Country_of_Origin,GPA, Education_Level, Field_of_Study, University_Ranking,Internship_Experience, Visa_Type, Years_Since_Graduation
+Age, Gender, Country_of_Origin,GPA, Education_Level, Field_of_Study, University_Ranking,Internship_Experience, Visa_Type, Years_Since_Graduation,Language_Proficiency, region_of_study, Job_Sector
 We will look at which ones influence the response and are significant predictors. 
  
 Missing data procedures:
 
-
 The dataset contains no missing values in any of the variables. 
-
 
 Numerical and graphical summaries to be presented:
 Numerical Summaries
-* Summary statistics for all numerical variables
-* Correlation matrix for numerical predictors
+Summary statistics for all numerical variables
+Correlation matrix for numerical predictors
 Graphical Summaries
-* Boxplots of Salary vs categorical predictors
-* Scatterplots for numerical predictors
-* Bar charts of Employment_Status by key predictors
+Boxplots of Salary vs categorical predictors
+Scatterplots for numerical predictors
+Bar charts of Employment_Status by key predictors
 Models to be fitted:
-
 
 Employment Classification Models  
 To answer Research Questions 1, 2:
-* K‑Nearest Neighbours (KNN)
-* Classification Tree
-* Random Forest
-* Support Vector Machine (SVM)
-
+K‑Nearest Neighbours (KNN)
+Classification Tree
+Random Forest
+Support Vector Machine (SVM)
 
 So far, all models will be evaluated using 10‑fold cross‑validation.
 
-
 Some Performance metrics:Accuracy, Sensitivity, Specificity, Precision, F1‑score, and ROC‑AUC.
-
 
 Performance metrics comparison will identify the best classifier. Applicable classification methods and performance metrics will be used only. 
 Predictor Importance Analysis
 To answer Research Question 3::
-* Logistic Regression 
-* Stepwise AIC selection
-* LASSO regularisation
-
+Logistic Regression 
+Stepwise AIC selection
+LASSO regularisation
 
 We might perform Stepwise AIC and LASSO as two separate variable selection methods. Each method will produce its own set of predictors because they use different selection criteria. We will then compare the results and identify the predictors that appear in both methods (or just use Stepwise AIC selection).
 In addition, as a combination of Research Questions 1 and 3, we may also perform Random Forest classification to examine variable importance, identify key predictors, and classify employment outcomes. 
 Salary Modelling (Regression)
 To answer Research Question 4:
-* Multiple Linear Regression
-* LASSO or Stepwise AIC selection 
-* Additive Models (if we detect non‑linear effects, )
-
+Multiple Linear Regression
+LASSO or Stepwise AIC selection 
+Additive Models (if we detect non‑linear effects, )
 
 Some Evaluation metrics in  mind:
-Adjusted R² and AIC to assess model fit, p‑values for the multiple linear regression model, as they are not applicable to additive models.
+Adjusted R² and AIC to assess model fit, p‑values for the multiple linear regression model, as they are not applicable to additive models. 
+
+
