@@ -134,6 +134,9 @@ data_uk %>%
   count(Employment_Status) %>%
   mutate(prop = n / sum(n))
 
+#distribution of employemnt status, we can do pie chart, and in research questions we can look at it again
+#after filtering out continuing education
+
 
 
 ###########################################################################
@@ -146,9 +149,14 @@ emplyement_data <- data_uk %>%
 #basic EDA to explore Data. 
 
 
+
 ###########################################################################
+##################                          ###############################
+##################    Research Questions    ###############################
+##################                          ###############################
 ###########################################################################
-###########################################################################
+
+
 
 '''
 How accurately can employment outcomes of international graduates in the UK
@@ -164,6 +172,17 @@ splitted the datset by 10-fold-cross-validation
 
 We applied 10‑fold cross‑validation to estimate the classification accuracy.
 
+
+
+
+############################################################################
+##################                           ###############################
+##################    K-nearest Neighbours   ###############################
+##################                           ###############################
+############################################################################
+
+
+
 KNN computes distance for every K, each time it compute the distance between the validation points
 and all training points. We will be doing this for 100 K values and 10 folds, so we will be training 1000 KNN models. 
 (for each K value, we train 10 models)
@@ -174,13 +193,23 @@ data_emp<- data_uk %>%
   filter(Employment_Status!="Continuing Education") %>%
   select(-Salary, -Job_Sector,-Region_of_Study)
 
-#Response and predictor variables
+#training and test set 
 Y<- as.factor(data_emp$Employment_Status)
-x<- data_emp %>% select(-Employment_Status, -Region_of_Study)
+x<- data_emp %>% select(-Employment_Status)
 
 #change categorical variables to dummy variables
 X_num <- model.matrix(~ ., data = x)[,-1]
 X_scaled<- scale(X_num) #scaling
+
+n <- nrow(data_emp)
+train_index <- sample(1:n, size = 0.7*n)
+
+X_train <- X_scaled[train_index, ]
+X_test  <- X_scaled[-train_index, ]
+
+y_train <- Y[train_index]
+y_test  <- Y[-train_index]
+
 
 library(class)
 
@@ -189,7 +218,7 @@ set.seed(1)
 # splitting into 10 folds
 
 n <- nrow(X_scaled)
-fold_indices <- sample(rep(1:5, length.out = n))
+fold_indices <- sample(rep(1:10, length.out = n))
 folds <- split(1:n, fold_indices)
 
 K_vals <- 1:50 #LIST OF 100 k values, SHOULD I CHOOSE  A DIFFERENT NB 
@@ -198,11 +227,11 @@ cv_acc <- numeric(length(K_vals)) #vector of 100 values
 for (i in seq_along(K_vals)) { #for each value of k 
   
   k_val <- K_vals[i]
-  fold_acc <- numeric(5) #vector of length 10 
+  fold_acc <- numeric(10) #vector of length 10 
   
-  for (f in 1:5) { #for each fold
+  for (f in 1:10) { #for each fold
     
-      
+    
     # Validation indices
     valid_ind <- folds[[f]] # fold f is the validation,the rest are training 
     train_ind <- setdiff(1:n, valid_ind)
@@ -217,7 +246,7 @@ for (i in seq_along(K_vals)) { #for each value of k
     #train KNN
     pred_valid <- knn(
       train = X_train_fold,
-      test  = X_valid_fold,
+      test  = X_valid_fold,   
       cl    = y_train_fold,
       k     = k_val
     )
@@ -234,24 +263,60 @@ for (i in seq_along(K_vals)) { #for each value of k
 best_k<- which.max(cv_acc)
 #we select K with the highest CV accuracy 
 
-'''
-very computationally expensive, and takes  lot of time, so we try leave-on-out CV where for each K value we fit only 1 model
 
-library(class)
+#very computationally expensive, and takes  lot of time, so we try leave-on-out CV where for each K value we fit only 1 model
+#took almost 50 min
 
-K_vals <- 1:100
-cv_acc <- numeric(length(K_vals))
+pred_knn <- knn(train = X_train, test = X_test, cl = y_train, k = best_k, prob = TRUE)
+mean(pred_knn == y_test)
 
-for (i in seq_along(K_vals)) {
-  
-  k_val <- K_vals[i]
-  
-  pred <- knn.cv(train = X_scaled, cl = Y, k = k_val)
-  
-  cv_acc[i] <- mean(pred == Y)
-}
 
-this also took so long and didnt run 
+#Confusion Matrix
+
+confusionM_KNN<- table(Predicted=pred_knn, Actual=y_test)
+confusionM_KNN
+
+confusionM_KNN_table<- data.frame(
+  Actual=c("1","-1"),
+  pred_1=c(confusionM[1,1], confusionM[1,-1]),
+  pred_minus1=c(confusionM[-1,1], confusionM[-1,-1])
+) %>% gt() %>%
+  tab_spanner(
+    label = "Predicted",
+    columns = c("pred_1", "pred_minus1")
+  ) %>%
+  cols_label(
+    Actual = "Actual",
+    pred_1 = "1",
+    pred_minus1 = "-1"
+  )
+
+confusionM_KNN_table
+
+
+sensitivity<- confusionM[1,1]/(confusionM[1,1]+confusionM[1,-1])
+sensitivity<- confusionM[-1,-1]/(confusionM[-1,-1]+confusionM[-1,1])
+precision<- confusionM[1,1]/(confusionM[1,1]+confusionM[-1,1])
+F1_score<- 2*((precision*sensitivity)/(precision+sensitivity))
+
+library(PRROC)
+
+knn_prob <- attr(pred_knn, "prob") #this stores the probabilities
+knn_prob_employed <- ifelse(pred_knn == "Employed", knn_prob, 1 - knn_prob)
+
+
+
+precision_recall_KNN_curve<- pr.curve(scores.class0 = knn_prob_employed[y_test=="Employed"],
+                                      scores.class1 = knn_prob_employed[y_test=="Unemployed"],
+                                      curve = TRUE)
+
+plot(precision_recall_KNN_curve)
+
+ROC_KNN<- roc.curve(scores.class0 = knn_prob_employed[y_test=="Employed"],
+                    scores.class1 = knn_prob_employed[y_test=="Unemployed"],
+                    curve = TRUE)
+
+plot(ROC_KNN)
 
 
 
@@ -263,10 +328,8 @@ this also took so long and didnt run
 ###########################################################################
 
 
-employement with 3 categorical values is used, cause when we filter cotinuing eductaion out, the tree consider 
-salary as the only predictor resulting ina  tree of only 1 split
-
-'''
+#employement with 3 categorical values is used, cause when we filter cotinuing eductaion out, the tree consider 
+s#alary as the only predictor resulting ina  tree of only 1 split
 
 library(rpart)
 install.packages("rpart.plot")
@@ -349,8 +412,72 @@ results <- data.frame(
 ) 
 
 results %>% gt() 
+pred_test<- predict(tree_prune_1se, newdata = test_data, type = "class")
+accuracy_1se<- mean(pred_test == test_data$Employment_Status)
 
-Pred_tree<- mean(pred1 == test_data$Employment_Status)
+#Confusion Matrix
+
+confusionM<- table(Predicted=pred_test, Actual=test_data$Employment_Status)
+confusionM
+
+confusionM_tree_table<- data.frame(
+  Actual=c("1","-1"),
+  pred_1=c(confusionM[1,1], confusionM[1,-1]),
+  pred_minus1=c(confusionM[-1,1], confusionM[-1,-1])
+) %>% gt() %>%
+  tab_spanner(
+  label = "Predicted",
+  columns = c("pred_1", "pred_minus1")
+) %>%
+  cols_label(
+    Actual = "Actual",
+    pred_1 = "1",
+    pred_minus1 = "-1"
+  )
+
+confusionM_tree_table
+
+
+count_classes<- test_data %>%
+  count(Employment_Status)
+#we see that there's 11650 students classified as employed and 5230 student classified as unemployed
+#this show an imbalanced data, so using AUC-ROC leads to misleading incorrect interpretation
+#Instead we'll use precision-recall for imbalanced data
+
+sensitivity<- confusionM[1,1]/(confusionM[1,1]+confusionM[1,-1])
+sensitivity<- confusionM[-1,-1]/(confusionM[-1,-1]+confusionM[-1,1])
+precision<- confusionM[1,1]/(confusionM[1,1]+confusionM[-1,1])
+F1_score<- 2*((precision*sensitivity)/(precision+sensitivity))
+
+install.packages("PRROC")
+library(PRROC)
+
+
+precision_recall_curve<- pr.curve(scores.class0 = pred_test_probaility[test_data$Employment_Status=="Employed", "Employed"],
+             scores.class1 = pred_test_probaility[test_data$Employment_Status=="Unemployed", "Employed"],
+             curve = TRUE)
+
+plot(precision_recall_curve)
+
+roc_curve<-roc.curve(scores.class0 = pred_test_probaility[test_data$Employment_Status=="Employed", "Employed"],
+             scores.class1 = pred_test_probaility[test_data$Employment_Status=="Unemployed", "Employed"],
+             curve = TRUE)
+plot(roc_curve)
+
+'''
+we did model selection by accurcay, and now we interpret by proc, pr curve and the other etrics found y confusion matrix 
+the recall is how many actual unemployed cases are correctly identified, precision is were correct fromt he predicted unemployed
+the pr curve measures how weel the model identifies employed, a value of 0.9827009 mens th emodel maintains very high precision and very high recall simultaneously
+STRONG PERFORMANCE ont he positive class employed
+
+Roc curve, we use recall of the y axis (porpotion of employed predicted as employed) and false positive rate FPR on the xaxis which is how many actuall negative(unemployed) the model inccorrectly label as positive
+in other words it is the proportion of unemployed predicted as employed.
+
+'''
+
+
+###########################################################
+###############################################################################################################################################
 
 #We can RE-fit this Model including Continuing education in the Employment Status.
 
@@ -362,20 +489,29 @@ Pred_tree<- mean(pred1 == test_data$Employment_Status)
 
 library(MASS)
 library(e1071)
-Model_svm <- svm(Employment_Status ~. , data=train_data,  type="C-classification", kernel="linear", cost=1)
+Model_svm <- svm(Employment_Status ~. , data=train_data,  type="C-classification", kernel="linear", cost=1) # default
+model_svm_guassian<- svm(Employment_Status ~. , data=train_data,  type="C-classification", kernel="radial", cost=1) 
 predsvm <- predict(Model_svm, newdata = test_data, type = "class")
 mean(predsvm == test_data$Employment_Status)
+predsvm_guassian<- predict(model_svm_guassian, newdata = test_data, type = "class")
+mean(predsvm_guassian == test_data$Employment_Status)  #better accuracy 
 
-cost_range <- c(0.1,0.5,1,2,5,10)
-model_tune<- tune.svm(Employment_Status ~. , data=train_data, type="C-classification", kernel="linear", cost=cost_range)
+'''
+In a SVM you are searching for two things: a hyperplane with the largest minimum margin, and a hyperplane that correctly separates as many instances as possible. 
+The problem is that you will not always be able to get both things. The c parameter determines how great your desire is for the latter. 
+I want to have a good strong classification so high c 
+'''
+
+cost_range = c(0.01, 0.1, 1, 10)
+model_L_tune<- tune.svm(Employment_Status ~. , data=train_data, type="C-classification", kernel="linear", cost=cost_range)
 best_svm <- model_tune$best.model
 predsvm_tune <- predict(best_svm, newdata = test_data, type = "class")
 mean(predsvm_tune == test_data$Employment_Status)
 
-#took ages to run 
+#took more than 1 hour and didn't complete running
 
-#TDL: Compare all Classification models, fit the logistic regression model, fit GAM/ linear model
-#maybe try different performance metrics? or no need? ROC?
-#confusion matrix + ROC,
-#class specific performance : specificty.....
-#accuracy mfor most accurate model
+#TDL: fit the logistic regression model, fit GAM/ linear model
+
+
+#guassian kernel, glmnet for lasso 
+
