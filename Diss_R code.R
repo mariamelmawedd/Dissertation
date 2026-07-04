@@ -344,7 +344,7 @@ train_index <- sample(1:n, size = 0.7*n)
 train_data <- data_emp[train_index, ]
 test_data  <- data_emp[-train_index, ]
 
-train_data$Employment_Status <- as.factor(train_data$Employment_Status)
+train_data$Employment_Status <- as.factor(train_data$Employment_Status) #tells that this is categorical, so classification model
 
 tree <- rpart(Employment_Status ~. , data=train_data, method="class",cp=0)
 rpart.plot(tree)
@@ -515,3 +515,79 @@ mean(predsvm_tune == test_data$Employment_Status)
 
 #guassian kernel, glmnet for lasso 
 
+
+################################################################################################
+##################                                               ###############################
+##################   Logistic Regression- Employment Status      ###############################
+##################                                               ###############################
+################################################################################################
+
+
+#fit a binary logistic regression for the employement status of the categories( employed, Unemployed)
+
+data_emp<- data_emp %>%
+  mutate(Employment_binary= (ifelse(Employment_Status=="Employed",1,0) ))
+model<- glm(Employment_binary ~ (. - Employment_Status), data=data_emp, family = binomial)
+
+summary(model)
+#apply  selection 
+model_selection<- stepAIC(model, direction = "both")
+Final_AIC_model<- glm(Employment_binary ~ Education_Level+ Language_Proficiency +
+                        University_Ranking + Years_Since_Graduation + GPA + Internship_Experience, data=data_emp, family = binomial)
+summary(Final_AIC_model)
+
+#LASSO regression
+library(glmnet)
+y<- data_emp$Employment_binary
+x<- model.matrix(
+  Employment_binary ~ . - Employment_Status - Employment_binary,
+  data = data_emp
+) [, -1]
+
+lambda_Selection<- cv.glmnet(x,y,alpha=1)
+best_lambda<- alpha_Selection$lambda.min
+
+
+variable_selection <- coef(lambda_Selection, s = "lambda.min") #coefficients based on the best lambda 
+
+final_model<- glm(Employment_binary ~ Country_of_Origin + Field_of_Study  + 
+                    + Gender + Visa_Type + Language_Proficiency 
+                  + Education_Level + University_Ranking + GPA + Years_Since_Graduation
+                  + Internship_Experience, data=data_emp, family = binomial)
+summary(final_model)
+
+
+#can we do scenarios of model comparison? 
+#we choose lasso, what can we do next??
+
+
+#######################################################################################
+##################                                      ###############################
+##################   Multilinear Regression- Salary     ###############################
+##################                                      ###############################
+#######################################################################################
+
+data_salary<- data_uk %>% select( - Job_Sector, - Employment_Status, - Region_of_Study )
+model1 <- lm( Salary ~ ., data=data_salary)
+summary(model1)
+
+#apply 10 fold cross validation to choose the best lambda
+lambda_salary<- cv.glmnet(model.matrix(Salary ~ . , data=data_salary)[,-1], data_salary$Salary, alpha=1)
+
+lasso_salary_selection<- coef(lambda_salary, s="lambda.min")
+
+final_salary_model_LASSO<- lm(Salary ~ . -Age - Visa_Type, data=data_salary)
+summary(final_salary_model_LASSO)
+
+
+
+#now using AIC
+
+AIC_selection<- stepAIC(model1, direction = "backward")
+Salary_AIC_finalmodel<- lm(Salary ~ . -Age - Visa_Type - Country_of_Origin - Field_of_Study, data = data_salary)
+summary(Salary_AIC_finalmodel)
+
+#if we proceed with the aic, we can do hypothesis tests to find if a speciic variable has significant over the model
+#lasso for prediction, 
+# i can look at p values, confidnece intervals
+#do we need to fit models with and wtihout a pecific predictor and then do model comparison? but we can see this frot h sumamry 
