@@ -32,3 +32,38 @@ We can perform group by for some rows, how is this useful?
 SAP raw notes: 
 first filtered the data to have UK rows only
 apply drop method to find the best fitted model with t#use boxplots instead causehe lowest AIC/BIC 
+
+
+#After applying backward selection, this is the final model
+Step:  AIC=33494.16
+Employment_binary ~ Education_Level + Language_Proficiency + 
+    University_Ranking + Years_Since_Graduation + GPA + Internship_Experience
+
+                         Df Deviance   AIC
+<none>                         33470 33494
+- Internship_Experience   1    35741 35763
+- Years_Since_Graduation  1    36308 36330
+- University_Ranking      2    37463 37483
+- GPA                     1    38135 38157
+- Education_Level         3    48518 48536
+- Language_Proficiency    3    48751 48769
+
+
+USING stepAIC, direction= both 
+Step:  AIC=33494.16
+Employment_binary ~ Education_Level + Language_Proficiency + 
+    University_Ranking + Years_Since_Graduation + GPA + Internship_Experience
+
+                         Df Deviance   AIC
+<none>                         33470 33494
++ Gender                  2    33466 33494
++ Age                     1    33470 33496
++ Field_of_Study          5    33464 33498
++ Country_of_Origin       7    33461 33499
++ Visa_Type               3    33470 33500
+- Internship_Experience   1    35741 35763
+- Years_Since_Graduation  1    36308 36330
+- University_Ranking      2    37463 37483
+- GPA                     1    38135 38157
+- Education_Level         3    48518 48536
+- Language_Proficiency    3    48751 48769
