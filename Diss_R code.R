@@ -278,8 +278,8 @@ confusionM_KNN
 
 confusionM_KNN_table<- data.frame(
   Actual=c("1","-1"),
-  pred_1=c(confusionM[1,1], confusionM[1,-1]),
-  pred_minus1=c(confusionM[-1,1], confusionM[-1,-1])
+  pred_1=c(confusionM_KNN[1,1], confusionM_KNN[1,-1]),
+  pred_minus1=c(confusionM_KNN[-1,1], confusionM_KNN[-1,-1])
 ) %>% gt() %>%
   tab_spanner(
     label = "Predicted",
@@ -294,10 +294,11 @@ confusionM_KNN_table<- data.frame(
 confusionM_KNN_table
 
 
-sensitivity<- confusionM[1,1]/(confusionM[1,1]+confusionM[1,-1])
-sensitivity<- confusionM[-1,-1]/(confusionM[-1,-1]+confusionM[-1,1])
-precision<- confusionM[1,1]/(confusionM[1,1]+confusionM[-1,1])
+sensitivity<- confusionM_KNN[1,1]/(confusionM_KNN[1,1]+confusionM_KNN[1,-1])
+sensitivity<- confusionM_KNN[-1,-1]/(confusionM_KNN[-1,-1]+confusionM_KNN[-1,1])
+precision<- confusionM_KNN[1,1]/(confusionM_KNN[1,1]+confusionM_KNN[-1,1])
 F1_score<- 2*((precision*sensitivity)/(precision+sensitivity))
+
 
 library(PRROC)
 
@@ -329,24 +330,24 @@ plot(ROC_KNN)
 
 
 #employement with 3 categorical values is used, cause when we filter cotinuing eductaion out, the tree consider 
-s#alary as the only predictor resulting ina  tree of only 1 split
+#salary as the only predictor resulting ina  tree of only 1 split
 
 library(rpart)
-install.packages("rpart.plot")
+#install.packages("rpart.plot")
 library(rpart.plot)
 
 
 #first we split the dataset
 set.seed(1)
 n <- nrow(data_emp)
-train_index <- sample(1:n, size = 0.7*n)
+train_index <- sample(1:n, size = 0.8*n)
 
-train_data <- data_emp[train_index, ]
-test_data  <- data_emp[-train_index, ]
+train_data_tree <- data_emp[train_index, ]
+test_data_tree  <- data_emp[-train_index, ]
 
-train_data$Employment_Status <- as.factor(train_data$Employment_Status) #tells that this is categorical, so classification model
+train_data_tree$Employment_Status <- as.factor(train_data_tree$Employment_Status) #tells that this is categorical, so classification model
 
-tree <- rpart(Employment_Status ~. , data=train_data, method="class",cp=0)
+tree <- rpart(Employment_Status ~. , data=train_data_tree, method="class",cp=0)
 rpart.plot(tree)
 #very large 
 printcp(tree) # prune the tre,e find the best cot complecity 
@@ -361,8 +362,8 @@ num_splits<- tree$cptable [which.min(tree$cptable[, "xerror"]), "nsplit"]
 tree_prune<- prune(tree, cp=best_cp)
 rpart.plot(tree_prune)
 #Predict and evaluate perfromance
-pred1 <- predict(tree_prune, newdata = test_data, type = "class")
-mean(pred1 == test_data$Employment_Status)
+pred1 <- predict(tree_prune, newdata = test_data_tree, type = "class")
+mean(pred1 == test_data_tree$Employment_Status)
 #shouldi add arguments like minsplit and minbucket? how will this help? nothing changed
 
 #after splitting data we get the pruning tree to be larger than without splitting 
@@ -378,8 +379,8 @@ best_cp_1se <- tree$cptable[best_1se_index, "CP"]
 tree_prune_1se<- prune(tree, cp=best_cp_1se)
 rpart.plot(tree_prune_1se)
 #Predict and evaluate perfromance
-pred2 <- predict(tree_prune_1se, newdata = test_data, type = "class")
-mean(pred2 == test_data$Employment_Status)
+pred2 <- predict(tree_prune_1se, newdata = test_data_tree, type = "class")
+mean(pred2 == test_data_tree$Employment_Status)
 #this 1SE gives a less crowded tree
 
 ###############################
@@ -387,15 +388,15 @@ mean(pred2 == test_data$Employment_Status)
 library(randomForest)
 # bagging
 
-Model <- randomForest(Employment_Status ~. , data=train_data, mtry= ncol(train_data)-1,ntree=500) # nb of predictors 
+Model <- randomForest(Employment_Status ~. , data=train_data_tree, mtry= ncol(train_data_tree)-1,ntree=500) # nb of predictors 
 #Predict and evaluate perfromance
-pred3 <- predict(Model, newdata = test_data, type = "class")
-mean(pred3 == test_data$Employment_Status)
+pred3 <- predict(Model, newdata = test_data_tree, type = "class")
+mean(pred3 == test_data_tree$Employment_Status)
 # random forests
-Model2 <- randomForest(Employment_Status ~. , data=train_data)
+Model2 <- randomForest(Employment_Status ~. , data=train_data_tree)
 #Predict and evaluate perfromance
-pred4 <- predict(Model2, newdata = test_data, type = "class")
-mean(pred4 == test_data$Employment_Status)
+pred4 <- predict(Model2, newdata = test_data_tree, type = "class")
+mean(pred4 == test_data_tree$Employment_Status)
 
 results <- data.frame(
   Model = c("Tree (min xerror)", 
@@ -404,26 +405,26 @@ results <- data.frame(
             "Random Forest"),
   
   Accuracy = c(
-    mean(pred1 == test_data$Employment_Status),
-    mean(pred2 == test_data$Employment_Status),
-    mean(pred3 == test_data$Employment_Status),
-    mean(pred4 == test_data$Employment_Status)
+    mean(pred1 == test_data_tree$Employment_Status),
+    mean(pred2 == test_data_tree$Employment_Status),
+    mean(pred3 == test_data_tree$Employment_Status),
+    mean(pred4 == test_data_tree$Employment_Status)
   )
 ) 
 
 results %>% gt() 
-pred_test<- predict(tree_prune_1se, newdata = test_data, type = "class")
-accuracy_1se<- mean(pred_test == test_data$Employment_Status)
+pred_test<- predict(tree_prune_1se, newdata = test_data_tree, type = "class")
+accuracy_1se<- mean(pred_test == test_data_tree$Employment_Status)
 
 #Confusion Matrix
 
-confusionM<- table(Predicted=pred_test, Actual=test_data$Employment_Status)
-confusionM
+confusionM_tree<- table(Predicted=pred_test, Actual=test_data_tree$Employment_Status)
+confusionM_tree
 
 confusionM_tree_table<- data.frame(
   Actual=c("1","-1"),
-  pred_1=c(confusionM[1,1], confusionM[1,-1]),
-  pred_minus1=c(confusionM[-1,1], confusionM[-1,-1])
+  pred_1=c(confusionM_tree[1,1], confusionM_tree[1,-1]),
+  pred_minus1=c(confusionM_tree[-1,1], confusionM_tree[-1,-1])
 ) %>% gt() %>%
   tab_spanner(
   label = "Predicted",
@@ -438,36 +439,36 @@ confusionM_tree_table<- data.frame(
 confusionM_tree_table
 
 
-count_classes<- test_data %>%
+sensitivity<- confusionM_tree[1,1]/(confusionM_tree[1,1]+confusionM_tree[1,-1])
+sensitivity<- confusionM_tree[-1,-1]/(confusionM_tree[-1,-1]+confusionM_tree[-1,1])
+precision<- confusionM_tree[1,1]/(confusionM_tree[1,1]+confusionM_tree[-1,1])
+F1_score<- 2*((precision*sensitivity)/(precision+sensitivity))
+
+
+#install.packages("PRROC")
+
+count_classes<- test_data_tree %>%
   count(Employment_Status)
 #we see that there's 11650 students classified as employed and 5230 student classified as unemployed
 #this show an imbalanced data, so using AUC-ROC leads to misleading incorrect interpretation
-#Instead we'll use precision-recall for imbalanced data
+#Instead we'll use precision-recall for imbalanced datalibrary(PRROC)
 
-sensitivity<- confusionM[1,1]/(confusionM[1,1]+confusionM[1,-1])
-sensitivity<- confusionM[-1,-1]/(confusionM[-1,-1]+confusionM[-1,1])
-precision<- confusionM[1,1]/(confusionM[1,1]+confusionM[-1,1])
-F1_score<- 2*((precision*sensitivity)/(precision+sensitivity))
-
-install.packages("PRROC")
-library(PRROC)
-
-
-precision_recall_curve<- pr.curve(scores.class0 = pred_test_probaility[test_data$Employment_Status=="Employed", "Employed"],
-             scores.class1 = pred_test_probaility[test_data$Employment_Status=="Unemployed", "Employed"],
+pred_test_probability<- predict(tree_prune_1se, newdata = test_data_tree, type = "prob") 
+precision_recall_curve<- pr.curve(scores.class0 = pred_test_probability[test_data_tree$Employment_Status=="Employed", "Employed"],
+             scores.class1 = pred_test_probability[test_data_tree$Employment_Status=="Unemployed", "Employed"],
              curve = TRUE)
 
 plot(precision_recall_curve)
 
-roc_curve<-roc.curve(scores.class0 = pred_test_probaility[test_data$Employment_Status=="Employed", "Employed"],
-             scores.class1 = pred_test_probaility[test_data$Employment_Status=="Unemployed", "Employed"],
+roc_curve<-roc.curve(scores.class0 = pred_test_probability[test_data_tree$Employment_Status=="Employed", "Employed"],
+             scores.class1 = pred_test_probability[test_data_tree$Employment_Status=="Unemployed", "Employed"],
              curve = TRUE)
 plot(roc_curve)
 
 '''
 we did model selection by accurcay, and now we interpret by proc, pr curve and the other etrics found y confusion matrix 
 the recall is how many actual unemployed cases are correctly identified, precision is were correct fromt he predicted unemployed
-the pr curve measures how weel the model identifies employed, a value of 0.9827009 mens th emodel maintains very high precision and very high recall simultaneously
+the pr curve measures how well the model identifies employed, a value of 0.9827009 mens the model maintains very high precision and very high recall simultaneously
 STRONG PERFORMANCE ont he positive class employed
 
 Roc curve, we use recall of the y axis (porpotion of employed predicted as employed) and false positive rate FPR on the xaxis which is how many actuall negative(unemployed) the model inccorrectly label as positive
@@ -499,21 +500,15 @@ mean(predsvm_guassian == test_data$Employment_Status)  #better accuracy
 '''
 In a SVM you are searching for two things: a hyperplane with the largest minimum margin, and a hyperplane that correctly separates as many instances as possible. 
 The problem is that you will not always be able to get both things. The c parameter determines how great your desire is for the latter. 
-I want to have a good strong classification so high c 
+I want to have a good strong classification so high c , didnt work, took too much time to run
 '''
 
-cost_range = c(0.01, 0.1, 1, 10)
-model_L_tune<- tune.svm(Employment_Status ~. , data=train_data, type="C-classification", kernel="linear", cost=cost_range)
-best_svm <- model_tune$best.model
-predsvm_tune <- predict(best_svm, newdata = test_data, type = "class")
-mean(predsvm_tune == test_data$Employment_Status)
 
-#took more than 1 hour and didn't complete running
-
-#TDL: fit the logistic regression model, fit GAM/ linear model
 
 
 #guassian kernel, glmnet for lasso 
+
+#polynomial kernel, 
 
 
 ################################################################################################
@@ -523,42 +518,102 @@ mean(predsvm_tune == test_data$Employment_Status)
 ################################################################################################
 
 
-#fit a binary logistic regression for the employement status of the categories( employed, Unemployed)
+#fit a binary logistic regression for the employment status of the categories( employed, Unemployed)
 
 data_emp<- data_emp %>%
   mutate(Employment_binary= (ifelse(Employment_Status=="Employed",1,0) ))
-model<- glm(Employment_binary ~ (. - Employment_Status), data=data_emp, family = binomial)
 
+n<- nrow(data_emp)
+train_ind <- sample(1:n, size = 0.8*n)
+train_data<- data_emp[train_ind, ]
+test_data<- data_emp[-train_ind, ]
+model<- glm(Employment_binary ~ (. - Employment_Status), data=train_data, family = binomial)
 summary(model)
+
 #apply  selection 
-model_selection<- stepAIC(model, direction = "both")
-Final_AIC_model<- glm(Employment_binary ~ Education_Level+ Language_Proficiency +
-                        University_Ranking + Years_Since_Graduation + GPA + Internship_Experience, data=data_emp, family = binomial)
-summary(Final_AIC_model)
+model_AIC<- stepAIC(model, direction = "both")
+summary(model_AIC) 
+#WE GOT GENDERMALE AND GENDEROTHER WITH insignificant p value? but this variable was selected by AIC do we do hypothesis testing to compare if GENDER is significant or not
+#so we need model comparison
+predict_AIC_logistic<- predict(model_AIC, newdata = test_data)
 
 #LASSO regression
 library(glmnet)
+
 y<- data_emp$Employment_binary
 x<- model.matrix(
   Employment_binary ~ . - Employment_Status - Employment_binary,
   data = data_emp
 ) [, -1]
 
-lambda_Selection<- cv.glmnet(x,y,alpha=1)
-best_lambda<- alpha_Selection$lambda.min
+
+X_train <- x[train_ind, ]
+Y_train <- y[train_ind ] #y is a vector and not a matrix
+
+X_test<- x[-train_ind, ]
+Y_test<- y[-train_ind ]
+
+lambda_ridge<- cv.glmnet(X_train, Y_train, alpha=0)
+model_ridge<- glmnet(X_train, Y_train, family = "binomial", alpha=0, lambda = lambda_ridge$lambda.min)
+
+lambda_other<- cv.glmnet(X_train, Y_train, alpha=0.5)
+model_other<- glmnet(X_train, Y_train, family = "binomial", alpha=0.5, lambda = lambda_other$lambda.min)
+
+lambda_lasso<- cv.glmnet(X_train,Y_train,alpha=1)
+model_lasso <- glmnet(X_train, Y_train, family = "binomial", alpha=1, lambda = lambda_lasso$lambda.min)
 
 
-variable_selection <- coef(lambda_Selection, s = "lambda.min") #coefficients based on the best lambda 
-
-final_model<- glm(Employment_binary ~ Country_of_Origin + Field_of_Study  + 
-                    + Gender + Visa_Type + Language_Proficiency 
-                  + Education_Level + University_Ranking + GPA + Years_Since_Graduation
-                  + Internship_Experience, data=data_emp, family = binomial)
-summary(final_model)
+plot(lambda_lasso)
 
 
-#can we do scenarios of model comparison? 
+result_ridge<- predict(model_ridge, s= lambda_ridge$lambda.min, type="class", newx = X_test)
+result_other<- predict(model_net, s= lambda_other$lambda.min, type="class", newx = X_test)
+result_lasso<- predict(model_lasso, s= lambda_lasso$lambda.min, type="class", newx = X_test)
+
+
+values_ridge<- cbind(Y_test, result_ridge)
+values_other<- cbind(Y_test, result_other)
+values_lasso<- cbind(Y_test, result_lasso)
+
+model_lasso
+results_model <- data.frame(
+  Model = c("Ridge", 
+            "Other", 
+            "Lasso"),
+  
+  Accuracy = c(
+    mean(Y_test==values_ridge),
+    mean(Y_test==values_other),
+    mean(Y_test==values_lasso)
+  )
+) 
+
+results_model %>% gt() 
+coef(model_ridge)
+coef(model_other)
+coef(model_lasso)
+
+
+#COMPARE LASSO AND AIC
+model_AIC_LASSO <- data.frame(
+  Model = c(
+    "Lasso",
+    "AIC"),
+  
+  Accuracy = c(
+    mean(Y_test==values_lasso),
+    mean(test_data==predict_AIC_logistic)
+  )
+) 
+
+model_AIC_LASSO %>% gt()  #why we get 0 accuracy for AIC? look at it
+
+
 #we choose lasso, what can we do next??
+
+#training and test data
+#several alphas from 0 to 1 and compare the models on ets data 
+# do interactions
 
 
 #######################################################################################
@@ -567,27 +622,72 @@ summary(final_model)
 ##################                                      ###############################
 #######################################################################################
 
-data_salary<- data_uk %>% select( - Job_Sector, - Employment_Status, - Region_of_Study )
-model1 <- lm( Salary ~ ., data=data_salary)
-summary(model1)
+#only employed people
+data_salary<- data_uk %>% filter(Salary!=0) %>%
+  select( - Job_Sector, - Employment_Status, - Region_of_Study ) 
+
 
 #apply 10 fold cross validation to choose the best lambda
-lambda_salary<- cv.glmnet(model.matrix(Salary ~ . , data=data_salary)[,-1], data_salary$Salary, alpha=1)
 
-lasso_salary_selection<- coef(lambda_salary, s="lambda.min")
+y<- data_salary$Salary
+x<- model.matrix(
+  Salary ~ .,
+  data = data_salary
+) [, -1]
 
-final_salary_model_LASSO<- lm(Salary ~ . -Age - Visa_Type, data=data_salary)
-summary(final_salary_model_LASSO)
+n<- nrow(data_salary)
+train_ind_s <- sample(1:n, size = 0.8*n)
 
+X_train_s <- x[train_ind_s, ]
+Y_train_s <- y[train_ind_s ] #y is a vector and not a matrix
+
+X_test_s<- x[-train_ind_s, ]
+Y_test_s<- y[-train_ind_s ]
+
+lambda_salary<- cv.glmnet(X_train_s, Y_train_s, alpha=1)
+model_lasso_salary <- glmnet(X_train_s, Y_train_s, family = "gaussian", alpha=1, lambda = lambda_salary$lambda.min)
+coef(model_lasso_salary)
+
+
+res<- predict(model_lasso_salary, s=lambda_salary$lambda.min, type = "link", newx= X_test_s)
+values_salary<- cbind(Y_test_s, res)
+mean(Y_test_s==res)  #accuracy=0????????
+#we're doing regression, use MSE or RMSE 
+mse_Lasso<- mean((Y_test_s-res)^2)
+
+
+#############################################
 
 
 #now using AIC
 
+train_data_s<- data_salary[train_ind_s, ]
+test_data_s<- data_salary[-train_ind_s, ]
+model1 <- lm(Salary ~ . , data=train_data_s)
+summary(model1)
 AIC_selection<- stepAIC(model1, direction = "backward")
-Salary_AIC_finalmodel<- lm(Salary ~ . -Age - Visa_Type - Country_of_Origin - Field_of_Study, data = data_salary)
-summary(Salary_AIC_finalmodel)
+summary(AIC_selection)
 
-#if we proceed with the aic, we can do hypothesis tests to find if a speciic variable has significant over the model
-#lasso for prediction, 
-# i can look at p values, confidnece intervals
-#do we need to fit models with and wtihout a pecific predictor and then do model comparison? but we can see this frot h sumamry 
+predict_AIC<- predict(AIC_selection, newdata = test_data_s)
+mse_AIC<- mean((test_data_s$Salary- predict_AIC)^2)
+
+res_model <- data.frame(
+  Model = c(
+            "Lasso",
+            "AIC"),
+  
+  MSE = c(
+    mse_Lasso,
+    mse_AIC
+  )
+) 
+
+res_model %>% gt() #LASSO SMALLER MSE, PROCEED WITH LASSO
+
+
+
+
+
+#TO DO LIST: fit interactions, and polynomial kernel for SVM, model comparison for model_AIC compare with nested model without GENDER, look at why we got 0 accuracy in comparing AIC AND LASSO in Logistic regression
+#ask does it matter which direction we use?
+#update R 
