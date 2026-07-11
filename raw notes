@@ -67,3 +67,40 @@ Employment_binary ~ Education_Level + Language_Proficiency +
 - GPA                     1    38135 38157
 - Education_Level         3    48518 48536
 - Language_Proficiency    3    48751 48769
+
+
+
+
+
+
+
+#FINAL AIC model for elogistic 
+'''
+glm(formula = Employment_binary ~ Education_Level + Language_Proficiency + 
+    University_Ranking + Years_Since_Graduation + GPA + Internship_Experience, 
+    family = binomial, data = train_data)
+
+Coefficients:
+                                  Estimate Std. Error z value Pr(>|z|)    
+(Intercept)                      -4.515819   0.138369 -32.636   <2e-16 ***
+Education_LevelDiploma           -0.041003   0.049828  -0.823    0.411    
+Education_LevelMasters           3.480774   0.044497  78.225   <2e-16 ***
+  Education_LevelPhD                3.459414   0.055566  62.258   <2e-16 ***
+  Language_ProficiencyBasic        -3.532882   0.051497 -68.604   <2e-16 ***
+  Language_ProficiencyFluent       -0.084945   0.049626  -1.712    0.087 .  
+Language_ProficiencyIntermediate -3.487208   0.047769 -73.002   <2e-16 ***
+  University_RankingLow            -1.992867   0.048083 -41.446   <2e-16 ***
+  University_RankingMedium         -2.004199   0.040523 -49.459   <2e-16 ***
+  Years_Since_Graduation           -0.258625   0.005753 -44.954   <2e-16 ***
+  GPA                               2.383435   0.043182  55.195   <2e-16 ***
+  Internship_ExperienceYes          1.353315   0.033456  40.451   <2e-16 ***
+  ---
+  Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+Null deviance: 55452  on 45010  degrees of freedom
+Residual deviance: 26836  on 44999  degrees of freedom
+AIC: 26860
+
+'''
