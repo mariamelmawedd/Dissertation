@@ -1,0 +1,37 @@
+################################
+#######   INTERACTIONS   #######
+
+X_interaction <- model.matrix(
+  Employment_binary ~ . - Age +
+    GPA:Internship_Experience +
+    Internship_Experience:University_Ranking +
+    Country_of_Origin:Language_Proficiency +
+  Education_Level:Language_Proficiency,
+  data = data_emp_logistic
+)[, -1]  #age doesnt contribute to prediction 
+
+
+X_train_interaction <- X_interaction[train_ind, ] 
+Y_train_interaction <- y[train_ind ] #y is a vector and not a matrix
+
+X_test_interaction<- X_interaction[-train_ind, ]
+Y_test_interaction<- y[-train_ind ]
+
+lambda_lasso_interaction<- cv.glmnet(X_train_interaction,Y_train_interaction,alpha=1)
+model_lasso_interaction <- glmnet(X_train_interaction, Y_train_interaction, family = "binomial", alpha=1, lambda = lambda_lasso_interaction$lambda.min)
+coef(model_lasso_interaction) #do all nonzero coefficients mean they are significant????
+p<- predict(model_lasso_interaction, s= lambda_lasso_interaction$lambda.min, type="class", newx = X_test_interaction)
+mean(p==Y_test_interaction)
+
+model_l_interaction <- glmnet(X_train_interaction, Y_train_interaction, family = "binomial", alpha=1)
+plot(model_l_interaction, label = TRUE) #shows only 10 truly important predictors
+
+#log odds for interaction
+exp(coef(model_lasso_interaction))
+
+
+# do interactions
+
+
+this answers which interactions helps in predicting, it doesnt answer my research question of whihc factors determines employability
+this is why we are using lasso remove variables not selected by it then fitting glm logistic
