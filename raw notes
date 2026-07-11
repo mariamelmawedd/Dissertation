@@ -104,3 +104,18 @@ Residual deviance: 26836  on 44999  degrees of freedom
 AIC: 26860
 
 '''
+
+For the employment outcome analysis, I initially used LASSO logistic regression to identify the important predictors.
+After that, I refitted a normal logistic regression model using the selected variables and carried out likelihood ratio tests to remove variables that did not significantly improve the model.
+I also tested some possible interaction effects
+LASSO was chosen because it gave slightly better predictive performance and helped identify the variables that contributed most to prediction.
+However, after refitting the logistic regression and performing the hypothesis tests, the final model ended up being very similar to the model selected using AIC.
+For the salary analysis, I compared LASSO regression and an AIC-selected linear regression model. 
+LASSO achieved a slightly lower MSE, so it performed better for prediction.
+However, because the research question is about identifying factors that determine salary levels, I'm considering using the AIC-selected model for interpretation.
+should I also have used the AIC approach for the employment determinant analysis, since that question is also about identifying important factors rather than only prediction.
+Two approached:
+Use LASSO as a variable selection method, then refit a standard regression model for interpretation, for both employment and salary; or
+Use AIC-selected models for both since the aim is to understand the determinants.
+
+
