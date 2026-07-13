@@ -11,7 +11,7 @@ library(gt)
 library(GGally)
 
 #read data 
-data<- read.csv("data_dissertation.csv")
+data<- read.csv("dataset.csv")
 
 data %>% skim() %>% gt()
 glimpse(data)
@@ -295,10 +295,16 @@ confusionM_KNN_table
 
 
 sensitivity<- confusionM_KNN[1,1]/(confusionM_KNN[1,1]+confusionM_KNN[1,-1])
-sensitivity<- confusionM_KNN[-1,-1]/(confusionM_KNN[-1,-1]+confusionM_KNN[-1,1])
+specificity<- confusionM_KNN[-1,-1]/(confusionM_KNN[-1,-1]+confusionM_KNN[-1,1])
 precision<- confusionM_KNN[1,1]/(confusionM_KNN[1,1]+confusionM_KNN[-1,1])
 F1_score<- 2*((precision*sensitivity)/(precision+sensitivity))
 
+metrics_table_KNN <- data.frame(
+  Metric = c("Accuracy", "Sensitivity", "Specificity", "Precision", "F1 Score"),
+  Value  = c(knn_acc, sensitivity, specificity, precision, F1_score)
+)
+
+metrics_table_KNN %>% gt()
 
 library(PRROC)
 
@@ -318,8 +324,6 @@ ROC_KNN<- roc.curve(scores.class0 = knn_prob_employed[y_test=="Employed"],
                     curve = TRUE)
 
 plot(ROC_KNN)
-
-
 
 
 ###########################################################################
@@ -413,12 +417,13 @@ results <- data.frame(
 ) 
 
 results %>% gt() 
-pred_test<- predict(tree_prune_1se, newdata = test_data_c, type = "class")
-accuracy_1se<- mean(pred_test == test_data_c$Employment_Status)
+
+pred_1SE_tree<- predict(tree_prune_1se, newdata = test_data_c, type = "class")
+accuracy_1se<- mean(pred_1SE_tree == test_data_c$Employment_Status)
 
 #Confusion Matrix
 
-confusionM_tree<- table(Predicted=pred_test, Actual=test_data_c$Employment_Status)
+confusionM_tree<- table(Predicted=pred_1SE_tree, Actual=test_data_c$Employment_Status)
 confusionM_tree
 
 confusionM_tree_table<- data.frame(
@@ -440,9 +445,16 @@ confusionM_tree_table
 
 
 sensitivity<- confusionM_tree[1,1]/(confusionM_tree[1,1]+confusionM_tree[1,-1])
-sensitivity<- confusionM_tree[-1,-1]/(confusionM_tree[-1,-1]+confusionM_tree[-1,1])
+specificity<- confusionM_tree[-1,-1]/(confusionM_tree[-1,-1]+confusionM_tree[-1,1])
 precision<- confusionM_tree[1,1]/(confusionM_tree[1,1]+confusionM_tree[-1,1])
 F1_score<- 2*((precision*sensitivity)/(precision+sensitivity))
+
+metrics_table_tree <- data.frame(
+  Metric_TREE = c("Accuracy", "Sensitivity", "Specificity", "Precision", "F1 Score"),
+  Value  = c(accuracy_1se, sensitivity, specificity, precision, F1_score)
+)
+
+metrics_table_tree %>% gt()
 
 
 #install.packages("PRROC")
@@ -509,9 +521,40 @@ cost_range = c(0.01, 0.1, 1, 10)
 model_tune<- tune.svm(Employment_Status ~. , data=train_data_c, type="C-classification", kernel="linear", cost=cost_range, tune.control(cross = 5))
 best_svm <- model_tune$best.model
 predsvm_tune <- predict(best_svm, newdata = test_data_c, type = "class")
-mean(predsvm_tune == test_data_c$Employment_Status)
+accuracy_svm<- mean(predsvm_tune == test_data_c$Employment_Status)
+
+confusionM_SVM<- table(Predicted=predsvm_tune, Actual=test_data_c$Employment_Status)
+confusionM_SVM
+
+confusionM_SVM_table<- data.frame(
+  Actual=c("1","-1"),
+  pred_1=c(confusionM_SVM[1,1], confusionM_SVM[1,-1]),
+  pred_minus1=c(confusionM_SVM[-1,1], confusionM_SVM[-1,-1])
+) %>% gt() %>%
+  tab_spanner(
+    label = "Predicted",
+    columns = c("pred_1", "pred_minus1")
+  ) %>%
+  cols_label(
+    Actual = "Actual",
+    pred_1 = "1",
+    pred_minus1 = "-1"
+  )
+
+confusionM_SVM_table
 
 
+sensitivity<- confusionM_SVM[1,1]/(confusionM_SVM[1,1]+confusionM_SVM[1,-1])
+specificity<- confusionM_SVM[-1,-1]/(confusionM_SVM[-1,-1]+confusionM_SVM[-1,1])
+precision<- confusionM_SVM[1,1]/(confusionM_SVM[1,1]+confusionM_SVM[-1,1])
+F1_score<- 2*((precision*sensitivity)/(precision+sensitivity))
+
+metrics_table_SVM <- data.frame(
+  Metric_SVM = c("Accuracy", "Sensitivity", "Specificity", "Precision", "F1 Score"),
+  Value  = c(accuracy_svm, sensitivity, specificity, precision, F1_score)
+)
+
+metrics_table_SVM %>% gt()
 
 #guassian kernel, glmnet for lasso 
 
@@ -531,7 +574,7 @@ mean(predsvm_tune == test_data_c$Employment_Status)
 data_emp_logistic<- data_emp %>%
   mutate(Employment_binary= (ifelse(Employment_Status=="Employed",1,0) )) %>%
   select(-Employment_Status)
-  
+
 
 n<- nrow(data_emp_logistic)
 train_ind <- sample(1:n, size = 0.8*n)
@@ -542,17 +585,19 @@ summary(full_model)
 
 #apply  selection 
 model_AIC<- stepAIC(full_model, direction = "both")
-summary(model_AIC)    #WE GOT GENDER AGAIN!!!!!!!!!!!!!!!!!!!!!  
-#WE GOT GENDERMALE AND GENDEROTHER WITH insignificant p value? but this variable was selected by AIC do we do hypothesis testing to compare if GENDER is significant or not
-#so we need model comparison
+summary(model_AIC)   #one time it is giving gender another time it is not
+
+model_BIC<- step(full_model, k= log(nrow(train_data)), direction = "both")
+summary(model_BIC)
+predict_BIC<- ifelse(predict(model_BIC, newdata=test_data) >0.5, 1,0)
+
+mean(predict_BIC==test_data$Employment_binary) #same model as AIC, same accuracy 
+
 predict_AIC_logistic<- predict(model_AIC, newdata = test_data) #this gives probabilities 
-#glm cant output classes it gives probabilities, so convert to classes 0 and 1
-
-predict_AIC_class <- ifelse(predict_AIC_logistic > 0.5, 1, 0)
 
 
-#after running again, gender turned out to be insignficant
-#
+predict_AIC_class <- ifelse(predict_AIC_logistic > 0.5, 1, 0) #glm cant output classes it gives probabilities, so convert to classes 0 and 1
+
 
 #####################################
 #######   LASSO regression   ########
@@ -638,12 +683,11 @@ exp(coef(model_lasso)) # >1 increase odds, < 1 reduces odds of employability
 
 #####################################################################
 #################   MODEL AFTER removing variables seleted by LASSO
-nonzero_coeff<- rownames(coef_lasso)[as.numeric(coef_lasso) !=0 ] 
+
+nonzero_coeff<- rownames(coef_lasso)[as.numeric(coef_lasso) !=0 ] #remove age
 
 model_glm <- glm(
-  Employment_binary ~ GPA + Internship_Experience + Education_Level + 
-    University_Ranking + Language_Proficiency + Field_of_Study + Gender+ Visa_Type +
-    Country_of_Origin + Years_Since_Graduation,
+  Employment_binary ~ . -Age,
   data = train_data,
   family = binomial
 )
@@ -654,11 +698,7 @@ summary(model_glm)
 
 # Remove Gender
 model_no_gender <- glm(
-  Employment_binary ~ GPA + Internship_Experience +
-    Education_Level + University_Ranking +
-    Language_Proficiency + Field_of_Study +
-    Visa_Type + Country_of_Origin +
-    Years_Since_Graduation,
+  Employment_binary ~ . -Age - Gender,
   data = train_data,
   family = binomial
 )
@@ -668,11 +708,7 @@ summary(model_no_gender)
 anova(model_no_gender, model_glm, test = "Chisq") #p value >0.05 then we don't reject H0, so remove Gender
 
 model_no_visa <- glm(
-  Employment_binary ~ GPA + Internship_Experience +
-    Education_Level + University_Ranking +
-    Language_Proficiency + Field_of_Study +
-    Country_of_Origin +
-    Years_Since_Graduation,
+  Employment_binary ~ . -Age - Gender - Visa_Type,
   data = train_data,
   family = binomial
 )
@@ -683,11 +719,7 @@ anova(model_no_visa, model_no_gender, test = "Chisq") #remove visa, p value>0.05
 summary(model_no_visa)
 
 model_no_field <- glm(
-  Employment_binary ~ GPA + Internship_Experience +
-    Education_Level + University_Ranking +
-    Language_Proficiency +
-    Country_of_Origin +
-    Years_Since_Graduation,
+  Employment_binary ~ . -Age - Gender - Visa_Type -Field_of_Study,
   data = train_data,
   family = binomial
 )
@@ -698,10 +730,7 @@ anova(model_no_field, model_no_visa, test = "Chisq") #remove field, p value>0.05
 summary(model_no_field)
 
 model_no_country <- glm(
-  Employment_binary ~ GPA + Internship_Experience +
-    Education_Level + University_Ranking +
-    Language_Proficiency +
-    Years_Since_Graduation,
+  Employment_binary ~ . -Age - Gender - Visa_Type -Field_of_Study -Country_of_Origin,
   data = train_data,
   family = binomial
 )
@@ -711,10 +740,10 @@ anova(model_no_country, model_no_field, test = "Chisq") #remove country, p value
 
 summary(model_no_country)
 
+final_Lasso_model<- model_no_country
+
 ################################
 #######   INTERACTIONS   #######
-
-final_model<- model_no_country
 
 interaction_model <- glm(
   Employment_binary ~ GPA +
@@ -724,17 +753,18 @@ interaction_model <- glm(
     Language_Proficiency +
     Years_Since_Graduation +
     GPA:Internship_Experience+
-  Internship_Experience:University_Ranking + Education_Level:Language_Proficiency,
+    Internship_Experience:University_Ranking + Education_Level:Language_Proficiency,
   data = train_data,
   family = binomial
 )
 
 summary(interaction_model)
-anova(final_model, interaction_model, test = "Chisq") #simpler model, then more complicated model
-AIC(final_model, interaction_model)
+
+anova(final_Lasso_model, interaction_model, test = "Chisq") #simpler model, then more complicated model
+AIC(final_Lasso_model, interaction_model)
 
 
-predict_final<- ifelse( predict(final_model, newdata = test_data) >0.5, 1, 0)
+predict_final<- ifelse( predict(final_Lasso_model, newdata = test_data) >0.5, 1, 0)
 predict_interaction<- ifelse( predict(interaction_model, newdata = test_data) >0.5, 1, 0)
 mean(predict_final==test_data$Employment_binary)  #same as the AIC ONE
 mean(predict_interaction==test_data$Employment_binary)
@@ -742,6 +772,23 @@ mean(predict_interaction==test_data$Employment_binary)
 # the final selected model 
 
 exp(coef(interaction_model))
+
+
+library(caret)
+
+
+confusionMatrix(
+  factor(predict_final, levels = c(0,1)),
+  factor(test_data$Employment_binary, levels = c(0,1)),
+  positive = "1"
+)
+
+
+confusionMatrix(
+  factor(predict_interaction, levels = c(0,1)),
+  factor(test_data$Employment_binary, levels = c(0,1)),
+  positive = "1"
+)$table  #this gives confusion matrix, without the precision, f1 and others 
 
 #######################################################################################
 ##################                                      ###############################
@@ -754,74 +801,98 @@ data_salary<- data_uk %>% filter(Salary!=0) %>%
   select( - Job_Sector, - Employment_Status, - Region_of_Study ) 
 
 
-#apply 10 fold cross validation to choose the best lambda
-
-y<- data_salary$Salary
-x<- model.matrix(
-  Salary ~ .,
-  data = data_salary
-) [, -1]
-
-n<- nrow(data_salary)
-train_ind_s <- sample(1:n, size = 0.8*n)
-
-X_train_s <- x[train_ind_s, ]
-Y_train_s <- y[train_ind_s ] #y is a vector and not a matrix
-
-X_test_s<- x[-train_ind_s, ]
-Y_test_s<- y[-train_ind_s ]
-
-lambda_salary<- cv.glmnet(X_train_s, Y_train_s, alpha=1)
-model_lasso_salary <- glmnet(X_train_s, Y_train_s, family = "gaussian", alpha=1, lambda = lambda_salary$lambda.min)
-coef(model_lasso_salary)
-
-res<- predict(model_lasso_salary, s=lambda_salary$lambda.min, type = "link", newx= X_test_s)
-values_salary<- cbind(Y_test_s, res)
-mean(Y_test_s==res)  
-#we're doing regression, use MSE or RMSE 
-mse_Lasso<- mean((Y_test_s-res)^2)
+#LASSO DELETED
 
 
-#############################################
-
+##########################
 
 #now using AIC
 
 train_data_s<- data_salary[train_ind_s, ]
 test_data_s<- data_salary[-train_ind_s, ]
+
 model1 <- lm(Salary ~ . , data=train_data_s)
 summary(model1)
+
 AIC_selection<- stepAIC(model1, direction = "backward")
 summary(AIC_selection)
 
 predict_AIC<- predict(AIC_selection, newdata = test_data_s)
 mse_AIC<- mean((test_data_s$Salary- predict_AIC)^2)
 
-res_model <- data.frame(
-  Model = c(
-    "Lasso",
-    "AIC"),
-  
-  MSE = c(
-    mse_Lasso,
-    mse_AIC
-  )
-) 
-
-res_model %>% gt() #LASSO SMALLER MSE, PROCEED WITH LASSO
-
-
-final_model_salary <- AIC_selection
 par(mfrow=c(2,2))
-plot(final_model_salary)
+plot(AIC_selection, main="Before Log")
 
 
+train_data_s$Fitted <- fitted(AIC_selection)
+aggregate(Fitted ~ Education_Level,
+          data = train_data_s,
+          mean)
+
+aggregate(Fitted ~ Internship_Experience,
+          data = train_data_s,
+          mean)
+
+aggregate(Fitted ~ Field_of_Study,
+          data = train_data_s,
+          mean)
+
+aggregate(Fitted ~ Language_Proficiency,
+          data = train_data_s,
+          mean)
+
+aggregate(Fitted ~ Visa_Type,
+          data = train_data_s,
+          mean)
+
+
+#############################
+### LOG SALARY AIC
+
+model_log_salary<- lm(log(Salary) ~ . , data=train_data_s) #salary i sright-skewed
+AIC_log_salary<- stepAIC(model_log_salary, direction = "backward")
+summary(AIC_log_salary)
+
+predict_AIC_s_log<- exp(predict(AIC_log_salary, newdata = test_data_s))
+mse_AIC_log<- mean((test_data_s$Salary- predict_AIC_s_log)^2)
+
+par(mfrow=c(2,2))
+plot(AIC_log_salary, main="After Log")
+
+
+####################################
+#BIC NO LOG 
+
+model_BIC_s<- step(model1, k= log(nrow(train_data_s)), direction = "both")
+summary(model_BIC_s)
+
+predict_BIC_s<- predict(model_BIC_s, newdata=test_data_s)
+mean((test_data_s$Salary- predict_BIC_s)^2)  
+
+par(mfrow=c(2,2))
+plot(model_BIC_s, main="After Log") #SAME RESULT AS AIC NO LOG 
+
+
+###############################
+#BIC with log
+
+model_BIC_s_log<- step(model_log_salary, k= log(nrow(train_data_s)), direction = "both")
+summary(model_BIC_s)
+
+predict_BIC_s_log<- exp(predict(model_BIC_s_log, newdata=test_data_s))
+mean((test_data_s$Salary- predict_BIC_s_log)^2) #AIC_LOG salary model is slightly better, didnt get the same result with BIC 
+
+par(mfrow=c(2,2))
+plot(model_BIC_s_log, main="After Log") #kinda similar to that as AIC
+
+
+final_model_salary<- AIC_log_salary
 
 ###################################################
 ############### Additive model
 library(mgcv)
 salary_add <- gam(
-  Salary ~ s(GPA) + s(Years_Since_Graduation) + s(Age) + Internship_Experience +
+  log(Salary) ~ s(GPA) + s(Years_Since_Graduation) + s(Age) + Internship_Experience +
     Education_Level + University_Ranking + Language_Proficiency + Field_of_Study + Gender+ Visa_Type +
     Country_of_Origin,
   data=train_data_s,
@@ -829,6 +900,7 @@ salary_add <- gam(
 )
 par(mfrow=c(2,2))
 plot(salary_add)
+
 
 summary(salary_add)
 salary_no_gender <-  gam(
@@ -906,51 +978,26 @@ anova(salary_no_age, salary_no_years, test = "Chisq") #remove age, p value>0.05
 
 summary(salary_no_age)
 
-final_s<- salary_no_age
+final_GAM_salary<- salary_no_age
 
-####################################################
-####### GAM USING AIC SEELCTED VARIABLES
 
-library(mgcv)
-gam_salary <- gam(
-  Salary ~ s(GPA) + s(Age) +
-    Internship_Experience + Education_Level + 
-    University_Ranking + Language_Proficiency ,
-  data=train_data_s,
-  method="REML"
-)
-par(mfrow=c(2,2))
-plot(gam_salary)
-
-summary(gam_salary) #from here we can see that age is insignificant so we remove it 
-
-gam_salary_noAge <- gam(
-  Salary ~ s(GPA) + 
-    Internship_Experience + Education_Level + 
-    University_Ranking + Language_Proficiency ,
-  data=train_data_s,
-  method="REML"
-)
-
-anova(gam_salary_noAge, gam_salary, test = "Chisq") #remove age
-summary(gam_salary_noAge)
 
 
 # GAM predictions
-pred_GAM <- predict(gam_salary_noAge, newdata=test_data_s)
+pred_GAM <- predict(final_GAM_salary, newdata=test_data_s)
 
 mse_GAM <- mean((test_data_s$Salary - pred_GAM)^2)
 
-predict_noAge<- predict(final_s, newdata = test_data_s)
-mse_noAGE <- mean((test_data_s$Salary - predict_noAge)^2)
+
 
 data.frame(
-  Model = c("AIC Linear", "GAM", "NO AGE"),
-  MSE = c(mse_AIC, mse_GAM, mse_noAGE)
+  Model = c("AIC Linear", "GAM"),
+  MSE = c(sqrt(mse_AIC), sqrt(mse_GAM))
 )
-
+#gam 5216.299 and AIC 5364.680
 
 #both GAM methods gave the same result, same MSE
+#maybe we can look at R ^2 AND RMSE
 #TO DO LIST: fit roc for the employment, residual plots for salary, 
 #ask does it matter which direction we use?
 #update R 
