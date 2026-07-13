@@ -6,12 +6,12 @@ library(ggplot2)
 library(dplyr)
 library(skimr)
 library(gt)
-library(moderndive)
-library(gapminder)
+#library(moderndive)
+#library(gapminder)
 library(GGally)
 
 #read data 
-data<- read.csv("dataset.csv")
+data<- read.csv("data_dissertation.csv")
 
 data %>% skim() %>% gt()
 glimpse(data)
@@ -506,10 +506,10 @@ I want to have a good strong classification so high c , didnt work, took too muc
 '''
 
 cost_range = c(0.01, 0.1, 1, 10)
-model_tune<- tune.svm(Employment_Status ~. , data=train_data, type="C-classification", kernel="linear", cost=cost_range, tune.control(cross = 5))
+model_tune<- tune.svm(Employment_Status ~. , data=train_data_c, type="C-classification", kernel="linear", cost=cost_range, tune.control(cross = 5))
 best_svm <- model_tune$best.model
-predsvm_tune <- predict(best_svm, newdata = test_data, type = "class")
-mean(predsvm_tune == test_data$Employment_Status)
+predsvm_tune <- predict(best_svm, newdata = test_data_c, type = "class")
+mean(predsvm_tune == test_data_c$Employment_Status)
 
 
 
@@ -542,7 +542,7 @@ summary(full_model)
 
 #apply  selection 
 model_AIC<- stepAIC(full_model, direction = "both")
-summary(model_AIC) 
+summary(model_AIC)    #WE GOT GENDER AGAIN!!!!!!!!!!!!!!!!!!!!!  
 #WE GOT GENDERMALE AND GENDEROTHER WITH insignificant p value? but this variable was selected by AIC do we do hypothesis testing to compare if GENDER is significant or not
 #so we need model comparison
 predict_AIC_logistic<- predict(model_AIC, newdata = test_data) #this gives probabilities 
@@ -900,9 +900,9 @@ salary_no_age <- gam(
   data=train_data_s,
   method="REML"
 )
-#H0: country is not significant
-#H1: country is significant, 
-anova(salary_no_age, salary_no_years, test = "Chisq") #remove country, p value>0.05
+#H0: age is not significant
+#H1: age is significant, 
+anova(salary_no_age, salary_no_years, test = "Chisq") #remove age, p value>0.05
 
 summary(salary_no_age)
 
@@ -922,11 +922,22 @@ gam_salary <- gam(
 par(mfrow=c(2,2))
 plot(gam_salary)
 
-summary(gam_salary)
+summary(gam_salary) #from here we can see that age is insignificant so we remove it 
+
+gam_salary_noAge <- gam(
+  Salary ~ s(GPA) + 
+    Internship_Experience + Education_Level + 
+    University_Ranking + Language_Proficiency ,
+  data=train_data_s,
+  method="REML"
+)
+
+anova(gam_salary_noAge, gam_salary, test = "Chisq") #remove age
+summary(gam_salary_noAge)
 
 
 # GAM predictions
-pred_GAM <- predict(gam_salary, newdata=test_data_s)
+pred_GAM <- predict(gam_salary_noAge, newdata=test_data_s)
 
 mse_GAM <- mean((test_data_s$Salary - pred_GAM)^2)
 
@@ -938,6 +949,8 @@ data.frame(
   MSE = c(mse_AIC, mse_GAM, mse_noAGE)
 )
 
+
+#both GAM methods gave the same result, same MSE
 #TO DO LIST: fit roc for the employment, residual plots for salary, 
 #ask does it matter which direction we use?
 #update R 
