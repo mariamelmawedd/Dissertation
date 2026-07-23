@@ -201,6 +201,7 @@ x<- data_emp %>% select(-Employment_Status)
 X_num <- model.matrix(~ ., data = x)[,-1]
 continious_x<- c("GPA", "Age", "Years_Since_Graduation")
 
+set.seed(1)
 n <- nrow(data_emp)
 train_index <- sample(1:n, size = 0.8*n)
 
@@ -333,25 +334,11 @@ metrics_table_KNN <- data.frame(
 
 metrics_table_KNN %>% gt()
 
-library(PRROC)
+cm_knn <- confusionMatrix(factor(pred_knn, levels = c("Employed","Unemployed")),
+                          factor(y_test, levels = c("Employed","Unemployed")),
+                          positive = "Employed")
 
-knn_prob <- attr(pred_knn, "prob") #this stores the probabilities
-knn_prob_employed <- ifelse(pred_knn == "Employed", knn_prob, 1 - knn_prob)
-
-
-
-precision_recall_KNN_curve<- pr.curve(scores.class0 = knn_prob_employed[y_test=="Employed"],
-                                      scores.class1 = knn_prob_employed[y_test=="Unemployed"],
-                                      curve = TRUE)
-
-plot(precision_recall_KNN_curve)
-
-ROC_KNN<- roc.curve(scores.class0 = knn_prob_employed[y_test=="Employed"],
-                    scores.class1 = knn_prob_employed[y_test=="Unemployed"],
-                    curve = TRUE)
-
-plot(ROC_KNN)
-
+cm_knn
 ###########################################################################
 ##################                          ###############################
 ##################   Classification tree    ###############################
@@ -488,15 +475,16 @@ metrics_table_tree %>% gt()
 
 library(caret)
 
-confusionMatrix(
+cm_tree<- confusionMatrix(
   factor(pred_1SE_tree, levels = c("Employed","Unemployed")),
   factor(test_data_c$Employment_Status, levels = c("Employed","Unemployed")),
   positive = "Employed"
 )
 
+
 #install.packages("PRROC")
 
-count_classes<- test_data_c %>%
+count_classes<- train_data_c %>%
   count(Employment_Status)
 #we see that there's 11650 students classified as employed and 5230 student classified as unemployed
 #this show an imbalanced data, so using AUC-ROC leads to misleading incorrect interpretation
@@ -513,6 +501,7 @@ roc_curve<-roc.curve(scores.class0 = pred_test_probability[test_data_c$Employmen
                      scores.class1 = pred_test_probability[test_data_c$Employment_Status=="Unemployed", "Employed"],
                      curve = TRUE)
 plot(roc_curve)
+auc(roc_curve)
 
 '''
 we did model selection by accurcay, and now we interpret by proc, pr curve and the other etrics found y confusion matrix 
@@ -542,7 +531,7 @@ library(e1071)
 
 Model_svm <- svm(Employment_Status ~. , data=train_data_c,  type="C-classification", kernel="linear", cost=1) # default
 predsvm <- predict(Model_svm, newdata = test_data_c, type = "class")
-mean(predsvm == test_data_c$Employment_Status)
+SVM_acc<- mean(predsvm == test_data_c$Employment_Status)
 
 #model_svm_guassian<- svm(Employment_Status ~. , data=train_data_c,  type="C-classification", kernel="radial", cost=1) 
 #predsvm_guassian<- predict(model_svm_guassian, newdata = test_data_c, type = "class")
@@ -554,41 +543,66 @@ The problem is that you will not always be able to get both things. The c parame
 I want to have a good strong classification so high c , didnt work, took too much time to run
 '''
 
-cost_range = c(0.01, 0.1, 1, 10)
-model_tune<- tune.svm(Employment_Status ~. , data=train_data_c, type="C-classification", kernel="linear", cost=cost_range, tune.control(cross = 5))
-best_svm <- model_tune$best.model
-predsvm_tune <- predict(best_svm, newdata = test_data_c, type = "class")
-accuracy_svm<- mean(predsvm_tune == test_data_c$Employment_Status)
+#cost_range = c(0.01, 0.1, 1, 10)
+#model_tune<- tune.svm(Employment_Status ~. , data=train_data_c, type="C-classification", kernel="linear", cost=cost_range, tune.control(cross = 5))
+#best_svm <- model_tune$best.model
+#predsvm_tune <- predict(best_svm, newdata = test_data_c, type = "class")
+#accuracy_svm<- mean(predsvm_tune == test_data_c$Employment_Status)
 
-confusionM_SVM<- table(Predicted=predsvm_tune, Actual=test_data_c$Employment_Status)
+confusionM_SVM<- table(Predicted=predsvm, Actual=test_data_c$Employment_Status)
 confusionM_SVM
 
+cm_SVM<- confusionMatrix(
+  factor(predsvm, levels = c("Employed","Unemployed")),
+  factor(test_data_c$Employment_Status, levels = c("Employed","Unemployed")),
+  positive = "Employed"
+)
+
+comparison_metrics <- data.frame(Model = c("KNN", "Tree (1-SE rule)", "SVM"),
+                                 Accuracy = c(cm_knn$overall["Accuracy"],
+                                              cm_tree$overall["Accuracy"],
+                                              cm_SVM$overall["Accuracy"]),
+                                 Sensitivity = c(cm_knn$byClass["Sensitivity"],
+                                                 cm_tree$byClass["Sensitivity"],
+                                                 cm_SVM$byClass["Sensitivity"]),
+                                 Specificity = c(cm_knn$byClass["Specificity"],
+                                                 cm_tree$byClass["Specificity"],
+                                                 cm_SVM$byClass["Specificity"]),
+                                 Precision = c(cm_knn$byClass["Pos Pred Value"],
+                                               cm_tree$byClass["Pos Pred Value"],
+                                               cm_SVM$byClass["Pos Pred Value"]),
+                                 F1 = c(cm_knn$byClass["F1"],
+                                        cm_tree$byClass["F1"],
+                                        cm_SVM$byClass["F1"]))
+comparison_metrics %>% gt()
+
 confusionM_SVM_table<- data.frame(
-  Actual=c("1","-1"),
-  pred_1=c(confusionM_SVM[1,1], confusionM_SVM[1,-1]),
-  pred_minus1=c(confusionM_SVM[-1,1], confusionM_SVM[-1,-1])
+  Predicted=c("Employed","Unemployed"),
+  Employed=c(confusionM_SVM[1,1], confusionM_SVM[2,1]),
+  Unemployed=c(confusionM_SVM[1,2], confusionM_SVM[2,2])
 ) %>% gt() %>%
   tab_spanner(
-    label = "Predicted",
-    columns = c("pred_1", "pred_minus1")
+    label = "Actual",
+    
+    columns = c("Employed","Unemployed")
   ) %>%
   cols_label(
-    Actual = "Actual",
-    pred_1 = "1",
-    pred_minus1 = "-1"
+    Predicted = "Predicted",
+    Employed = "Employed",
+    Unemployed = "Unemployed"
   )
 
 confusionM_SVM_table
 
 
-sensitivity<- confusionM_SVM[1,1]/(confusionM_SVM[1,1]+confusionM_SVM[1,-1])
-specificity<- confusionM_SVM[-1,-1]/(confusionM_SVM[-1,-1]+confusionM_SVM[-1,1])
-precision<- confusionM_SVM[1,1]/(confusionM_SVM[1,1]+confusionM_SVM[-1,1])
+sensitivity<- confusionM_SVM[1,1]/(confusionM_SVM[1,1]+confusionM_SVM[-1,1])
+specificity<- confusionM_SVM[-1,-1]/(confusionM_SVM[-1,-1]+confusionM_SVM[1,-1])
+precision<- confusionM_SVM[1,1]/(confusionM_SVM[1,1]+confusionM_SVM[1,-1])
 F1_score<- 2*((precision*sensitivity)/(precision+sensitivity))
 
 metrics_table_SVM <- data.frame(
   Metric_SVM = c("Accuracy", "Sensitivity", "Specificity", "Precision", "F1 Score"),
-  Value  = c(accuracy_svm, sensitivity, specificity, precision, F1_score)
+  Value  = c(SVM_acc, sensitivity, specificity, precision, F1_score)
 )
 
 metrics_table_SVM %>% gt()
@@ -721,7 +735,7 @@ coef_lasso<- coef(model_lasso)
 
 
 #COMPARE LASSO AND BIC
-model_AIC_LASSO <- data.frame(
+model_BIC_LASSO <- data.frame(
   Model = c(
     "Lasso",
     "BIC"),
@@ -732,7 +746,7 @@ model_AIC_LASSO <- data.frame(
   )
 ) 
 
-model_AIC_LASSO %>% gt()  #why we get 0 accuracy for AIC? look at it
+model_BIC_LASSO %>% gt()  #why we get 0 accuracy for AIC? look at it
 
 #log odds of the model_lasso
 exp(coef(model_lasso)) # >1 increase odds, < 1 reduces odds of employability
@@ -835,6 +849,18 @@ confusionMatrix(
   factor(test_data$Employment_binary, levels = c(0,1)),
   positive = "1"
 )$table  #this gives confusion matrix, without the precision, f1 and others 
+
+prob_interaction<- predict(interaction_model, newdata = test_data, type = "response")
+library(PRROC)
+pr_interaction<- pr.curve(scores.class0 = prob_interaction[test_data$Employment_binary==1],
+                            scores.class1 = prob_interaction[test_data$Employment_binary==0],
+                            curve = TRUE)
+plot(pr_interaction)
+
+roc_interaction<- roc.curve(scores.class0 = prob_interaction[test_data$Employment_binary==1],
+                            scores.class1 = prob_interaction[test_data$Employment_binary==0],
+                            curve = TRUE)
+plot(roc_interaction)
 
 #######################################################################################
 ##################                                      ###############################
@@ -973,24 +999,27 @@ final_GAM_salary<- gam(
   method="REML"
 )
 summary(final_GAM_salary)
+
+
 plot(final_GAM_salary)
 plot(final_GAM_salary, residuals = TRUE)
 
 # GAM predictions
-pred_GAM <- predict(final_GAM_salary, newdata=test_data_s)
+predict_GAM <- predict(final_GAM_salary, newdata=test_data_s)
 
-mse_GAM <- mean((test_data_s$Salary - pred_GAM)^2)
+mse_GAM <- mean((test_data_s$Salary - predict_GAM)^2)
 
-
-
+R2_AIC<- cor(test_data_s$Salary, predict_AIC)^2
+R2_GAM<- cor(test_data_s$Salary, predict_GAM)^2
 data.frame(
   Model = c("AIC Linear", "GAM"),
-  RMSE = c(sqrt(mse_AIC), sqrt(mse_GAM))
+  RMSE = c(sqrt(mse_AIC), sqrt(mse_GAM)),
+  R2=c(R2_AIC, R2_GAM)
 )
 #gam 5216.299 and AIC 5364.680
+#GAM SHOWS higher R2 is better.
 
-#both GAM methods gave the same result, same MSE
-#maybe we can look at R ^2 AND RMSE
+
 #TO DO LIST: fit roc for the employment, residual plots for salary, 
 #ask does it matter which direction we use?
 #update R 
