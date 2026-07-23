@@ -25,15 +25,82 @@ list.files()
 glimpse(data_uk)
 data_uk %>% skim() #74901 rows
 
+
+
+########################################################################
+# Emplyemnet Status #
+#####################
+
+# Employment status distribution
+
+ggplot(data_uk,aes(x = Employment_Status, fill = Employment_Status)) +
+  geom_bar()
+
+#employmnet with numerical values, 
+library(gridExtra)
+p1<- ggplot(data_uk, aes(x=Employment_Status, y=GPA))+
+  geom_boxplot()
+p2<- ggplot(data_uk, aes(x=Employment_Status, y=Age))+
+  geom_boxplot()
+p3<- ggplot(data_uk, aes(x=Employment_Status, y=Years_Since_Graduation))+
+  geom_boxplot()
+
+grid.arrange(p1, p2, p3, ncol=2)
+
+# Employment by Field of Study
+p4<- ggplot(data_uk, aes(x = Field_of_Study, fill = Employment_Status)) +
+  geom_bar(position = "fill")
+
+# Employment by Visa Type
+p5<- ggplot(data_uk, aes(x = Visa_Type, fill = Employment_Status)) +
+  geom_bar(position = "fill")
+
+# Employment by Internship Experience
+p6<- ggplot(data_uk, aes(x = Internship_Experience, fill = Employment_Status)) +
+  geom_bar(position = "fill") # for proportion
+
+# Employment by University Ranking
+p7<- ggplot(data_uk, aes(x = University_Ranking, fill = Employment_Status)) +
+  geom_bar(position = "fill") # for proportion
+
+p8<- ggplot(data_uk, aes(x = Gender, fill = Employment_Status)) +
+  geom_bar(position = "fill") # for proportion 
+p9<- ggplot(data_uk, aes(x = Education_Level, fill = Employment_Status)) +
+  geom_bar(position = "fill") # for proportion 
+
+grid.arrange(p4,p5,p6,p7,p8,p9, ncol=2)
+
+#Employement Class
+data_uk %>%
+  count(Employment_Status) %>%
+  mutate(prop = n / sum(n))
+
+#distribution of employemnt status, we can do pie chart, and in research questions we can look at it again
+#after filtering out continuing education
+
+
+
 ########################################
 # Salary #
 ##########
+
+#salary's distribution
+
+ggplot(data_salary_EDA, aes(x=Salary))+geom_histogram()
+ggplot(data_salary_EDA, aes(x=Salary))+geom_boxplot()
+
+ggplot(data_salary_EDA, aes(x=log(Salary)))+geom_histogram()
+ggplot(data_salary_EDA, aes(x=log(Salary)))+geom_boxplot()
+
 
 #Slary vs Employment 
 ggplot(data_uk, aes(x=Employment_Status, y=Salary))+
   geom_boxplot()
 
 data_salary_EDA<- data_uk %>% filter(Employment_Status=="Employed")
+
+ggplot(data_salary_EDA, aes(x=Employment_Status, y=Salary))+
+  geom_boxplot()
 
 #Salary with numerical variables
 data_numerical<- data_salary_EDA %>% select(Salary, Years_Since_Graduation, GPA, Age)
@@ -94,67 +161,9 @@ ggplot(data_salary_EDA, aes(x=Country_of_Origin, y=Salary))+
 n_distinct(data_salary_EDA$Job_Sector)
 
 
-#salary's distribution
-
-ggplot(data_salary_EDA, aes(x=Salary))+geom_histogram()
-ggplot(data_salary_EDA, aes(x=Salary))+geom_boxplot()
-
-ggplot(data_salary_EDA, aes(x=log(Salary)))+geom_histogram()
-ggplot(data_salary_EDA, aes(x=log(Salary)))+geom_boxplot()
 
 #All i did today was lookign at salary and others, next look for employement status with other variables.
 
-
-########################################################################
-# Emplyemnet Status #
-#####################
-
-# Employment status distribution
-
-ggplot(data_uk,aes(x = Employment_Status, fill = Employment_Status)) +
-  geom_bar()
-
-#employmnet with numerical values, 
-library(gridExtra)
-p1<- ggplot(data_uk, aes(x=Employment_Status, y=GPA))+
-  geom_boxplot()
-p2<- ggplot(data_uk, aes(x=Employment_Status, y=Age))+
-  geom_boxplot()
-p3<- ggplot(data_uk, aes(x=Employment_Status, y=Years_Since_Graduation))+
-  geom_boxplot()
-
-grid.arrange(p1, p2, p3, ncol=2)
-
-# Employment by Field of Study
-p4<- ggplot(data_uk, aes(x = Field_of_Study, fill = Employment_Status)) +
-  geom_bar(position = "fill")
-
-# Employment by Visa Type
-p5<- ggplot(data_uk, aes(x = Visa_Type, fill = Employment_Status)) +
-  geom_bar(position = "fill")
-
-# Employment by Internship Experience
-p6<- ggplot(data_uk, aes(x = Internship_Experience, fill = Employment_Status)) +
-  geom_bar(position = "fill") # for proportion
-
-# Employment by University Ranking
-p7<- ggplot(data_uk, aes(x = University_Ranking, fill = Employment_Status)) +
-  geom_bar(position = "fill") # for proportion
-
-p8<- ggplot(data_uk, aes(x = Gender, fill = Employment_Status)) +
-  geom_bar(position = "fill") # for proportion 
-p9<- ggplot(data_uk, aes(x = Education_Level, fill = Employment_Status)) +
-  geom_bar(position = "fill") # for proportion 
-
-grid.arrange(p4,p5,p6,p7,p8,p9, ncol=2)
-
-#Employement Class
-data_uk %>%
-  count(Employment_Status) %>%
-  mutate(prop = n / sum(n))
-
-#distribution of employemnt status, we can do pie chart, and in research questions we can look at it again
-#after filtering out continuing education
 
 
 #basic EDA to explore Data. 
