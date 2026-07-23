@@ -29,8 +29,14 @@ data_uk %>% skim() #74901 rows
 # Salary #
 ##########
 
+#Slary vs Employment 
+ggplot(data_uk, aes(x=Employment_Status, y=Salary))+
+  geom_boxplot()
+
+data_salary_EDA<- data_uk %>% filter(Employment_Status=="Employed")
+
 #Salary with numerical variables
-data_numerical<- data_uk %>% select(Salary, Years_Since_Graduation, GPA, Age)
+data_numerical<- data_salary_EDA %>% select(Salary, Years_Since_Graduation, GPA, Age)
 sum(is.na(data_numerical$Salary))
 sum(is.na(data_numerical$GPA))
 sum(is.na(data_numerical$Age))
@@ -41,9 +47,9 @@ ggpairs(data_numerical)
 #use boxplots instead cause my variables are discrete numerical 
 
 library(gridExtra)
-p1<- ggplot(data_uk, aes(x=factor(Age), y=Salary))+
+p1<- ggplot(data_salary_EDA, aes(x=factor(Age), y=Salary))+
   geom_boxplot()
-p2 <- ggplot(data_uk, aes(x = factor(Years_Since_Graduation), y = Salary)) +
+p2 <- ggplot(data_salary_EDA, aes(x = factor(Years_Since_Graduation), y = Salary)) +
   geom_boxplot() 
 
 grid.arrange(p1, p2, ncol=2)
@@ -63,38 +69,38 @@ summary(data_numerical)
 #Salary with categorical variables
 
 library(gridExtra)
-p1<- ggplot(data_uk, aes(x=Internship_Experience, y=Salary))+
+p1<- ggplot(data_salary_EDA, aes(x=Internship_Experience, y=Salary))+
   geom_boxplot()
-p2<- ggplot(data_uk, aes(x=Education_Level, y=Salary))+
+p2<- ggplot(data_salary_EDA, aes(x=Education_Level, y=Salary))+
   geom_boxplot()
-p3<- ggplot(data_uk, aes(x=University_Ranking, y=Salary))+
+p3<- ggplot(data_salary_EDA, aes(x=University_Ranking, y=Salary))+
   geom_boxplot()
-p4<- ggplot(data_uk, aes(x=Visa_Type, y=Salary))+
+p4<- ggplot(data_salary_EDA, aes(x=Visa_Type, y=Salary))+
   geom_boxplot()
-p5<- ggplot(data_uk, aes(x=Field_of_Study, y=Salary))+
+p5<- ggplot(data_salary_EDA, aes(x=Field_of_Study, y=Salary))+
   geom_boxplot()
-p6<- ggplot(data_uk, aes(x=Gender, y=Salary))+
+p6<- ggplot(data_salary_EDA, aes(x=Gender, y=Salary))+
   geom_boxplot()
 grid.arrange(p1, p2, p3, p4,p5,p6, ncol=2)
 
 #SALARY VS JOb_sector boxplot ]
-ggplot(data_uk, aes(x=Job_Sector, y=Salary))+
+ggplot(data_salary_EDA, aes(x=Job_Sector, y=Salary))+
   geom_boxplot()
+n_distinct(data_salary_EDA$Job_Sector)
 
 #salary vs country of origin 
-ggplot(data_uk, aes(x=Country_of_Origin, y=Salary))+
+ggplot(data_salary_EDA, aes(x=Country_of_Origin, y=Salary))+
   geom_boxplot() #it doesnt really matter
-
-#boxplot for salary only
-boxplot(data_numerical$Salary)
+n_distinct(data_salary_EDA$Job_Sector)
 
 
-#Slary vs Employment 
-ggplot(data_uk, aes(x=Employment_Status, y=Salary))+
-  geom_boxplot()
+#salary's distribution
 
+ggplot(data_salary_EDA, aes(x=Salary))+geom_histogram()
+ggplot(data_salary_EDA, aes(x=Salary))+geom_boxplot()
 
-
+ggplot(data_salary_EDA, aes(x=log(Salary)))+geom_histogram()
+ggplot(data_salary_EDA, aes(x=log(Salary)))+geom_boxplot()
 
 #All i did today was lookign at salary and others, next look for employement status with other variables.
 
@@ -108,26 +114,39 @@ ggplot(data_uk, aes(x=Employment_Status, y=Salary))+
 ggplot(data_uk,aes(x = Employment_Status, fill = Employment_Status)) +
   geom_bar()
 
+#employmnet with numerical values, 
+library(gridExtra)
+p1<- ggplot(data_uk, aes(x=Employment_Status, y=GPA))+
+  geom_boxplot()
+p2<- ggplot(data_uk, aes(x=Employment_Status, y=Age))+
+  geom_boxplot()
+p3<- ggplot(data_uk, aes(x=Employment_Status, y=Years_Since_Graduation))+
+  geom_boxplot()
+
+grid.arrange(p1, p2, p3, ncol=2)
 
 # Employment by Field of Study
-
-ggplot(data_uk, aes(x = Field_of_Study, fill = Employment_Status)) +
-  geom_bar()
-
+p4<- ggplot(data_uk, aes(x = Field_of_Study, fill = Employment_Status)) +
+  geom_bar(position = "fill")
 
 # Employment by Visa Type
-ggplot(data_uk, aes(x = Visa_Type, fill = Employment_Status)) +
-  geom_bar()
+p5<- ggplot(data_uk, aes(x = Visa_Type, fill = Employment_Status)) +
+  geom_bar(position = "fill")
 
 # Employment by Internship Experience
-ggplot(data_uk, aes(x = Internship_Experience, fill = Employment_Status)) +
+p6<- ggplot(data_uk, aes(x = Internship_Experience, fill = Employment_Status)) +
   geom_bar(position = "fill") # for proportion
 
 # Employment by University Ranking
-ggplot(data_uk, aes(x = University_Ranking, fill = Employment_Status)) +
+p7<- ggplot(data_uk, aes(x = University_Ranking, fill = Employment_Status)) +
   geom_bar(position = "fill") # for proportion
 
+p8<- ggplot(data_uk, aes(x = Gender, fill = Employment_Status)) +
+  geom_bar(position = "fill") # for proportion 
+p9<- ggplot(data_uk, aes(x = Education_Level, fill = Employment_Status)) +
+  geom_bar(position = "fill") # for proportion 
 
+grid.arrange(p4,p5,p6,p7,p8,p9, ncol=2)
 
 #Employement Class
 data_uk %>%
@@ -138,16 +157,7 @@ data_uk %>%
 #after filtering out continuing education
 
 
-
-###########################################################################
-
-#Maybe in the future the dataset can be cleaned to 
-emplyement_data <- data_uk %>%
-  filter((Employment_Status == "Employed" | Employment_Status=="Unemployed"))
-
-
 #basic EDA to explore Data. 
-
 
 
 ###########################################################################
@@ -271,7 +281,7 @@ for (i in seq_along(K_vals)) { #for each value of k
   cv_acc[i] <- mean(fold_acc)
 }
 
-best_k<- which.max(cv_acc)
+best_k<- K_vals[which.max(cv_acc)]
 #we select K with the highest CV accuracy 
 
 # Plot CV accuracy
@@ -339,6 +349,24 @@ cm_knn <- confusionMatrix(factor(pred_knn, levels = c("Employed","Unemployed")),
                           positive = "Employed")
 
 cm_knn
+
+
+
+pred_test_probability_knn<- ifelse(pred_knn=="Employed", 
+                               attr(pred_knn, "prob"),
+                               1-attr(pred_knn, "prob"))
+
+pr_curve_knn<- pr.curve(scores.class0 = pred_test_probability_knn[y_test=="Employed"],
+                         scores.class1 = pred_test_probability_knn[y_test=="Unemployed"],
+                         curve = TRUE)
+
+plot(pr_curve_knn)
+
+roc_curve_knn<-roc.curve(scores.class0 = pred_test_probability_knn[y_test=="Employed"],
+                          scores.class1 = pred_test_probability_knn[y_test=="Unemployed"],
+                          curve = TRUE)
+plot(roc_curve_knn)
+
 ###########################################################################
 ##################                          ###############################
 ##################   Classification tree    ###############################
@@ -405,12 +433,15 @@ mean(pred2 == test_data_c$Employment_Status)
 
 library(randomForest)
 # bagging
-
+set.seed(1)
 Model <- randomForest(Employment_Status ~. , data=train_data_c, mtry= ncol(train_data_c)-1,ntree=500) # nb of predictors 
 #Predict and evaluate perfromance
 pred3 <- predict(Model, newdata = test_data_c, type = "class")
 mean(pred3 == test_data_c$Employment_Status)
+
+
 # random forests
+set.seed(1)
 Model2 <- randomForest(Employment_Status ~. , data=train_data_c)
 #Predict and evaluate perfromance
 pred4 <- predict(Model2, newdata = test_data_c, type = "class")
@@ -481,7 +512,6 @@ cm_tree<- confusionMatrix(
   positive = "Employed"
 )
 
-
 #install.packages("PRROC")
 
 count_classes<- train_data_c %>%
@@ -491,28 +521,17 @@ count_classes<- train_data_c %>%
 #Instead we'll use precision-recall for imbalanced datalibrary(PRROC)
 
 pred_test_probability<- predict(tree_prune_1se, newdata = test_data_c, type = "prob") 
-precision_recall_curve<- pr.curve(scores.class0 = pred_test_probability[test_data_c$Employment_Status=="Employed", "Employed"],
+pr_curve_tree<- pr.curve(scores.class0 = pred_test_probability[test_data_c$Employment_Status=="Employed", "Employed"],
                                   scores.class1 = pred_test_probability[test_data_c$Employment_Status=="Unemployed", "Employed"],
                                   curve = TRUE)
 
-plot(precision_recall_curve)
+plot(pr_curve_tree)
 
-roc_curve<-roc.curve(scores.class0 = pred_test_probability[test_data_c$Employment_Status=="Employed", "Employed"],
+roc_curve_tree<-roc.curve(scores.class0 = pred_test_probability[test_data_c$Employment_Status=="Employed", "Employed"],
                      scores.class1 = pred_test_probability[test_data_c$Employment_Status=="Unemployed", "Employed"],
                      curve = TRUE)
-plot(roc_curve)
-auc(roc_curve)
+plot(roc_curve_tree)
 
-'''
-we did model selection by accurcay, and now we interpret by proc, pr curve and the other etrics found y confusion matrix 
-the recall is how many actual unemployed cases are correctly identified, precision is were correct fromt he predicted unemployed
-the pr curve measures how well the model identifies employed, a value of 0.9827009 mens the model maintains very high precision and very high recall simultaneously
-STRONG PERFORMANCE ont he positive class employed
-
-Roc curve, we use recall of the y axis (porpotion of employed predicted as employed) and false positive rate FPR on the xaxis which is how many actuall negative(unemployed) the model inccorrectly label as positive
-in other words it is the proportion of unemployed predicted as employed.
-
-'''
 
 
 ###########################################################
@@ -529,8 +548,9 @@ in other words it is the proportion of unemployed predicted as employed.
 library(MASS)
 library(e1071)
 
-Model_svm <- svm(Employment_Status ~. , data=train_data_c,  type="C-classification", kernel="linear", cost=1) # default
-predsvm <- predict(Model_svm, newdata = test_data_c, type = "class")
+set.seed(1)
+Model_svm <- svm(Employment_Status ~. , data=train_data_c,  type="C-classification", kernel="linear", cost=1, probability=TRUE) # default
+predsvm <- predict(Model_svm, newdata = test_data_c, probability= TRUE)
 SVM_acc<- mean(predsvm == test_data_c$Employment_Status)
 
 #model_svm_guassian<- svm(Employment_Status ~. , data=train_data_c,  type="C-classification", kernel="radial", cost=1) 
@@ -557,6 +577,22 @@ cm_SVM<- confusionMatrix(
   factor(test_data_c$Employment_Status, levels = c("Employed","Unemployed")),
   positive = "Employed"
 )
+cm_SVM
+
+pred_test_probability_svm<- attr(predsvm, "probabilities")[, "Employed"]
+
+pr_curve_SVM<- pr.curve(scores.class0 = pred_test_probability_svm[test_data_c$Employment_Status=="Employed"],
+                        scores.class1 = pred_test_probability_svm[test_data_c$Employment_Status=="Unemployed"],
+                        curve = TRUE)
+
+plot(pr_curve_SVM)
+
+roc_curve_SVM<-roc.curve(scores.class0 = pred_test_probability_svm[test_data_c$Employment_Status=="Employed"],
+                         scores.class1 = pred_test_probability_svm[test_data_c$Employment_Status=="Unemployed"],
+                         curve = TRUE)
+plot(roc_curve_SVM)
+
+######################################################################
 
 comparison_metrics <- data.frame(Model = c("KNN", "Tree (1-SE rule)", "SVM"),
                                  Accuracy = c(cm_knn$overall["Accuracy"],
@@ -573,43 +609,29 @@ comparison_metrics <- data.frame(Model = c("KNN", "Tree (1-SE rule)", "SVM"),
                                                cm_SVM$byClass["Pos Pred Value"]),
                                  F1 = c(cm_knn$byClass["F1"],
                                         cm_tree$byClass["F1"],
-                                        cm_SVM$byClass["F1"]))
+                                        cm_SVM$byClass["F1"]),
+                                 PR_AUC= c(pr_curve_knn$auc.integral,
+                                           pr_curve_tree$auc.integral,
+                                           pr_curve_SVM$auc.integral),
+                                 ROC_AUC=c(roc_curve_knn$auc,
+                                           roc_curve_tree$auc,
+                                           roc_curve_SVM$auc))
 comparison_metrics %>% gt()
 
-confusionM_SVM_table<- data.frame(
-  Predicted=c("Employed","Unemployed"),
-  Employed=c(confusionM_SVM[1,1], confusionM_SVM[2,1]),
-  Unemployed=c(confusionM_SVM[1,2], confusionM_SVM[2,2])
-) %>% gt() %>%
-  tab_spanner(
-    label = "Actual",
-    
-    columns = c("Employed","Unemployed")
-  ) %>%
-  cols_label(
-    Predicted = "Predicted",
-    Employed = "Employed",
-    Unemployed = "Unemployed"
-  )
-
-confusionM_SVM_table
+#best is the tree
 
 
-sensitivity<- confusionM_SVM[1,1]/(confusionM_SVM[1,1]+confusionM_SVM[-1,1])
-specificity<- confusionM_SVM[-1,-1]/(confusionM_SVM[-1,-1]+confusionM_SVM[1,-1])
-precision<- confusionM_SVM[1,1]/(confusionM_SVM[1,1]+confusionM_SVM[1,-1])
-F1_score<- 2*((precision*sensitivity)/(precision+sensitivity))
 
-metrics_table_SVM <- data.frame(
-  Metric_SVM = c("Accuracy", "Sensitivity", "Specificity", "Precision", "F1 Score"),
-  Value  = c(SVM_acc, sensitivity, specificity, precision, F1_score)
-)
+'''
+we did model selection by accurcay, and now we interpret by proc, pr curve and the other etrics found y confusion matrix 
+the recall is how many actual unemployed cases are correctly identified, precision is were correct fromt he predicted unemployed
+the pr curve measures how well the model identifies employed, a value of 0.9827009 mens the model maintains very high precision and very high recall simultaneously
+STRONG PERFORMANCE ont he positive class employed
 
-metrics_table_SVM %>% gt()
+Roc curve, we use recall of the y axis (porpotion of employed predicted as employed) and false positive rate FPR on the xaxis which is how many actuall negative(unemployed) the model inccorrectly label as positive
+in other words it is the proportion of unemployed predicted as employed.
 
-#guassian kernel, glmnet for lasso 
-
-#polynomial kernel, taking a lot of time so ignore it, might also ignore the radial and focus on tuning the svm with linear? 
+'''
 
 
 
@@ -754,7 +776,6 @@ exp(coef(model_lasso)) # >1 increase odds, < 1 reduces odds of employability
 #####################################################################
 #################   MODEL AFTER removing variables seleted by LASSO
 
-nonzero_coeff<- rownames(coef_lasso)[as.numeric(coef_lasso) !=0 ] #remove age
 
 model_glm <- glm(
   Employment_binary ~ . -Age -Visa_Type,
@@ -837,18 +858,18 @@ exp(coef(interaction_model))
 library(caret)
 
 
-confusionMatrix(
+cm_logistic_interaction <- confusionMatrix(
   factor(predict_interaction, levels = c(0,1)),
   factor(test_data$Employment_binary, levels = c(0,1)),
   positive = "1"
 )
 
 
-confusionMatrix(
-  factor(predict_interaction, levels = c(0,1)),
-  factor(test_data$Employment_binary, levels = c(0,1)),
-  positive = "1"
-)$table  #this gives confusion matrix, without the precision, f1 and others 
+cm_logistic_interaction$table  #this gives confusion matrix, without the precision, f1 and others 
+
+
+
+
 
 prob_interaction<- predict(interaction_model, newdata = test_data, type = "response")
 library(PRROC)
@@ -883,7 +904,7 @@ test_data_s<- data_salary[-train_ind_s, ]
 fullmodel <- lm(Salary ~ . , data=train_data_s)
 summary(fullmodel)
 
-AIC_model<- stepAIC(fullmodel, direction = "backward")
+AIC_model<- stepAIC(fullmodel, direction = "both")
 summary(AIC_model)
 
 predict_AIC<- predict(AIC_model, newdata = test_data_s)
@@ -897,7 +918,7 @@ plot(AIC_model, main="Before Log")
 ### LOG SALARY AIC
 
 model_log_salary<- lm(log(Salary) ~ . , data=train_data_s) #salary i sright-skewed
-AIC_log_salary<- stepAIC(model_log_salary, direction = "backward")
+AIC_log_salary<- stepAIC(model_log_salary, direction = "both")
 summary(AIC_log_salary)
 
 predict_AIC_s_log<- exp(predict(AIC_log_salary, newdata = test_data_s))
@@ -1020,6 +1041,5 @@ data.frame(
 #GAM SHOWS higher R2 is better.
 
 
-#TO DO LIST: fit roc for the employment, residual plots for salary, 
-#ask does it matter which direction we use?
+
 #update R 
