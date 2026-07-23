@@ -199,10 +199,20 @@ x<- data_emp %>% select(-Employment_Status)
 
 #change categorical variables to dummy variables
 X_num <- model.matrix(~ ., data = x)[,-1]
-X_scaled<- scale(X_num) #scaling
+continious_x<- c("GPA", "Age", "Years_Since_Graduation")
 
 n <- nrow(data_emp)
 train_index <- sample(1:n, size = 0.7*n)
+
+#if we scaled before splitting, the test rows would help scale to prepare the training data
+#we need to scale the continuous data only with the train data
+
+train_mean<- colMeans(X_num[train_index, continious_x])
+train_sd<- apply(X_num[train_index, continious_x], 2, sd)
+
+X_scaled<- X_num
+X_scaled[train_index, continious_x] <- scale(X_num[train_index, continious_x], center = train_mean, scale = train_sd )
+X_scaled[- train_index, continious_x]<- scale(X_num[-train_index, continious_x], center = train_mean, scale = train_sd)
 
 X_train <- X_scaled[train_index, ]
 X_test  <- X_scaled[-train_index, ]
@@ -217,12 +227,12 @@ set.seed(1)
 
 # splitting into 10 folds
 
-n <- nrow(X_scaled)
+n <- nrow(X_train)
 fold_indices <- sample(rep(1:10, length.out = n))
 folds <- split(1:n, fold_indices)
 
-K_vals <- 1:50 #LIST OF 100 k values, SHOULD I CHOOSE  A DIFFERENT NB 
-cv_acc <- numeric(length(K_vals)) #vector of 100 values
+K_vals <- 1:50 #LIST OF 50 k values, SHOULD I CHOOSE  A DIFFERENT NB 
+cv_acc <- numeric(length(K_vals)) #vector of 50 values
 
 for (i in seq_along(K_vals)) { #for each value of k 
   
@@ -237,11 +247,11 @@ for (i in seq_along(K_vals)) { #for each value of k
     train_ind <- setdiff(1:n, valid_ind)
     
     # Split the data
-    X_train_fold <- X_scaled[train_ind, ] #train
-    y_train_fold <- Y[train_ind]
+    X_train_fold <- X_train[train_ind, ] #train
+    y_train_fold <- y_train[train_ind]
     
-    X_valid_fold <- X_scaled[valid_ind, ]  #test 
-    y_valid_fold <- Y[valid_ind]
+    X_valid_fold <- X_train[valid_ind, ]  #test 
+    y_valid_fold <- y_train[valid_ind]
     
     #train KNN
     pred_valid <- knn(
@@ -263,12 +273,32 @@ for (i in seq_along(K_vals)) { #for each value of k
 best_k<- which.max(cv_acc)
 #we select K with the highest CV accuracy 
 
+# Plot CV accuracy
+plot(K_vals, cv_acc, type="b",
+     main="10-fold Cross-Validation Accuracy vs k",
+     xlab="k (neighbours)",
+     ylab="CV Accuracy",
+     cex.main=1.6,
+     cex.lab=1.4,
+     cex.axis=1.2)
 
-#very computationally expensive, and takes  lot of time, so we try leave-on-out CV where for each K value we fit only 1 model
-#took almost 50 min
+# Put CV results into a table
+results <- data.frame(
+  K = K_vals,
+  CV_Accuracy = cv_acc
+)
+
+# Sort from highest accuracy to lowest
+results_sorted <- results[order(-results$CV_Accuracy), ]
+
+# Show the top 10 K values, sorting accuracy from highest to lowest
+head(results[order(-results$CV_Accuracy), ], 10)
+
+#very computationally expensive, and takes  lot of time,
+
 
 pred_knn <- knn(train = X_train, test = X_test, cl = y_train, k = best_k, prob = TRUE)
-mean(pred_knn == y_test)
+knn_acc<- mean(pred_knn == y_test)
 
 
 #Confusion Matrix
@@ -278,8 +308,8 @@ confusionM_KNN
 
 confusionM_KNN_table<- data.frame(
   Actual=c("1","-1"),
-  pred_1=c(confusionM_KNN[1,1], confusionM_KNN[1,-1]),
-  pred_minus1=c(confusionM_KNN[-1,1], confusionM_KNN[-1,-1])
+  pred_1=c(confusionM_KNN[1,1], confusionM_KNN[2,1]),
+  pred_minus1=c(confusionM_KNN[1,2], confusionM_KNN[2,2])
 ) %>% gt() %>%
   tab_spanner(
     label = "Predicted",
@@ -294,9 +324,9 @@ confusionM_KNN_table<- data.frame(
 confusionM_KNN_table
 
 
-sensitivity<- confusionM_KNN[1,1]/(confusionM_KNN[1,1]+confusionM_KNN[1,-1])
-specificity<- confusionM_KNN[-1,-1]/(confusionM_KNN[-1,-1]+confusionM_KNN[-1,1])
-precision<- confusionM_KNN[1,1]/(confusionM_KNN[1,1]+confusionM_KNN[-1,1])
+sensitivity<- confusionM_KNN[1,1]/(confusionM_KNN[1,1]+confusionM_KNN[-1,1])
+specificity<- confusionM_KNN[-1,-1]/(confusionM_KNN[-1,-1]+confusionM_KNN[1,-1])
+precision<- confusionM_KNN[1,1]/(confusionM_KNN[1,1]+confusionM_KNN[1,-1])
 F1_score<- 2*((precision*sensitivity)/(precision+sensitivity))
 
 metrics_table_KNN <- data.frame(
