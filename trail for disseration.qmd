@@ -1,0 +1,104 @@
+---
+title: "Predicting Coffee Quality Classification"
+subtitle: " Using GLM"
+author: "Group 15"
+format: 
+  revealjs:
+    theme: serif
+    slide-number: true
+    toc: false
+    css: styles.css
+    embed-resources: true
+    
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## Introduction {.small-title}
+
+<hr>
+
+-   Goal: Predict coffee quality classification\
+-   Approach: Generalised Linear Model (GLM)\
+-   Dataset: Coffe Quality Database (CQD)
+
+<br>
+
+::: red-text
+***About the Dataset:***
+:::
+
+The dataset contains information on features of coffee and its production including an overall score of quality(Good/ Poor).
+
+## Aims of the Analysis {.small-title}
+
+<hr>
+
+:::: center-text
+::: red-text
+***Research Question***
+:::
+
+*What influence do different features of coffee have on whether the quality of a batch of coffee is classified as good or poor?*
+::::
+
+-   Identify the influence of features on the quality of coffee\
+
+-   Perform exploratory data analysis (EDA)\
+
+-   Fit a GLM (logistic regression)\
+
+-   Evaluate model performance
+
+## Exploratory Data Analysis {.small-title}
+
+<hr>
+
+<br>
+
+An overview of the dataset structure and the types of variables:
+
+
+## Exploratory Data Analysis {.small-title}
+
+<hr>
+
+<br>
+
+***Data Cleaning Steps:***
+
+-   **Removed unrealistic observation**
+
+-   **Removed altitude outliers**
+
+-   **Standardised country names**
+
+-   **Converted Qualityclass to numeric** (1 = Good , 0 = Poor).
+
+## Exploratory Data Analysis {.small-title}
+
+<hr>
+
+<br>
+
+***Distribution of Numeric Variables***
+
+-   Aroma, Flavor, Acidity fall within a narrow range
+
+-   Category_two_defects is heavily right‑skewed
+
+-   Altitude becomes more stable after log‑transformation
+
+## Exploratory Data Analysis {.small-title}
+
+<hr>
+
+<br>
+
+***Some Key Findings of the EDA:***
+
+-   **Dataset is Balanced**
+
+    Good and Poor classes appear in almost equal proportions
