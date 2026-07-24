@@ -3,7 +3,7 @@
 library(MASS)
 library(tidyverse)
 library(ggplot2)
-library(dplyr)
+library(dplyr) 
 library(skimr)
 library(gt)
 #library(moderndive)
@@ -84,13 +84,7 @@ data_uk %>%
 # Salary #
 ##########
 
-#salary's distribution
 
-ggplot(data_salary_EDA, aes(x=Salary))+geom_histogram()
-ggplot(data_salary_EDA, aes(x=Salary))+geom_boxplot()
-
-ggplot(data_salary_EDA, aes(x=log(Salary)))+geom_histogram()
-ggplot(data_salary_EDA, aes(x=log(Salary)))+geom_boxplot()
 
 
 #Slary vs Employment 
@@ -99,8 +93,17 @@ ggplot(data_uk, aes(x=Employment_Status, y=Salary))+
 
 data_salary_EDA<- data_uk %>% filter(Employment_Status=="Employed")
 
+
 ggplot(data_salary_EDA, aes(x=Employment_Status, y=Salary))+
   geom_boxplot()
+
+#salary's distribution
+
+ggplot(data_salary_EDA, aes(x=Salary))+geom_histogram()
+ggplot(data_salary_EDA, aes(x=Salary))+geom_boxplot()
+
+ggplot(data_salary_EDA, aes(x=log(Salary)))+geom_histogram()
+ggplot(data_salary_EDA, aes(x=log(Salary)))+geom_boxplot()
 
 #Salary with numerical variables
 data_numerical<- data_salary_EDA %>% select(Salary, Years_Since_Graduation, GPA, Age)
@@ -191,7 +194,7 @@ splitted the datset by 10-fold-cross-validation
 
 We applied 10‑fold cross‑validation to estimate the classification accuracy.
 
-
+'''
 
 
 ############################################################################
@@ -201,7 +204,7 @@ We applied 10‑fold cross‑validation to estimate the classification accuracy.
 ############################################################################
 
 
-
+'''
 KNN computes distance for every K, each time it compute the distance between the validation points
 and all training points. We will be doing this for 100 K values and 10 folds, so we will be training 1000 KNN models. 
 (for each K value, we train 10 models)
@@ -353,13 +356,14 @@ metrics_table_KNN <- data.frame(
 
 metrics_table_KNN %>% gt()
 
+library(caret)
 cm_knn <- confusionMatrix(factor(pred_knn, levels = c("Employed","Unemployed")),
                           factor(y_test, levels = c("Employed","Unemployed")),
                           positive = "Employed")
 
 cm_knn
 
-
+library(PRROC)
 
 pred_test_probability_knn<- ifelse(pred_knn=="Employed", 
                                attr(pred_knn, "prob"),
@@ -496,7 +500,7 @@ confusionM_tree_table<- data.frame(
     Unemployed = "Unemployed"
   )
 
-confusionM_tree_table
+confusionM_tree_table %>% as_latex()
 
 
 sensitivity<- confusionM_tree[1,1]/(confusionM_tree[1,1]+confusionM_tree[-1,1])
@@ -521,6 +525,12 @@ cm_tree<- confusionMatrix(
   positive = "Employed"
 )
 
+as.data.frame.matrix(cm_tree$table) %>% 
+  gt(rownames_to_stub = TRUE) %>% 
+  as_latex() %>% 
+  as.character() %>% 
+  cat()
+
 #install.packages("PRROC")
 
 count_classes<- train_data_c %>%
@@ -528,6 +538,14 @@ count_classes<- train_data_c %>%
 #we see that there's 11650 students classified as employed and 5230 student classified as unemployed
 #this show an imbalanced data, so using AUC-ROC leads to misleading incorrect interpretation
 #Instead we'll use precision-recall for imbalanced datalibrary(PRROC)
+
+png("plot_tree_pr.png", width = 500, height = 450)
+plot(pr_curve_tree)
+dev.off()
+
+png("plot_tree_roc.png", width = 500, height = 450)
+plot(roc_curve_tree)
+dev.off()
 
 pred_test_probability<- predict(tree_prune_1se, newdata = test_data_c, type = "prob") 
 pr_curve_tree<- pr.curve(scores.class0 = pred_test_probability[test_data_c$Employment_Status=="Employed", "Employed"],
@@ -603,29 +621,46 @@ plot(roc_curve_SVM)
 
 ######################################################################
 
-comparison_metrics <- data.frame(Model = c("KNN", "Tree (1-SE rule)", "SVM"),
-                                 Accuracy = c(cm_knn$overall["Accuracy"],
-                                              cm_tree$overall["Accuracy"],
-                                              cm_SVM$overall["Accuracy"]),
-                                 Sensitivity = c(cm_knn$byClass["Sensitivity"],
-                                                 cm_tree$byClass["Sensitivity"],
-                                                 cm_SVM$byClass["Sensitivity"]),
-                                 Specificity = c(cm_knn$byClass["Specificity"],
-                                                 cm_tree$byClass["Specificity"],
-                                                 cm_SVM$byClass["Specificity"]),
-                                 Precision = c(cm_knn$byClass["Pos Pred Value"],
-                                               cm_tree$byClass["Pos Pred Value"],
-                                               cm_SVM$byClass["Pos Pred Value"]),
-                                 F1 = c(cm_knn$byClass["F1"],
-                                        cm_tree$byClass["F1"],
-                                        cm_SVM$byClass["F1"]),
-                                 PR_AUC= c(pr_curve_knn$auc.integral,
-                                           pr_curve_tree$auc.integral,
-                                           pr_curve_SVM$auc.integral),
-                                 ROC_AUC=c(roc_curve_knn$auc,
-                                           roc_curve_tree$auc,
-                                           roc_curve_SVM$auc))
-comparison_metrics %>% gt()
+
+comparison_metrics <- data.frame(
+  KNN = c(cm_knn$overall["Accuracy"],
+          cm_knn$byClass["Sensitivity"],
+          cm_knn$byClass["Specificity"],
+          cm_knn$byClass["Pos Pred Value"],
+          cm_knn$byClass["F1"],
+          pr_curve_knn$auc.integral,
+          roc_curve_knn$auc),
+  
+  `Tree(1SE_rule)` = c(cm_tree$overall["Accuracy"],
+           cm_tree$byClass["Sensitivity"],
+           cm_tree$byClass["Specificity"],
+           cm_tree$byClass["Pos Pred Value"],
+           cm_tree$byClass["F1"],
+           pr_curve_tree$auc.integral,
+           roc_curve_tree$auc),
+  
+  SVM = c(cm_SVM$overall["Accuracy"],
+          cm_SVM$byClass["Sensitivity"],
+          cm_SVM$byClass["Specificity"],
+          cm_SVM$byClass["Pos Pred Value"],
+          cm_SVM$byClass["F1"],
+          pr_curve_SVM$auc.integral,
+          roc_curve_SVM$auc),
+  
+  row.names = c("Accuracy",
+                "Sensitivity",
+                "Specificity",
+                "Precision",
+                "F1",
+                "PR_AUC",
+                "ROC_AUC")
+)
+
+comparison_metrics %>% 
+  gt(rownames_to_stub = TRUE) %>% 
+  as_latex() %>% 
+  as.character() %>% 
+  cat()
 
 #best is the tree
 
@@ -677,6 +712,7 @@ model_no_gender <- update(model_AIC, . ~ . - Gender)
 anova(model_no_gender, model_AIC, test = "Chisq") #remove gender
 
 model_AIC_no_gender<- model_no_gender
+summary(model_AIC_no_gender)
 predict_AIC_logistic<- ifelse(predict(model_AIC_no_gender, newdata=test_data, type="response") >0.5, 1,0) #this gives probabilities 
 #glm cant output classes it gives probabilities, so convert to classes 0 and 1
 mean(predict_AIC_logistic==test_data$Employment_binary)
@@ -830,6 +866,7 @@ anova(model_no_country, model_no_field, test = "Chisq") #remove country, p value
 summary(model_no_country)
 
 final_Lasso_model<- model_no_country
+summary(final_Lasso_model)
 
 ################################
 #######   INTERACTIONS   #######
@@ -874,10 +911,36 @@ cm_logistic_interaction <- confusionMatrix(
 )
 
 
-cm_logistic_interaction$table  #this gives confusion matrix, without the precision, f1 and others 
+cm_logistic_interaction$table %>% gt() %>% as_latex() %>% 
+  as.character() %>% 
+  cat()
 
+as.data.frame.matrix(cm_logistic_interaction$table) %>% 
+  gt(rownames_to_stub = TRUE) %>% 
+  as_latex() %>% 
+  as.character() %>% 
+  cat()
+#this gives confusion matrix, without the precision, f1 and others 
 
+library(gt)
 
+metric_all<- data.frame(
+  Model = c(
+    "Lasso",
+    "Lasso (After variable removal)",
+    "AIC (Gender Removed)",
+    "BIC"),
+  
+  Accuracy = c(
+    mean(Y_test==result_lasso),
+    mean(predict_final==test_data$Employment_binary),
+    mean(predict_AIC_logistic==test_data$Employment_binary),
+    mean(test_data$Employment_binary==predict_BIC_logistic)
+  )
+) 
+metric_all %>% gt() %>% as_latex() %>% 
+  as.character() %>% 
+  cat()
 
 
 prob_interaction<- predict(interaction_model, newdata = test_data, type = "response")
@@ -903,7 +966,7 @@ data_salary<- data_uk %>% filter(Salary!=0) %>%
   select( - Job_Sector, - Employment_Status, - Region_of_Study ) 
 
 
-#using AIC
+#using BIC
 set.seed(1)
 n<- nrow(data_salary)
 train_ind_s <- sample(1:n, size = 0.8*n)
@@ -913,28 +976,32 @@ test_data_s<- data_salary[-train_ind_s, ]
 fullmodel <- lm(Salary ~ . , data=train_data_s)
 summary(fullmodel)
 
-AIC_model<- stepAIC(fullmodel, direction = "both")
-summary(AIC_model)
+BIC_model <- stepAIC(fullmodel, direction = "both", k = log(nrow(train_data_s)))
+summary(BIC_model)
 
-predict_AIC<- predict(AIC_model, newdata = test_data_s)
-mse_AIC<- mean((test_data_s$Salary- predict_AIC)^2)
+predict_BIC<- predict(BIC_model, newdata = test_data_s)
+mse_BIC<- mean((test_data_s$Salary- predict_BIC)^2)
 
 par(mfrow=c(2,2))
-plot(AIC_model, main="Before Log")
+plot(BIC_model, main="Before Log")
 
-
+par(mfrow = c(2, 2))
+plot(BIC_model, which = 1, main = "Before Log")
+plot(BIC_model, which = 2, main = "Before Log")
+plot(BIC_log_salary, which = 1, main = "After Log")
+plot(BIC_log_salary, which = 2, main = "After Log")
 #############################
-### LOG SALARY AIC
+### LOG SALARY BIC
 
 model_log_salary<- lm(log(Salary) ~ . , data=train_data_s) #salary i sright-skewed
-AIC_log_salary<- stepAIC(model_log_salary, direction = "both")
-summary(AIC_log_salary)
+BIC_log_salary<- stepAIC(model_log_salary, direction = "both", k = log(nrow(train_data_s)))
+summary(BIC_log_salary)
 
-predict_AIC_s_log<- exp(predict(AIC_log_salary, newdata = test_data_s))
-mse_AIC_log<- mean((test_data_s$Salary- predict_AIC_s_log)^2)
+predict_BIC_s_log<- exp(predict(BIC_log_salary, newdata = test_data_s))
+mse_BIC_log<- mean((test_data_s$Salary- predict_BIC_s_log)^2)
 
 par(mfrow=c(2,2))
-plot(AIC_log_salary, main="After Log")
+plot(BIC_log_salary, main="After Log")
 
 #continue with no log 
 
@@ -942,7 +1009,7 @@ plot(AIC_log_salary, main="After Log")
 #If we do BIC with log it gives slightly different result than the AIC log
 
 
-final_model_salary<- AIC_model
+final_model_salary<- BIC_model
 
 ###################################################
 ############### Additive model
@@ -1039,13 +1106,17 @@ predict_GAM <- predict(final_GAM_salary, newdata=test_data_s)
 
 mse_GAM <- mean((test_data_s$Salary - predict_GAM)^2)
 
-R2_AIC<- cor(test_data_s$Salary, predict_AIC)^2
+R2_BIC<- cor(test_data_s$Salary, predict_BIC)^2
 R2_GAM<- cor(test_data_s$Salary, predict_GAM)^2
-data.frame(
-  Model = c("AIC Linear", "GAM"),
-  RMSE = c(sqrt(mse_AIC), sqrt(mse_GAM)),
-  R2=c(R2_AIC, R2_GAM)
-)
+GAM_BIC<- data.frame(
+  Model = c("BIC Linear", "GAM"),
+  RMSE = c(sqrt(mse_BIC), sqrt(mse_GAM)),
+  R2=c(R2_BIC, R2_GAM)
+)  
+
+GAM_BIC %>% gt() %>% as_latex() %>% 
+  as.character() %>% 
+  cat()
 #gam 5216.299 and AIC 5364.680
 #GAM SHOWS higher R2 is better.
 
