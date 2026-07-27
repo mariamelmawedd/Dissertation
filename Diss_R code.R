@@ -366,18 +366,18 @@ cm_knn
 library(PRROC)
 
 pred_test_probability_knn<- ifelse(pred_knn=="Employed", 
-                               attr(pred_knn, "prob"),
-                               1-attr(pred_knn, "prob"))
+                                   attr(pred_knn, "prob"),
+                                   1-attr(pred_knn, "prob"))
 
 pr_curve_knn<- pr.curve(scores.class0 = pred_test_probability_knn[y_test=="Employed"],
-                         scores.class1 = pred_test_probability_knn[y_test=="Unemployed"],
-                         curve = TRUE)
+                        scores.class1 = pred_test_probability_knn[y_test=="Unemployed"],
+                        curve = TRUE)
 
 plot(pr_curve_knn)
 
 roc_curve_knn<-roc.curve(scores.class0 = pred_test_probability_knn[y_test=="Employed"],
-                          scores.class1 = pred_test_probability_knn[y_test=="Unemployed"],
-                          curve = TRUE)
+                         scores.class1 = pred_test_probability_knn[y_test=="Unemployed"],
+                         curve = TRUE)
 plot(roc_curve_knn)
 
 ###########################################################################
@@ -549,14 +549,14 @@ dev.off()
 
 pred_test_probability<- predict(tree_prune_1se, newdata = test_data_c, type = "prob") 
 pr_curve_tree<- pr.curve(scores.class0 = pred_test_probability[test_data_c$Employment_Status=="Employed", "Employed"],
-                                  scores.class1 = pred_test_probability[test_data_c$Employment_Status=="Unemployed", "Employed"],
-                                  curve = TRUE)
+                         scores.class1 = pred_test_probability[test_data_c$Employment_Status=="Unemployed", "Employed"],
+                         curve = TRUE)
 
 plot(pr_curve_tree)
 
 roc_curve_tree<-roc.curve(scores.class0 = pred_test_probability[test_data_c$Employment_Status=="Employed", "Employed"],
-                     scores.class1 = pred_test_probability[test_data_c$Employment_Status=="Unemployed", "Employed"],
-                     curve = TRUE)
+                          scores.class1 = pred_test_probability[test_data_c$Employment_Status=="Unemployed", "Employed"],
+                          curve = TRUE)
 plot(roc_curve_tree)
 
 
@@ -632,12 +632,12 @@ comparison_metrics <- data.frame(
           roc_curve_knn$auc),
   
   `Tree(1SE_rule)` = c(cm_tree$overall["Accuracy"],
-           cm_tree$byClass["Sensitivity"],
-           cm_tree$byClass["Specificity"],
-           cm_tree$byClass["Pos Pred Value"],
-           cm_tree$byClass["F1"],
-           pr_curve_tree$auc.integral,
-           roc_curve_tree$auc),
+                       cm_tree$byClass["Sensitivity"],
+                       cm_tree$byClass["Specificity"],
+                       cm_tree$byClass["Pos Pred Value"],
+                       cm_tree$byClass["F1"],
+                       pr_curve_tree$auc.integral,
+                       roc_curve_tree$auc),
   
   SVM = c(cm_SVM$overall["Accuracy"],
           cm_SVM$byClass["Sensitivity"],
@@ -946,8 +946,8 @@ metric_all %>% gt() %>% as_latex() %>%
 prob_interaction<- predict(interaction_model, newdata = test_data, type = "response")
 library(PRROC)
 pr_interaction<- pr.curve(scores.class0 = prob_interaction[test_data$Employment_binary==1],
-                            scores.class1 = prob_interaction[test_data$Employment_binary==0],
-                            curve = TRUE)
+                          scores.class1 = prob_interaction[test_data$Employment_binary==0],
+                          curve = TRUE)
 plot(pr_interaction)
 
 roc_interaction<- roc.curve(scores.class0 = prob_interaction[test_data$Employment_binary==1],
@@ -986,7 +986,16 @@ par(mfrow=c(2,2))
 plot(BIC_model, main="Before Log")
 
 par(mfrow = c(2, 2))
-plot(BIC_model, which = 1, main = "Before Log")
+plot(BIC_model, which = 1, main = "Before Log")   #try to see what is causing the cluster, 
+#calculate residuals to plot by ggplot, true and fitted values to find the residuals 
+
+salary_fitted<- train_data_s %>% 
+  select(Salary, Gender,Years_Since_Graduation, Age, Language_Proficiency, Education_Level, Language_Proficiency, Visa_Type, University_Ranking, Internship_Experience) %>% mutate(fitted=fitted.values(BIC_model), res=residuals.lm(BIC_model))
+ggplot(data=salary_fitted, aes(x=fitted, y=res, colour = Education_Level))+ 
+  geom_point()  #EDUCATION LEVEL IS THEONE CAUSING THE CLUSTER
+
+boxplot(salary_fitted$Salary)
+
 plot(BIC_model, which = 2, main = "Before Log")
 plot(BIC_log_salary, which = 1, main = "After Log")
 plot(BIC_log_salary, which = 2, main = "After Log")
@@ -1113,6 +1122,7 @@ GAM_BIC<- data.frame(
   RMSE = c(sqrt(mse_BIC), sqrt(mse_GAM)),
   R2=c(R2_BIC, R2_GAM)
 )  
+
 
 GAM_BIC %>% gt() %>% as_latex() %>% 
   as.character() %>% 
