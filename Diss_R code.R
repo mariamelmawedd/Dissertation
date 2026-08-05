@@ -500,8 +500,6 @@ confusionM_tree_table<- data.frame(
     Unemployed = "Unemployed"
   )
 
-confusionM_tree_table %>% as_latex()
-
 
 sensitivity<- confusionM_tree[1,1]/(confusionM_tree[1,1]+confusionM_tree[-1,1])
 specificity<- confusionM_tree[-1,-1]/(confusionM_tree[-1,-1]+confusionM_tree[1,-1])
@@ -525,11 +523,6 @@ cm_tree<- confusionMatrix(
   positive = "Employed"
 )
 
-as.data.frame.matrix(cm_tree$table) %>% 
-  gt(rownames_to_stub = TRUE) %>% 
-  as_latex() %>% 
-  as.character() %>% 
-  cat()
 
 #install.packages("PRROC")
 
@@ -578,11 +571,32 @@ library(e1071)
 set.seed(1)
 Model_svm <- svm(Employment_Status ~. , data=train_data_c,  type="C-classification", kernel="linear", cost=1, probability=TRUE) # default
 predsvm <- predict(Model_svm, newdata = test_data_c, probability= TRUE)
-SVM_acc<- mean(predsvm == test_data_c$Employment_Status)
+mean(predsvm == test_data_c$Employment_Status)
 
-#model_svm_guassian<- svm(Employment_Status ~. , data=train_data_c,  type="C-classification", kernel="radial", cost=1) 
-#predsvm_guassian<- predict(model_svm_guassian, newdata = test_data_c, type = "class")
-#mean(predsvm_guassian == test_data_c$Employment_Status)  #better accuracy 
+set.seed(1)
+model_svm_guassian<- svm(Employment_Status ~. , data=train_data_c,  type="C-classification", kernel="radial",probability=TRUE, cost=1) 
+predsvm_guassian<- predict(model_svm_guassian, newdata = test_data_c, type = "class")
+mean(predsvm_guassian == test_data_c$Employment_Status)  #better accuracy 
+
+set.seed(1)
+model_svm_poli2<- svm(Employment_Status ~. , data=train_data_c,  type="C-classification", kernel="polynomial", probability=TRUE, degree=2,  cost=1) 
+predsvm_poli2<- predict(model_svm_poli2, newdata = test_data_c, type = "class")
+mean(predsvm_poli2 == test_data_c$Employment_Status)  
+
+set.seed(1)
+model_svm_poli3<- svm(Employment_Status ~. , data=train_data_c,  type="C-classification", kernel="polynomial", probability=TRUE, degree=3,  cost=1) 
+predsvm_poli3<- predict(model_svm_poli3, newdata = test_data_c, type = "class")
+mean(predsvm_poli3 == test_data_c$Employment_Status)  
+
+
+
+model_SVM_metric <- data.frame(
+  `SVM Model` = c("Linear Kernel", "Radial Kernel", "Polynomial Gegree 2 Kernel", "Polynomial Degree 3 Kernel"),
+  Accuracy  = c(mean(predsvm == test_data_c$Employment_Status), mean(predsvm_guassian == test_data_c$Employment_Status) ,
+                mean(predsvm_poli2 == test_data_c$Employment_Status), mean(predsvm_poli3 == test_data_c$Employment_Status))
+)
+
+model_SVM_metric %>% gt()
 
 '''
 In a SVM you are searching for two things: a hyperplane with the largest minimum margin, and a hyperplane that correctly separates as many instances as possible. 
@@ -590,23 +604,15 @@ The problem is that you will not always be able to get both things. The c parame
 I want to have a good strong classification so high c , didnt work, took too much time to run
 '''
 
-#cost_range = c(0.01, 0.1, 1, 10)
-#model_tune<- tune.svm(Employment_Status ~. , data=train_data_c, type="C-classification", kernel="linear", cost=cost_range, tune.control(cross = 5))
-#best_svm <- model_tune$best.model
-#predsvm_tune <- predict(best_svm, newdata = test_data_c, type = "class")
-#accuracy_svm<- mean(predsvm_tune == test_data_c$Employment_Status)
-
-confusionM_SVM<- table(Predicted=predsvm, Actual=test_data_c$Employment_Status)
-confusionM_SVM
 
 cm_SVM<- confusionMatrix(
-  factor(predsvm, levels = c("Employed","Unemployed")),
+  factor(predsvm_guassian, levels = c("Employed","Unemployed")),
   factor(test_data_c$Employment_Status, levels = c("Employed","Unemployed")),
   positive = "Employed"
 )
 cm_SVM
 
-pred_test_probability_svm<- attr(predsvm, "probabilities")[, "Employed"]
+pred_test_probability_svm<- attr(predsvm_guassian, "probabilities")[, "Employed"]
 
 pr_curve_SVM<- pr.curve(scores.class0 = pred_test_probability_svm[test_data_c$Employment_Status=="Employed"],
                         scores.class1 = pred_test_probability_svm[test_data_c$Employment_Status=="Unemployed"],
@@ -656,11 +662,6 @@ comparison_metrics <- data.frame(
                 "ROC_AUC")
 )
 
-comparison_metrics %>% 
-  gt(rownames_to_stub = TRUE) %>% 
-  as_latex() %>% 
-  as.character() %>% 
-  cat()
 
 #best is the tree
 
@@ -776,10 +777,6 @@ result_ridge<- predict(model_ridge, s= lambda_ridge$lambda.min, type="class", ne
 result_other<- predict(model_other, s= lambda_other$lambda.min, type="class", newx = X_test)
 result_lasso<- predict(model_lasso, s= lambda_lasso$lambda.min, type="class", newx = X_test)
 
-
-#values_ridge<- cbind(Y_test, result_ridge)
-#values_other<- cbind(Y_test, result_other)
-#values_lasso<- cbind(Y_test, result_lasso)
 
 
 results_model <- data.frame(
@@ -911,15 +908,8 @@ cm_logistic_interaction <- confusionMatrix(
 )
 
 
-cm_logistic_interaction$table %>% gt() %>% as_latex() %>% 
-  as.character() %>% 
-  cat()
+cm_logistic_interaction$table %>% gt()
 
-as.data.frame.matrix(cm_logistic_interaction$table) %>% 
-  gt(rownames_to_stub = TRUE) %>% 
-  as_latex() %>% 
-  as.character() %>% 
-  cat()
 #this gives confusion matrix, without the precision, f1 and others 
 
 library(gt)
@@ -1106,12 +1096,17 @@ final_GAM_salary<- gam(
 )
 summary(final_GAM_salary)
 
+GAM_interaction<- gam(Salary~ s(GPA)+ Internship_Experience + Education_Level+ University_Ranking+ Language_Proficiency+ GPA:Internship_Experience+
+                        Internship_Experience:University_Ranking + Education_Level:Language_Proficiency, data=train_data_s,
+                      method="REML")
 
-plot(final_GAM_salary)
-plot(final_GAM_salary, residuals = TRUE)
+anova(final_GAM_salary, GAM_interaction, test = "Chisq") #better
+
+plot(GAM_interaction)
+plot(GAM_interaction, residuals = TRUE)
 
 # GAM predictions
-predict_GAM <- predict(final_GAM_salary, newdata=test_data_s)
+predict_GAM <- predict(GAM_interaction, newdata=test_data_s)
 
 mse_GAM <- mean((test_data_s$Salary - predict_GAM)^2)
 
@@ -1124,9 +1119,7 @@ GAM_BIC<- data.frame(
 )  
 
 
-GAM_BIC %>% gt() %>% as_latex() %>% 
-  as.character() %>% 
-  cat()
+GAM_BIC %>% gt()
 #gam 5216.299 and AIC 5364.680
 #GAM SHOWS higher R2 is better.
 
