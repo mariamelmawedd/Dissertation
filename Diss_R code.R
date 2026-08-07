@@ -442,6 +442,23 @@ pred2 <- predict(tree_prune_1se, newdata = test_data_c, type = "class")
 mean(pred2 == test_data_c$Employment_Status)
 #this 1SE gives a less crowded tree
 
+
+#2SE
+min_xerror_2 <- min(tree$cptable[, "xerror"])
+min_xstd_2 <- tree$cptable[which.min(tree$cptable[, "xerror"]), "xstd"]
+smallest_Tree_2<- min_xerror_2+ 2* min_xstd_2
+best_2se_index <- which(tree$cptable[, "xerror"] <= smallest_Tree_2)[1] #take the first value
+best_cp_2se <- tree$cptable[best_2se_index, "CP"]
+tree_prune_2se<- prune(tree, cp=best_cp_2se)
+rpart.plot(tree_prune_2se)
+#Predict and evaluate perfromance
+pred2se <- predict(tree_prune_2se, newdata = test_data_c, type = "class")
+mean(pred2se == test_data_c$Employment_Status)
+#nothing really changed
+
+
+
+
 ###############################
 
 library(randomForest)
@@ -524,7 +541,7 @@ cm_tree<- confusionMatrix(
 )
 
 
-#install.packages("PRROC")
+c#install.packages("PRROC")
 
 count_classes<- train_data_c %>%
   count(Employment_Status)
@@ -552,7 +569,45 @@ roc_curve_tree<-roc.curve(scores.class0 = pred_test_probability[test_data_c$Empl
                           curve = TRUE)
 plot(roc_curve_tree)
 
+############
 
+#undeerstand why 1030 employed where misclassified as unemployed
+
+misclassified_emp<- test_data_c[test_data_c$Employment_Status=="Employed" & pred_1SE_tree=="Unemployed",]
+true_employed<- test_data_c[test_data_c$Employment_Status=="Employed" & pred_1SE_tree=="Employed", ]
+
+
+ggplot(data=misclassified_emp, aes(x=Employment_Status, y=Age))+geom_boxplot()
+
+
+
+
+predictors <- c("Education_Level", "Internship_Experience", "Years_Since_Graduation",
+          "University_Ranking", "Language_Proficiency", "Gender")
+
+for (i in predictors) {
+  cat("\n---", i, "---\n")
+  cat("Misclassified:\n")
+  print(round(prop.table(table(misclassified_emp[[i]])) * 100, 1))
+  cat("Correctly classified:\n")
+  print(round(prop.table(table(true_employed[[i]])) * 100, 1))
+  
+  
+} #the tree has defined some values to be unemployed so it misclassifies and assumes those employed with such values as unemployed
+
+misclassified_unemp<- test_data_c[test_data_c$Employment_Status=="Unemployed" & pred_1SE_tree=="Employed",]
+true_unemployed<- test_data_c[test_data_c$Employment_Status=="Unemployed" & pred_1SE_tree=="Unemployed", ]
+
+
+for (i in predictors) {
+  cat("\n---", i, "---\n")
+  cat("Misclassified:\n")
+  print(round(prop.table(table(misclassified_unemp[[i]])) * 100, 1))
+  cat("Correctly classified:\n")
+  print(round(prop.table(table(true_unemployed[[i]])) * 100, 1))
+  
+  
+} #look more into it 
 
 ###########################################################
 ###############################################################################################################################################
@@ -1100,6 +1155,8 @@ GAM_interaction<- gam(Salary~ s(GPA)+ Internship_Experience + Education_Level+ U
                         Internship_Experience:University_Ranking + Education_Level:Language_Proficiency, data=train_data_s,
                       method="REML")
 
+#as K increases, the edf increase and the graph becomes more complex more wiggly, byut the shape of the curve doesnt change,s till decreasing 
+summary(GAM_interaction)
 anova(final_GAM_salary, GAM_interaction, test = "Chisq") #better
 
 plot(GAM_interaction)
