@@ -1,0 +1,117 @@
+---
+title: "Predictive Modelllign and Feature Analysis for Employment Status for International Students int he UK"
+subtitle: " uing Statistical Analysis and Machine Learning"
+author: "Mariam El Mawed"
+format: 
+  
+  html: default
+    
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+# Introduction
+
+
+
+# Description of the data and Exploratory Data Analysis
+
+```{r}
+#| echo: false
+#| message: false
+
+library(MASS)
+library(tidyverse)
+library(ggplot2)
+library(dplyr) 
+library(skimr)
+library(gt)
+library(moderndive)
+library(gapminder)
+library(GGally)
+
+#read data 
+data<- read.csv("dataset.csv")
+data_uk<- data %>% filter(`Region_of_Study`=="UK")
+```
+
+
+This dataset contains anonymized records for over 300,000 international graduates. It is sourced from Kaggle but originates from HESA (Higher Education Statistics Agency), the official body responsible for UK higher education data. The analysis here focuses on UK international students' employability outcomes, so the dataset was filtered to students who studied in the UK, giving 74,901 rows. It combines graduate-outcomes survey data with visa, language, and academic information, enabling predictive analysis of two outcomes: Employment Status (employed, unemployed, or continuing education) and Salary (annual salary for those employed).
+
+The dataset contains 15 variables: 11 categorical (Employment_Status, Visa_Type, Country_of_Origin, Language_Proficiency, Field_of_Study, Gender, University_Ranking, Education_Level, Internship_Experience, Job_Sector and Region_of_Study) and 4 numerical (Age, GPA, Salary, Years_Since_Graduation).
+
+
+Moving to the **exploratory data analysis (EDA)**, this section focuses on the distributions of the two main response variables, Employment Status and Salary, in relation to the other predictors. For Employment Status, we examine its own distribution alongside its relationship with each categorical predictor. For Salary, we examine its own distribution as well as its relationship with both the numerical and categorical predictors. This section focuses specifically on the distributions of Employment Status and Salary, since these shape how the data was prepared and structured for the modelling that follows.
+
+Since this analysis focuses on employability, Continuing Education was excluded, as these graduates have not yet entered the labour market. Even after this exclusion, @fig-employment and @tbl-employment show that the remaining data is still imbalanced between the Employed and Unemployed categories. This imbalance motivates the choice of evaluation approach used later in the analysis, the use of precision-recall curves rather than ROC curves , which will be discussed further in the Analysis chapter.
+
+<div style="display: flex; gap: 20px;">
+<div>
+```{r}
+#| echo: false
+#| message: false
+#| fig-width: 5
+#| label: fig-employment
+#| fig-cap: Employement Status Distribution
+ggplot(data_uk,aes(x = Employment_Status, fill = Employment_Status)) +
+  geom_bar()
+```
+</div>
+<div>
+
+
+```{r}
+#| echo: false
+#| message: false
+#| tbl-width: 5
+#| label: tbl-employment
+#| tbl-cap: Employement Status Proportions
+
+
+data_uk %>%
+  count(Employment_Status) %>%
+  mutate(prop = n / sum(n)) %>% gt()
+```
+</div>
+</div>
+
+
+As shown in @fig-salary, salary is positive only for graduates who are employed. For this reason, the dataset is filtered to include only employed graduates when examining the salary variable.
+
+```{r}
+#| echo: false
+#| message: false
+#| label: fig-salary
+#| fig-width: 5
+#| fig-align: center
+#| fig-cap: Salary Distribution with Employment Status
+ggplot(data_uk, aes(x=Employment_Status, y=Salary))+
+  geom_boxplot()
+```
+
+
+# Description of the methods
+
+##### K-Nearest Neighbor (KNN)
+K-Nearest Neighbours is a nonparametric classification method.  For each point we look at its k-nearest labelled points, and predict the class of this point to be that of the majority of its neighbours. Once the optimal value of K is chosen, the distances between each test point and all the training points are calculated and sorted to determine the k-nearest neighbours. The class of the test point can then be predicted.
+
+To apply kNN, it is standard to divide the data into training and test sets.We use 10‑fold cross‑validation on the full training set. Cross‑validation allows us to train and test the model multiple times on different subsets of the data, also providing a more stable estimate of accuracy using all available observations. Most importantly, it allows for the selection the optimal value of k (the number of neighbours) in a data‑efficient way.
+
+##### Support Vector Machines (SVM))
+Support Vector Machines are a supervised learning technique used to classify data. As with all supervised learning techniques, SVM learns the relationship between labelled inputs and outputs (where outputs are known for given inputs) and tries to predict the output of new data based on patterns previously detected.
+
+Classifying the data involves fitting planar boundaries between groups, maximising the margin. The boundary line that separates the classes is a hyperplane, and the perpendicular distances from the hyperplane to the closest points in each class are the margins. Often, many hyperplanes may separate the classes; of these, the hyperplane chosen is the maximal margin hyperplane. While it is often most intuitive to picture SVM classification using a dataset with two classes and two variables, for which one can draw a straight line between groups, this is rarely the case in real data. 
+
+
+# Analysis of the data
+
+# Conclusions and discussion
+
+
+
+You can add options to executable code like this
+
+
+The `echo: false` option disables the printing of code (only output is displayed).
