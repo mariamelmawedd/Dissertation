@@ -437,7 +437,7 @@ best_1se_index <- which(tree$cptable[, "xerror"] <= smallest_Tree)[1] #take the 
 best_cp_1se <- tree$cptable[best_1se_index, "CP"]
 tree_prune_1se<- prune(tree, cp=best_cp_1se)
 rpart.plot(tree_prune_1se)
-#Predict and evaluate perfromance
+#Predict and evaluate performance
 pred2 <- predict(tree_prune_1se, newdata = test_data_c, type = "class")
 mean(pred2 == test_data_c$Employment_Status)
 #this 1SE gives a less crowded tree
@@ -451,7 +451,7 @@ best_2se_index <- which(tree$cptable[, "xerror"] <= smallest_Tree_2)[1] #take th
 best_cp_2se <- tree$cptable[best_2se_index, "CP"]
 tree_prune_2se<- prune(tree, cp=best_cp_2se)
 rpart.plot(tree_prune_2se)
-#Predict and evaluate perfromance
+#Predict and evaluate performance
 pred2se <- predict(tree_prune_2se, newdata = test_data_c, type = "class")
 mean(pred2se == test_data_c$Employment_Status)
 #nothing really changed
@@ -583,11 +583,10 @@ ggplot(data=misclassified_emp, aes(x=Employment_Status, y=Age))+geom_boxplot()
 
 
 predictors <- c("Education_Level", "Internship_Experience", "Years_Since_Graduation",
-          "University_Ranking", "Language_Proficiency", "Gender")
+                "University_Ranking", "Language_Proficiency", "Gender")
 
 for (i in predictors) {
-  cat("\n---", i, "---\n")
-  cat("Misclassified:\n")
+  cat("\nMisclassified:\n")
   print(round(prop.table(table(misclassified_emp[[i]])) * 100, 1))
   cat("Correctly classified:\n")
   print(round(prop.table(table(true_employed[[i]])) * 100, 1))
@@ -1161,6 +1160,27 @@ anova(final_GAM_salary, GAM_interaction, test = "Chisq") #better
 
 plot(GAM_interaction)
 plot(GAM_interaction, residuals = TRUE)
+
+data_phd<- train_data_s %>%
+  filter(Education_Level == "PhD")
+
+data_education<- train_data_s %>%
+  filter(Education_Level != "PhD")
+
+GAM_phd<- gam(Salary~ s(GPA)+ Internship_Experience +  University_Ranking+ Language_Proficiency+ GPA:Internship_Experience+
+                                  Internship_Experience:University_Ranking , data=data_phd,
+                                method="REML")
+
+summary(GAM_phd)
+plot(GAM_phd)
+
+GAM_education<- gam(Salary~ s(GPA)+ Internship_Experience + Education_Level+ University_Ranking+ Language_Proficiency+ GPA:Internship_Experience+
+                      Internship_Experience:University_Ranking + Education_Level:Language_Proficiency, data=data_education,
+                    method="REML")
+
+summary(GAM_education)
+plot(GAM_education)
+
 
 # GAM predictions
 predict_GAM <- predict(GAM_interaction, newdata=test_data_s)
