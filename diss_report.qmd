@@ -94,17 +94,70 @@ ggplot(data_uk, aes(x=Employment_Status, y=Salary))+
 
 # Description of the methods
 
-##### K-Nearest Neighbor (KNN)
-K-Nearest Neighbours is a nonparametric classification method.  For each point we look at its k-nearest labelled points, and predict the class of this point to be that of the majority of its neighbours. Once the optimal value of K is chosen, the distances between each test point and all the training points are calculated and sorted to determine the k-nearest neighbours. The class of the test point can then be predicted.
+## Classification methods
 
-To apply kNN, it is standard to divide the data into training and test sets.We use 10‑fold cross‑validation on the full training set. Cross‑validation allows us to train and test the model multiple times on different subsets of the data, also providing a more stable estimate of accuracy using all available observations. Most importantly, it allows for the selection the optimal value of k (the number of neighbours) in a data‑efficient way.
+Classification methods are prediction models and algorithms used to classify or categorize objects based on their measurements. Analysis typically begins with "labelled" data, which are observations with measurements on one or more explanatory variables (features) as well as a label variable (outcome) indicating which class the object belongs to. The goal is to construct a classification rule from these labelled observations that can predict the class of future, unlabelled observations sharing the same explanatory variables.
 
-##### Support Vector Machines (SVM))
-Support Vector Machines are a supervised learning technique used to classify data. As with all supervised learning techniques, SVM learns the relationship between labelled inputs and outputs (where outputs are known for given inputs) and tries to predict the output of new data based on patterns previously detected.
+In this dissertation, this goal translates to building a classification rule for *Employment_Status (Employed vs Unemployed)* using each graduate's features, such as GPA, Internship_Experience, and Education_Level.
 
-Classifying the data involves fitting planar boundaries between groups, maximising the margin. The boundary line that separates the classes is a hyperplane, and the perpendicular distances from the hyperplane to the closest points in each class are the margins. Often, many hyperplanes may separate the classes; of these, the hyperplane chosen is the maximal margin hyperplane. While it is often most intuitive to picture SVM classification using a dataset with two classes and two variables, for which one can draw a straight line between groups, this is rarely the case in real data. 
+### K-Nearest Neighbor (KNN)
+K-Nearest Neighbours is a nonparametric classification method. For each point, we look at its k nearest labelled points and predict its class to be that of the majority of its neighbours, we use the observations in the training set closest to a given point. This requires four steps: deciding the value of k; defining closeness via a distance metric; sorting distances to determine the nearest neighbours; and assigning the class held by the majority of those neighbours.
+
+Several distance metrics exist, including Euclidean, Manhattan, and Mahalanobis distance. This analysis uses the standard choice, Euclidean distance, defined as the square root of the sum of squared differences between two points across all predictors. For 
+𝑝
+p-dimensional continuous variables, the distance between two points $x$ and $x_i$ is defined as:
+
+$$
+d(x, x_i) = \sqrt{\sum_{j=1}^{p} (x_j - x_{ij})^2}
+$$
+
+Having defined distance, the value of k must then be chosen, and this choice creates a bias-variance trade-off. When k is small, each prediction depends on only a handful of nearby points, $k=1$ relies on a single neighbour. This makes the classifier very flexible, closely tracing the training data, but also sensitive to noise: a single unusual or mislabelled point can flip a prediction, and a slightly different training sample could give quite different results. This instability is high variance, and the classifier is said to overfit. When k is large, predictions are averaged over many neighbours instead. This makes predictions stable, no single noisy point can swing the outcome, so variance is low. The classifier becomes too simple to capture the true classification boundary. This is high bias, and the classifier is said to underfit. The aim is therefore to choose a value of k that balances these two effects.
+
+To select k objectively rather than arbitrarily, 10-fold cross-validation was used: for each candidate value of $k=1,…,50$ the training data was split into 10 folds, the model was fitted on 9 folds and evaluated on the remaining fold, and this was repeated across all 10 folds to obtain an average cross-validated accuracy for that k. The value of k that maximised cross-validated accuracy was then selected for the final model.
 
 
+### Classification Tree
+
+
+Classification trees are another type of non-parametric classification method, also known as partitioning methods, since the result is a partition of the feature space (the set of possible values of the explanatory variables). Classification trees involve two steps. First, the feature space is divided into a number of disjoint, non-overlapping regions. Second, for a given test observation, its class is predicted as the most commonly occurring class among the training observations in the region to which it belongs.
+
+A tree is built from a sequence of features, each with a cut-off point chosen on that feature; a given feature can appear more than once in the tree, with different cut-off points at different splits. Each split leads either to a further split or to a terminal (leaf) node, where a class is predicted. Once the tree is built, each leaf is assigned the class held by the majority of training observations that fall into it. To make a prediction, an observation starts at the root node and follows the branches determined by whether it satisfies each split condition, until it reaches a leaf.
+
+Choosing the best feature and cut-off point at each split requires a measure of node impurity to optimise. This analysis uses the **Gini index**, defined as:
+
+$$
+Gini = \sum_{k=1}^{K} \hat{p}_k(1 - \hat{p}_k)
+$$ 
+
+where $K$ is the total number of classes and $\hat{p}_k$ is the proportion of training observations in the node belonging to class $k$. A node containing only one class has a Gini index of $0$ (pure), while a node with an even mix of classes has a higher Gini index (impure); at each stage, the split chosen is the one producing the greatest reduction in impurity. This approach is greedy where at each step, the best split is chosen given the splits already made so far, without looking ahead to whether a different choice would lead to a better tree in some future step.
+
+A fully grown tree tends to overfit the training data, so it is **pruned** to reduce complexity. Pruning is controlled by a complexity parameter ($cp$), and two strategies were compared to select its value: the **minimum error rule**, which prunes the tree back to the point where the cross-validated error is at a minimum; and the **1-SE (smallest tree) rule**,which first adds one standard error to the minimum cross-validated error to obtain a threshold, then selects the largest value of ($cp$) (the smallest tree) whose cross-validated error falls within that threshold. The 1-SE rule prunes slightly further than the minimum-error point, typically yielding a smaller, more interpretable tree.
+
+> #### Bagging and Random Forest
+
+Bagging, or bootstrap aggregation, is an ensemble technique that reduces the variance of a prediction by combining the results of many models fitted to different bootstrap samples of the training data (samples drawn with replacement from the original data). For classification, trees are grown, each on a different bootstrap sample, and the final prediction is made by majority vote across all trees. Bagging works particularly well for high-variance, low-bias procedures such as classification trees, since averaging over many trees smooths out the instability of any single tree.
+
+Random forest is a modification of bagging that further de-correlates the trees in the ensemble: rather than each tree splitting on the best feature from the full set of predictors at every split, random forest restricts each split to a random subset of the available features. This prevents strong predictors from dominating every tree in the ensemble, producing a more diverse set of trees whose averaged predictions further reduce variance compared to standard bagging.
+
+### Support Vector Machine
+
+Support Vector Machines (SVM) are a supervised classification technique that finds a boundary separating classes by maximising the margin between them. The boundary is a hyperplane, and the margin is the perpendicular distance from the hyperplane to the nearest point(s) of either class. Where multiple hyperplanes could separate the classes, SVM selects the one that maximises this distance,the largest margin, **maximal margin hyperplane**.
+
+Once the optimal hyperplane has been found, with estimated weight vector $\hat{w}$ and estimated bias term $\hat{b}$, classification of a new observation $x_{new}$ reduces to determining which side of the hyperplane it falls on. This is given by:
+
+$$
+\hat{g}(x_{new}) = \text{sign}(\hat{w}^T x_{new} + \hat{b})
+$$ 
+
+where $\text{sign}(\cdot)$ returns $+1$ for positive values and $-1$ for negative values. That is, $x_{new}$ is substituted into the estimated hyperplane equation, and the sign of the resulting value determines the predicted class: observations on one side of the hyperplane are assigned class $-1$, and observations on the other side are assigned class $+1$.
+
+In practice, classes are rarely perfectly separable, so SVM allows some points to fall on the wrong side of the margin or hyperplane, controlled by a **cost** parameter: a higher cost more heavily penalises misclassified points, producing a narrower margin that fits the training data more closely, while a lower cost allows a wider margin at the expense of some misclassification.
+
+The boundary described so far is linear. SVM can be extended to nonlinear boundaries by mapping the input features into a higher-dimensional space using a **kernel function**, within which a linear boundary is fitted; when mapped back to the original feature space, this linear boundary corresponds to a nonlinear boundary. Common kernel choices include the **linear kernel** (no transformation, producing a straight-line boundary), the **polynomial kernel**, and the **radial (Gaussian) kernel**, each producing increasingly flexible, curved decision boundaries. The choice of kernel is typically guided by whether the classes appear linearly separable in the original feature space and by comparing predictive performance across kernels.
+
+## Shrinkage Methods 
+
+### Lasso 
 # Analysis of the data
 
 # Conclusions and discussion
