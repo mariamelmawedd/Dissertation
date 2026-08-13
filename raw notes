@@ -120,3 +120,5 @@ Use AIC-selected models for both since the aim is to understand the determinants
 
 
 book: introduction to statistical computational  tibsharani- for methods 
+
+https://www.rdocumentation.org/packages/glmnet/versions/5.0/topics/glmnet   fit glmnet with lasso 
