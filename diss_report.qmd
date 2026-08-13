@@ -155,9 +155,100 @@ In practice, classes are rarely perfectly separable, so SVM allows some points t
 
 The boundary described so far is linear. SVM can be extended to nonlinear boundaries by mapping the input features into a higher-dimensional space using a **kernel function**, within which a linear boundary is fitted; when mapped back to the original feature space, this linear boundary corresponds to a nonlinear boundary. Common kernel choices include the **linear kernel** (no transformation, producing a straight-line boundary), the **polynomial kernel**, and the **radial (Gaussian) kernel**, each producing increasingly flexible, curved decision boundaries. The choice of kernel is typically guided by whether the classes appear linearly separable in the original feature space and by comparing predictive performance across kernels.
 
-## Shrinkage Methods 
+## Model Selection 
+For our third and fourth research questions, model selection techniques were used to ensure that the analysis retained only the variables with the most interpretable and significant effects on Employment status and Salary. There are several different model selection techniques; for this analysis we focus on **stepwise selection** and **shrinkage methods**.
+
+### Stepwise Selection
+Stepwise selection has 3 types: forward, backward and both-directions. For this analysis, the Both-direction was used. In Both-Direction stepwise selection was used. We start with a full model containing all predictors). At each step, the algorithm considers both removing  variables currently in the model that contributes the least( based on AIC/BIC criteria) and adding variables not currently in the model. It keeps iterating by adding or removing one variable at a time until no further step improves the criterion, effectively reaching the lowest achievable AIC/BIC value.
+
+### Shrinkage Methods
+
+Unlike stepwise selection, which searches over a discrete subsets of predictions, shrinkage methods fit the full model but penalize the coefficients/. This constraint reduces variance at the cost of a small increase in bias and depending on the penalty used we can also perform variable selection by shrinking some coefficient exactly to zero.
+
+A general way to express this is to minimise the residual sum of squares subject to a combination of two penalty terms: 
+
+$$
+\hat{\beta} = \arg\min_{\beta} \left\{ \sum_{i=1}^{N}\left(y_i - \beta_0 - \sum_{j=1}^{p}\beta_j x_{ij}\right)^2 + \lambda_1 \sum_{j=1}^{p}|\beta_j| + \lambda_2 \sum_{j=1}^{p}\beta_j^2 \right\}
+$$ {#eq-general-penalty}
+
+The two penalty terms behave differently:
+
+- The term $\sum_{j=1}^{p}|\beta_j|$ is the **L1 penalty**: the sum of the *absolute values* of the coefficients.
+- The term $\sum_{j=1}^{p}\beta_j^2$ is the **L2 penalty**: the sum of the *squared* coefficients.
+
+The tuning parameters $\lambda_1$ and $\lambda_2$ control how much weight is given to each penalty.
 
 ### Lasso 
+
+Lasso is is a penalized regression method. Instead of testing subsets of variables like stepwise selection, it fits all the predictors at once but adds a penalty to the loss function that constrains the total size of the coefficients( the sum of their absolute values), this penalty shrinkage the coefficients to zero, so it automatically performs variable selection technique. it takes care of the bias-variance trade off by continuous shrinkage
+
+Setting $\lambda_2 = 0$ in @eq-general-penalty leaves only the L1 penalty, giving the lasso:
+
+$$
+\hat{\beta}^{lasso} = \arg\min_{\beta} \left\{ \sum_{i=1}^{N}\left(y_i - \beta_0 - \sum_{j=1}^{p}\beta_j x_{ij}\right)^2 + \lambda_1 \sum_{j=1}^{p}|\beta_j| \right\}
+$$
+
+
+### Ridge 
+Ridge regression estimates coefficients by minimising the residual sum of squares subject to a penalty of the sum of squared coefficients. Unlike Lasso, it does not shrink coefficients exactly to zero, it only makes them as small as possible and therefore does not perform variable selection.
+
+Setting $\lambda_1 = 0$ in @eq-general-penalty leaves only the L2 penalty.  As $\lambda_2$ increases, coefficients are shrunk further toward zero, though never exactly to zero:
+
+$$
+\hat{\beta}^{ridge} = \arg\min_{\beta} \left\{ \sum_{i=1}^{N}\left(y_i - \beta_0 - \sum_{j=1}^{p}\beta_j x_{ij}\right)^2 + \lambda_2 \sum_{j=1}^{p}\beta_j^2 \right\}
+$$
+
+
+
+### Elastic Net
+
+
+The elastic net combines both the L1 and L2 penalties, allowing it to perform coefficient shrinkage and variable selection simultaneously as in @eq-general-penalty.
+
+## Statistical Models
+
+### Multiple Linear Regression
+
+Multiple linear regression models a continuous response variable as a linear combination of predictors. For salary, the model takes the form:
+
+$$
+y_i = \beta_0 + \sum_{j=1}^{p}\beta_j x_{ij} + \epsilon_i
+$$
+
+where $y_i$ is the salary of the $i$th individual, $x_{ij}$ are the predictor values, $\beta_j$ are the coefficients to be estimated, and $\epsilon_i$ is the error term, assumed to be independently and normally distributed with mean zero and constant variance. Coefficients are estimated by ordinary least squares (OLS), which minimises the residual sum of squares:
+
+$$
+\hat{\beta} = \arg\min_{\beta} \sum_{i=1}^{N}\left(y_i - \beta_0 - \sum_{j=1}^{p}\beta_j x_{ij}\right)^2
+$$
+
+Because salary was right-skewed, a log-transformed version of the model, $\log(y_i) = \beta_0 + \sum_j \beta_j x_{ij} + \epsilon_i$, was also considered to better satisfy the normality and constant-variance assumptions underlying OLS.
+
+### Logistic Regression
+
+For employment status, a binary outcome (employed/unemployed), ordinary least squares is not appropriate, since predictions are not constrained to lie between 0 and 1. Instead, logistic regression models the probability of the outcome using the logit link function:
+
+$$
+\log\left(\frac{p_i}{1-p_i}\right) = \beta_0 + \sum_{j=1}^{p}\beta_j x_{ij}
+$$
+
+where $p_i = P(y_i = 1 \mid x_i)$ is the probability that individual $i$ is employed. Rearranging gives the predicted probability directly:
+
+$$
+p_i = \frac{\exp\left(\beta_0 + \sum_{j=1}^{p}\beta_j x_{ij}\right)}{1+\exp\left(\beta_0 + \sum_{j=1}^{p}\beta_j x_{ij}\right)}
+$$
+
+Coefficients are estimated by maximum likelihood rather than least squares. Exponentiating a coefficient, $\exp(\beta_j)$, gives the odds ratio associated with a one-unit increase in $x_j$: values greater than 1 indicate the predictor increases the odds of employment, while values less than 1 indicate it decreases the odds.
+
+### Generalized Additive Models (GAM)
+
+Multiple linear regression assumes a strictly linear relationship between each predictor and the response. Generalized additive models (GAMs) relax this assumption by allowing continuous predictors to enter the model through smooth, non-linear functions while keeping the model additive and interpretable:
+
+$$
+y_i = \beta_0 + \sum_{k} f_k(x_{ik}) + \sum_{j} \beta_j x_{ij} + \epsilon_i
+$$
+
+where $f_k(\cdot)$ are smooth functions (typically splines) fitted to continuous predictors such as GPA, age, and years since graduation, and $\beta_j$ are ordinary linear coefficients for categorical predictors. The smoothness of each $f_k$ is controlled by a penalty term, tuned automatically via generalized cross-validation (GCV) or restricted maximum likelihood (REML), preventing overfitting while allowing the model to capture non-linear patterns that a purely linear model would miss.
+
 # Analysis of the data
 
 # Conclusions and discussion
