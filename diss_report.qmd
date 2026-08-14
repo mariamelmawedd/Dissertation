@@ -16,7 +16,7 @@ execute:
 
 
 
-# Description of the data and Exploratory Data Analysis
+# Description of the data and Exploratory Data Analysis {#sec-EDA}
 
 ```{r}
 #| echo: false
@@ -92,7 +92,7 @@ ggplot(data_uk, aes(x=Employment_Status, y=Salary))+
 ```
 
 
-# Description of the methods
+# Description of the methods {#sec-methods}
 
 ## Classification methods
 
@@ -249,11 +249,413 @@ $$
 
 where $f_k(\cdot)$ are smooth functions (typically splines) fitted to continuous predictors such as GPA, age, and years since graduation, and $\beta_j$ are ordinary linear coefficients for categorical predictors. The smoothness of each $f_k$ is controlled by a penalty term, tuned automatically via generalized cross-validation (GCV) or restricted maximum likelihood (REML), preventing overfitting while allowing the model to capture non-linear patterns that a purely linear model would miss.
 
+
+## Model Evaluation Metrics
+
+After applying a classification method on a data set, for each observatuon we predict a class, so this prediction may be rigth where we are getting the predicted class same as the true cass or th eprediction is wrong were we get the predicted class different thant he true class. For this we need to evaluate the performance of the classification method: how good it is at classifying obersvation, mans how good the mthod is overall. 
+
+### Confusion Metric  
+
+It is a cross-tabulation of predicted lass versus true class, where the$ij$-th element int he table gives the number of observations that were actually in class $i$ but predicted to be in class $j$. 
+
+We'll consider four different cases for this matrix. Assume we have two classes: sick ($y=1$) as the True class, and healthy($y=0$) as the False class. We want to predict whether a person is sick or healthy. A positive prediction means the person is predicted to be sick , and a negative prediction mean the person is predicted to be healthy.
+
+These four cases fill the confusion matrix as follows in @tbl-confusionMatrix:
+
+- **True Positive (TP):** a person is originally sick and predicted to be sick — correctly identified.
+- **False Positive (FP):** a person is healthy but predicted to be sick — incorrectly identified.
+- **True Negative (TN):** a person is healthy and predicted to be healthy — correctly rejected.
+- **False Negative (FN):** a person is sick but predicted to be healthy — incorrectly rejected.
+
+
+```{r}
+#| echo: false
+#| message: false
+#| tbl-cap: Confusion Matrix
+#| label: tbl-confusionMatrix
+
+data.frame(
+  Actual = c("True", "False"),
+  Positive = c("TP", "FP"),
+  Negative = c("FN", "TN")
+) %>%
+  gt() %>%
+  tab_spanner(
+    label = "Predicted",
+    columns = c("Positive", "Negative")
+  ) %>%
+  cols_label(
+    Actual = "Actual"
+  )
+```
+
+From these values, we can find performance metrics: 
+
+- ***Sensitivity/Recall (True positive Rate)***: it gives th eprportion of all observations that we correctly predcited as **positive** $TP/ TP+FN$
+
+- ***Specificity (True Negative Rate)***: the prportion of all observatiosn whp were correctly oredicted as **negative** $TN/TN+FP$
+
+- ***Accuracy(Correct classification Rate)***: it is gives the number of correctly classificed observation in their true class whether positive or ngative, asnd this lies on the diagonal of th etable, so we take th etrace of the diagonal over the total number of obsevations $TP+TN/n$
+> Misclassification Rate is $1-accuracy$, which is the trace of th evalues that lie ont he off-diagonal over the total nb of observations
+
+- ***Precision(Positve Prediction Rate)***: Th eproprotion of correctly predicted psoitive obsevations $TP/TP+FP$
+
+- ***$F_1$ Score***: A single number summary of precision and recall aand it's formula
+
+
+### ROC and Precision-Recall Curves
+
+- **ROC (Receiver Operating Characteristic):** commonly used to assess the trade-off between sensitivity and specificity for a binary classifier. It plots Sensitivity (True Positive Rate) on the y-axis against 1 − Specificity (False Positive Rate) on the x-axis across all classification thresholds, capturing both how many actual positives are correctly caught and how many actual negatives are incorrectly classified as positive.Overall performance is summarised by the area under the curve (AUC), with values closer to 1 indicating better discrimination between classes.
+
+
+- **Precision-Recall Curve:** used when the class distribution is imbalanced, as is the case in this dataset (see @fig-employment in @sec-EDA). It plots Recall on the x-axis against Precision on the y-axis across all classification thresholds, capturing how many of the actual positives were correctly caught, and capturing how many of the predicted positives were actually correct. This focuses specifically on performance for the **positive class only**.Overall performance is summarised by the area under the curve (AUC), with values closer to 1 indicating stronger precision-recall trade-off.
 # Analysis of the data
 
+## Research Question 1: How accurately can employment outcomes of international graduates in the UK be predicted using statistical and machine learning classification models?
+
+For this question, as explained previously, Employment Status was filtered to the Employed/Unemployed categories to frame this as a binary classification problem. Non-informative columns were removed: Region_of_Study (constant at "UK" after filtering), and Salary and Job_Sector, since these are outcomes of employment status rather than predictors of it.
+
+To start with first method:
+
+> ###K-Nearest Neighbours Method:
+
+Employment_Status was set as the response variable (Y), with the remaining variables forming the predictor set (X). Categorical predictors in X were 
+converted into dummy variables, while the continuous predictors (GPA, Age, Years_Since_Graduation) were identified separately so that they could later be scaled. A seed was fixed at 1 throughout to ensure 
+reproducible results.
+
+We started by creating Y set of factors of Employment status and X dataeet of the other predicteors left int he dataset, then we changed all the categorical ariables in the X set and splitted it into continious variables and dummy variavles. Then we set seed to 1 to have a static result everytime. After that we splitted the dataset by 80% trainign set and 20 % test set, we used the train index to find the mean sand the stnadard deviation of the it to scale the X values. Then we ended up splitting the dataset into X tain and X test then Y train and Y test. A k - nearedst neighbour algorthm was applied with k valuesof 50 and 10 cross validationa s explained in @sec-methods. What is basically happening we have 10 cross validation folds so we start with the first fold as test data and 9 remaining as  training folds, then the second fold as test data and the remiaing a terainign fold and so on, we do this for each value of k, 50 times, ofo each fold model we get a cross validation error, so for each value of k we get an average cross validation error over these 10 folds. Then after that we need ot choose the best k witht he highest cross validation accuracy, sfor this we plot a fplot of cross validation versus K values.  From the plot we can see that the best k value is 28, this means that each preiction is based ont he 28 neighbour points. Then using this k value, we predict the classes on the new data tet, the test data and compute the accuracy by $knn_acc<- mean(pred_knn == y_test)$. After that we oplotted the confusion matrix and computed all the performance metrics explained above in @sec-methods.
+
+
+The dataset was then split into 80% training and 20% test sets. Since KNN 
+relies on distance calculations between observations, unscaled variables with larger ranges would disproportionately dominate the distance metric, so the continuous predictors were standardised. To avoid data leakage, the scaling parameters (mean and standard deviation) were computed using only the training data, and these same parameters were then applied to scale both X continious values of the training and test sets.
+
+
+
+```{r}
+#| echo: false
+#| message: false
+#| label: fig-knn-cv
+#| fig-cap: 10-Fold Cross-Validation Accuracy vs k
+
+
+
+#filter data
+data_emp<- data_uk %>% 
+  filter(Employment_Status!="Continuing Education") %>%
+  select(-Salary, -Job_Sector,-Region_of_Study)
+
+#training and test set 
+Y<- as.factor(data_emp$Employment_Status)
+x<- data_emp %>% select(-Employment_Status)
+
+#change categorical variables to dummy variables
+X_num <- model.matrix(~ ., data = x)[,-1]
+continious_x<- c("GPA", "Age", "Years_Since_Graduation")
+
+set.seed(1)
+n <- nrow(data_emp)
+train_index <- sample(1:n, size = 0.8*n)
+
+#if we scaled before splitting, the test rows would help scale to prepare the training data
+#we need to scale the continuous data only with the train data
+
+train_mean<- colMeans(X_num[train_index, continious_x])
+train_sd<- apply(X_num[train_index, continious_x], 2, sd)
+
+X_scaled<- X_num
+X_scaled[train_index, continious_x] <- scale(X_num[train_index, continious_x], center = train_mean, scale = train_sd )
+X_scaled[- train_index, continious_x]<- scale(X_num[-train_index, continious_x], center = train_mean, scale = train_sd)
+
+X_train <- X_scaled[train_index, ]
+X_test  <- X_scaled[-train_index, ]
+
+y_train <- Y[train_index]
+y_test  <- Y[-train_index]
+
+
+library(class)
+
+set.seed(1)
+
+# splitting into 10 folds
+
+n <- nrow(X_train)
+fold_indices <- sample(rep(1:10, length.out = n))
+folds <- split(1:n, fold_indices)
+
+K_vals <- 1:50 #LIST OF 50 k values, SHOULD I CHOOSE  A DIFFERENT NB 
+cv_acc <- numeric(length(K_vals)) #vector of 50 values
+
+
+
+best_k<- K_vals[which.max(cv_acc)]
+#we select K with the highest CV accuracy 
+
+# Plot CV accuracy
+plot(K_vals, cv_acc, type="b",
+     main="10-fold Cross-Validation Accuracy vs k",
+     xlab="k (neighbours)",
+     ylab="CV Accuracy",
+     cex.main=1.6,
+     cex.lab=1.4,
+     cex.axis=1.2)
+
+#very computationally expensive, and takes  lot of time,
+
+pred_knn <- knn(train = X_train, test = X_test, cl = y_train, k = best_k, prob = TRUE)
+knn_acc<- mean(pred_knn == y_test)
+
+
+```
+
+
+A K-nearest neighbours algorithm was applied, testing fifty candidate values of $k$ (1 to 50) using 10-fold cross-validation, as described in @sec-methods. 
+For each candidate value of $k$, the training data was split into 10 folds: one fold was held out as validation while the remaining nine were used for training, and this was repeated so that each fold served as the validation set exactly once. This produced 10 accuracy estimates per value of $k$, which were averaged to give a cross-validated accuracy for that $k$. Repeating this process across all fifty candidate values of $k$ produced the cross-validated accuracy curve shown in @fig-knn-cv. The value of $k$ that maximised cross-validated accuracy, $k=$ `r best_k`, was selected as the final model, meaning each prediction is based on the `r best_k` nearest neighbouring observations.
+
+
+```{r}
+#| echo: false
+#| message: false
+#| label: tbl-confusionM-KNN
+#| tbl-cap: KNN Confusion Matrix
+
+#Confusion Matrix
+
+confusionM_KNN<- table(Predicted=pred_knn, Actual=y_test)
+
+
+confusionM_KNN_table<- data.frame(
+  Predicted=c("Employed","Unemployed"),
+  Employed=c(confusionM_KNN[1,1], confusionM_KNN[2,1]),
+  Unemployed=c(confusionM_KNN[1,2], confusionM_KNN[2,2])
+) %>% gt() %>%
+  tab_spanner(
+    label = "Actual",
+    
+    columns = c("Employed","Unemployed")
+  ) %>%
+  cols_label(
+    Predicted = "Predicted",
+    Employed = "Employed",
+    Unemployed = "Unemployed"
+  )
+
+confusionM_KNN_table
+
+
+sensitivity<- confusionM_KNN[1,1]/(confusionM_KNN[1,1]+confusionM_KNN[-1,1])
+specificity<- confusionM_KNN[-1,-1]/(confusionM_KNN[-1,-1]+confusionM_KNN[1,-1])
+precision<- confusionM_KNN[1,1]/(confusionM_KNN[1,1]+confusionM_KNN[1,-1])
+F1_score<- 2*((precision*sensitivity)/(precision+sensitivity))
+
+metrics_table_KNN <- data.frame(
+  Metric = c("Accuracy", "Sensitivity", "Specificity", "Precision", "F1 Score"),
+  Value  = c(knn_acc, sensitivity, specificity, precision, F1_score)
+)
+
+metrics_table_KNN %>% gt()
+
+```
+
+Using this value of $k$, class predictions were made on the test 
+set, and test accuracy was computed as the proportion of correctly 
+classified observations. The resulting confusion matrix and performance 
+metrics, defined in @sec-methods, are reported below.
+
+The confusion matrix in @tbl-confusionM-KNN shows the model's predictions 
+against the true classes on the test set. Based on this, the KNN model 
+achieved an overall accuracy of `r round(knn_acc*100,1)`%, meaning it 
+correctly classified this proportion of graduates in the test set.
+
+- Sensitivity (recall) was `r round(sensitivity*100,1)`%, indicating that the model correctly identified the large majority of graduates who were actually employed. 
+- Specificity was considerably lower, at `r round(specificity*100,1)`%, meaning the model correctly identified only around two-thirds of graduates who were actually unemployed, unemployed graduates were misclassified as employed.
+
+- Precision was `r round(precision*100,1)`%, meaning that when the model 
+predicted a graduate as employed, it was correct in the large majority of 
+cases.
+
+- F1 score of `r round(F1_score*100,1)`% reflects strong performance 
+on the positive (Employed) class specifically, but does not capture the 
+weaker specificity observed above, since F1 is calculated from precision and sensitivity alone and does not involve true negatives.
+
+This pattern — strong sensitivity but weaker specificity — is consistent with the class imbalance identified in @sec-EDA (@fig-employment), where employed graduates substantially outnumber unemployed graduates in the dataset. With more employed examples to learn from, the model is more inclined to predict the majority class, which improves its ability to catch employed graduates but reduces its ability to correctly flag unemployed ones. This imbalance is also why PR-AUC, reported in the next section, is used alongside accuracy to better capture performance on the minority (Unemployed) class.
+
+> ### Classification Trees
+
+
+As with the KNN model, the data was split into 80% training and 20% test sets, using the same seed for consistency across methods. Employment_Status was set as a factor to indicate a classification, rather than regression, task.
+
+A full classification tree was first grown with cost complexity set to zero, allowing splits to continue until each terminal node was pure. This produced an unwieldy tree with r nrow(tree$frame) nodes, illustrating the extent to which an unconstrained tree overfits the training data — each additional split captures noise specific to the training sample rather than a generalisable pattern. The tree was therefore pruned, using the approaches described in @sec-methods: the minimum cross-validated error rule and the 1-SE rule.
+
+Pruning via the minimum-error rule selected cp= r round(best_cp,4), producing a tree with r num_splits splits. The 1-SE rule, which first adds one standard error to the minimum cross-validated error to obtain a threshold and then selects the smallest tree whose error falls within that threshold, selected a smaller, less complex tree, shown in @fig-tree-pruned. A 2-SE variant was also considered, using two standard errors instead of one to push toward an even smaller tree; this produced only a marginal further reduction, differing from the 1-SE tree by a small number of nodes rather than a meaningfully different structure. Given this negligible difference, the 1-SE tree was retained rather than the 2-SE version, as the standard and more commonly used choice.
+```{r}
+#| echo: false
+#| message: false
+
+
+#employement with 3 categorical values is used, cause when we filter cotinuing eductaion out, the tree consider 
+#salary as the only predictor resulting ina  tree of only 1 split
+
+library(rpart)
+#install.packages("rpart.plot")
+library(rpart.plot)
+
+
+#first we split the dataset
+set.seed(1)
+n <- nrow(data_emp)
+train_index <- sample(1:n, size = 0.8*n)
+
+train_data_c <- data_emp[train_index, ]
+test_data_c <- data_emp[-train_index, ]
+
+train_data_c$Employment_Status <- as.factor(train_data_c$Employment_Status) #tells that this is categorical, so classification model
+
+tree <- rpart(Employment_Status ~. , data=train_data_c, method="class",cp=0)
+
+
+#find th eminimumm x error, the cv error
+xerror_min<- min(tree$cptable[, "xerror"])
+
+#now find the cp of that minimum
+best_cp<- tree$cptable [which.min(tree$cptable[, "xerror"]), "CP"]
+num_splits<- tree$cptable [which.min(tree$cptable[, "xerror"]), "nsplit"]
+
+tree_prune<- prune(tree, cp=best_cp)
+#Predict and evaluate perfromance
+pred1 <- predict(tree_prune, newdata = test_data_c, type = "class")
+mean(pred1 == test_data_c$Employment_Status)
+#shouldi add arguments like minsplit and minbucket? how will this help? nothing changed
+
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| label: fig-tree-pruned
+#| fig-cap: Pruned Classification Tree (1-SE Rule)
+
+#1SE
+min_xerror <- min(tree$cptable[, "xerror"])
+min_xstd <- tree$cptable[which.min(tree$cptable[, "xerror"]), "xstd"]
+smallest_Tree<- min_xerror+min_xstd
+best_1se_index <- which(tree$cptable[, "xerror"] <= smallest_Tree)[1] #take the first value
+best_cp_1se <- tree$cptable[best_1se_index, "CP"]
+tree_prune_1se<- prune(tree, cp=best_cp_1se)
+rpart.plot(tree_prune_1se)
+#Predict and evaluate performance
+pred2 <- predict(tree_prune_1se, newdata = test_data_c, type = "class")
+
+#this 1SE gives a less crowded tree
+
+
+
+###############################
+
+library(randomForest)
+# bagging
+set.seed(1)
+Model <- randomForest(Employment_Status ~. , data=train_data_c, mtry= ncol(train_data_c)-1,ntree=500) # nb of predictors 
+#Predict and evaluate perfromance
+pred3 <- predict(Model, newdata = test_data_c, type = "class")
+
+
+
+# random forests
+set.seed(1)
+Model2 <- randomForest(Employment_Status ~. , data=train_data_c)
+#Predict and evaluate perfromance
+pred4 <- predict(Model2, newdata = test_data_c, type = "class")
+
+
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| label: tbl-tree-comparison
+#| tbl-cap: "Model Comparison: Classification Tree Variants"
+
+results <- data.frame(
+  Model = c("Tree (min xerror)", 
+            "Tree (1-SE rule)", 
+            "Bagging", 
+            "Random Forest"),
+  
+  Accuracy = c(
+    mean(pred1 == test_data_c$Employment_Status),
+    mean(pred2 == test_data_c$Employment_Status),
+    mean(pred3 == test_data_c$Employment_Status),
+    mean(pred4 == test_data_c$Employment_Status)
+  )
+) 
+
+results %>% gt() 
+
+```
+
+To decide between the pruning strategies, and to check whether a single tree was competitive with ensemble methods, four models were compared on test accuracy: the minimum-error tree, the 1-SE tree, bagging, and random forest — both grown as 500-tree ensembles on bootstrap samples of the training data, as described in @sec-methods. @tbl-tree-comparison shows the minimum-error tree achieved the highest accuracy at r round(mean(pred1==test_data_c$Employment_Status)*100,1)%, with bagging and random forest at r round(mean(pred3==test_data_c$Employment_Status)*100,1)% and r round(mean(pred4==test_data_c$Employment_Status)*100,1)% respectively, and the 1-SE tree close behind at r round(mean(pred2==test_data_c$Employment_Status)*100,1)%.
+
+```{r}
+#| echo: false
+#| message: false
+#| label: tbl-confusionM-tree
+#| tbl-cap: Classification Tree (1-SE Rule) Confusion Matrix
+#| 
+pred_1SE_tree<- predict(tree_prune_1se, newdata = test_data_c, type = "class")
+accuracy_1se<- mean(pred_1SE_tree == test_data_c$Employment_Status)
+
+#Confusion Matrix
+
+confusionM_tree<- table(Predicted=pred_1SE_tree, Actual=test_data_c$Employment_Status)
+
+
+confusionM_tree_table<- data.frame(
+  Predicted=c("Employed","Unemployed"),
+  Employed=c(confusionM_tree[1,1], confusionM_tree[2,1]),
+  Unemployed=c(confusionM_tree[1,2], confusionM_tree[2,2])
+) %>% gt() %>%
+  tab_spanner(
+    label = "Actual",
+    
+    columns = c("Employed","Unemployed")
+  ) %>%
+  cols_label(
+    Predicted = "Predicted",
+    Employed = "Employed",
+    Unemployed = "Unemployed"
+  )
+
+```
+ 
+```{r}
+#| echo: false
+#| message: false
+#| label: tbl-metrics-tree
+#| tbl-cap: Classification Tree (1-SE Rule) Performance Metrics
+
+sensitivity<- confusionM_tree[1,1]/(confusionM_tree[1,1]+confusionM_tree[-1,1])
+specificity<- confusionM_tree[-1,-1]/(confusionM_tree[-1,-1]+confusionM_tree[1,-1])
+precision<- confusionM_tree[1,1]/(confusionM_tree[1,1]+confusionM_tree[1,-1])
+F1_score<- 2*((precision*sensitivity)/(precision+sensitivity))
+
+
+metrics_table_tree <- data.frame(
+  Metric_TREE = c("Accuracy", "Sensitivity", "Specificity", "Precision", "F1 Score"),
+  Value  = c(accuracy_1se, sensitivity, specificity, precision, F1_score)
+)
+
+metrics_table_tree %>% gt()
+
+
+```
+
+
+
+Despite not achieving the highest accuracy, the 1-SE tree was selected as the model to report in detail. The gap to the minimum-error tree and to the ensemble methods was marginal, while the 1-SE tree offers a substantially simpler, more interpretable partition of the feature space — a single tree that can be read and explained node-by-node, unlike a 500-tree ensemble where no individual tree can be inspected. Since identifying interpretable drivers of employment status is part of the aim of this analysis, this trade-off was judged worthwhile, and the 1-SE tree is examined in detail below.
+
+@tbl-confusionM-tree shows the 1-SE tree's predictions against the true classes on the test set. Of the `r sum(confusionM_tree[,2])` graduates actually unemployed, `r confusionM_tree[1,2]` were misclassified as employed.
 # Conclusions and discussion
-
-
 
 You can add options to executable code like this
 
