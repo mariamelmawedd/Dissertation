@@ -296,6 +296,9 @@ for (i in seq_along(K_vals)) { #for each value of k
 best_k<- K_vals[which.max(cv_acc)]
 #we select K with the highest CV accuracy 
 
+saveRDS(list(K_vals = K_vals, cv_acc = cv_acc, best_k = best_k,
+             pred_knn = pred_knn, knn_acc = knn_acc), "knn_results.rds")
+
 # Plot CV accuracy
 plot(K_vals, cv_acc, type="b",
      main="10-fold Cross-Validation Accuracy vs k",
@@ -629,19 +632,25 @@ mean(predsvm == test_data_c$Employment_Status)
 
 set.seed(1)
 model_svm_guassian<- svm(Employment_Status ~. , data=train_data_c,  type="C-classification", kernel="radial",probability=TRUE, cost=1) 
-predsvm_guassian<- predict(model_svm_guassian, newdata = test_data_c, type = "class")
+predsvm_guassian<- predict(model_svm_guassian, newdata = test_data_c, type = "class", probability = TRUE)
 mean(predsvm_guassian == test_data_c$Employment_Status)  #better accuracy 
 
 set.seed(1)
 model_svm_poli2<- svm(Employment_Status ~. , data=train_data_c,  type="C-classification", kernel="polynomial", probability=TRUE, degree=2,  cost=1) 
-predsvm_poli2<- predict(model_svm_poli2, newdata = test_data_c, type = "class")
+predsvm_poli2<- predict(model_svm_poli2, newdata = test_data_c, type = "class", probability = TRUE)
 mean(predsvm_poli2 == test_data_c$Employment_Status)  
 
 set.seed(1)
 model_svm_poli3<- svm(Employment_Status ~. , data=train_data_c,  type="C-classification", kernel="polynomial", probability=TRUE, degree=3,  cost=1) 
-predsvm_poli3<- predict(model_svm_poli3, newdata = test_data_c, type = "class")
+predsvm_poli3<- predict(model_svm_poli3, newdata = test_data_c, type = "class", probability = TRUE)
 mean(predsvm_poli3 == test_data_c$Employment_Status)  
 
+saveRDS(list(
+  Model_svm = Model_svm, predsvm = predsvm,
+  model_svm_guassian = model_svm_guassian, predsvm_guassian = predsvm_guassian,
+  model_svm_poli2 = model_svm_poli2, predsvm_poli2 = predsvm_poli2,
+  model_svm_poli3 = model_svm_poli3, predsvm_poli3 = predsvm_poli3
+), "svm_models.rds")
 
 
 model_SVM_metric <- data.frame(
@@ -679,6 +688,26 @@ roc_curve_SVM<-roc.curve(scores.class0 = pred_test_probability_svm[test_data_c$E
                          curve = TRUE)
 plot(roc_curve_SVM)
 
+
+saveRDS(list(K_vals = K_vals, cv_acc = cv_acc, best_k = best_k,
+             pred_knn = pred_knn, knn_acc = knn_acc,
+             cm_knn = cm_knn, pr_curve_knn = pr_curve_knn, roc_curve_knn = roc_curve_knn),
+        "knn_results.rds")
+
+saveRDS(list(
+  Model_svm = Model_svm, predsvm = predsvm,
+  model_svm_guassian = model_svm_guassian, predsvm_guassian = predsvm_guassian,
+  model_svm_poli2 = model_svm_poli2, predsvm_poli2 = predsvm_poli2,
+  model_svm_poli3 = model_svm_poli3, predsvm_poli3 = predsvm_poli3,
+  cm_SVM = cm_SVM, pr_curve_SVM = pr_curve_SVM, roc_curve_SVM = roc_curve_SVM
+), "svm_models.rds")
+
+saveRDS(list(
+  tree = tree, tree_prune_1se = tree_prune_1se,
+  pred_1SE_tree = pred_1SE_tree, accuracy_1se = accuracy_1se,
+  confusionM_tree = confusionM_tree, cm_tree = cm_tree,
+  pr_curve_tree = pr_curve_tree, roc_curve_tree = roc_curve_tree
+), "tree_results.rds")
 ######################################################################
 
 
@@ -716,6 +745,10 @@ comparison_metrics <- data.frame(
                 "ROC_AUC")
 )
 
+comparison_metrics$Metric <- rownames(comparison_metrics)
+comparison_metrics <- comparison_metrics[, c("Metric", "KNN", "Tree.1SE_rule.", "SVM")]
+
+comparison_metrics %>% gt() %>% cols_align(align = "center", columns = everything())
 
 #best is the tree
 
@@ -779,6 +812,13 @@ predict_BIC_logistic<- ifelse(predict(model_BIC, newdata=test_data, type="respon
 
 mean(predict_BIC_logistic==test_data$Employment_binary) #same model as AIC, same accuracy 
 
+
+saveRDS(list(
+  full_model = full_model,
+  model_AIC = model_AIC, model_AIC_no_gender = model_AIC_no_gender,
+  anova_AIC_gender = anova_AIC_gender, predict_AIC_logistic = predict_AIC_logistic,
+  model_BIC = model_BIC, predict_BIC_logistic = predict_BIC_logistic
+), "logistic_selection_results.rds")
 #same same for BIC AND AIC
 
 #BIC BETTER CAUSE WE DIDNT HAVE TO REMOVE GENDER, CONTINUE WITH BIC
@@ -804,24 +844,25 @@ Y_test<- y[-train_ind ]
 
 set.seed(1)
 lambda_ridge<- cv.glmnet(X_train, Y_train, alpha=0)
-model_ridge<- glmnet(X_train, Y_train, family = "binomial", alpha=0, lambda = lambda_ridge$lambda.min)
+model_ridge<- glmnet(X_train, Y_train, family = "binomial", alpha=0, lambda = lambda_ridge$lambda.1se)
 #TO PLOT
 model_r<- glmnet(X_train, Y_train, family = "binomial", alpha=0)
 plot(model_r, label = TRUE)
 
 set.seed(1)
 lambda_other<- cv.glmnet(X_train, Y_train, alpha=0.5)
-model_other<- glmnet(X_train, Y_train, family = "binomial", alpha=0.5, lambda = lambda_other$lambda.min)
+model_other<- glmnet(X_train, Y_train, family = "binomial", alpha=0.5, lambda = lambda_other$lambda.1se)
 #TO PLOT
 model_o<- glmnet(X_train, Y_train, family = "binomial", alpha=0.5)
 plot(model_o,label = TRUE)
 
 set.seed(1)
 lambda_lasso<- cv.glmnet(X_train,Y_train,alpha=1)
-model_lasso <- glmnet(X_train, Y_train, family = "binomial", alpha=1, lambda = lambda_lasso$lambda.min)
+model_lasso <- glmnet(X_train, Y_train, family = "binomial", alpha=1, lambda = lambda_lasso$lambda.1se)
 #TO PLOT
 model_l <- glmnet(X_train, Y_train, family = "binomial", alpha=1)
 plot(model_l, label = TRUE)
+
 
 plot(lambda_lasso)
 
@@ -850,16 +891,23 @@ results_model %>% gt()
 coef(model_ridge)
 coef(model_other)
 coef_lasso<- coef(model_lasso)
+# Convert  matrix to a regular numeric vector
+coef_vals <- as.numeric(coef_lasso)
+names(coef_vals) <- rownames(coef_lasso)
 
+# Names of variables LASSO shrank to exactly zero
+zero_vars <- names(coef_vals)[coef_vals == 0]
+zero_vars
 
 #COMPARE LASSO AND BIC
 model_BIC_LASSO <- data.frame(
   Model = c(
-    "Lasso",
+    "Lasso", "AIC",
     "BIC"),
   
   Accuracy = c(
     mean(Y_test==result_lasso),
+    mean(predict_AIC_logistic==test_data$Employment_binary),
     mean(test_data$Employment_binary==predict_BIC_logistic)
   )
 ) 
@@ -937,7 +985,7 @@ interaction_model <- glm(
 
 summary(interaction_model)
 
-anova(final_Lasso_model, interaction_model, test = "Chisq") #simpler model, then more complicated model
+anova_interaction<- anova(final_Lasso_model, interaction_model, test = "Chisq") #simpler model, then more complicated model
 #This means the interaction model fits the training data significantly better than the simpler model.
 AIC(final_Lasso_model, interaction_model)
 
@@ -946,6 +994,7 @@ predict_final<- ifelse( predict(final_Lasso_model, newdata = test_data, type="re
 predict_interaction<- ifelse( predict(interaction_model, newdata = test_data, type="response") >0.5, 1, 0)
 mean(predict_final==test_data$Employment_binary)  #same as the AIC after removing gender, same as BIC ONE
 mean(predict_interaction==test_data$Employment_binary)
+saveRDS( anova_interaction, "anova_interaction.rds")
 
 # the final selected model 
 
@@ -961,8 +1010,26 @@ cm_logistic_interaction <- confusionMatrix(
   positive = "1"
 )
 
+cm_table <- cm_logistic_interaction$table
 
-cm_logistic_interaction$table %>% gt()
+confusionM_logistic_table <- data.frame(
+  Predicted = c("Unemployed", "Employed"),   # careful: your factor levels are 0/1, not the KNN/tree labels
+  Unemployed = c(cm_table[1,1], cm_table[2,1]),
+  Employed   = c(cm_table[1,2], cm_table[2,2])
+) %>% gt() %>%
+  tab_spanner(
+    label = "Actual",
+    columns = c("Unemployed", "Employed")
+  ) %>%
+  cols_label(
+    Predicted = "Predicted",
+    Unemployed = "Unemployed",
+    Employed = "Employed"
+  )
+
+confusionM_logistic_table
+
+cm_logistic_interaction$table 
 
 #this gives confusion matrix, without the precision, f1 and others 
 
@@ -982,9 +1049,7 @@ metric_all<- data.frame(
     mean(test_data$Employment_binary==predict_BIC_logistic)
   )
 ) 
-metric_all %>% gt() %>% as_latex() %>% 
-  as.character() %>% 
-  cat()
+metric_all %>% gt() 
 
 
 prob_interaction<- predict(interaction_model, newdata = test_data, type = "response")
@@ -1026,11 +1091,9 @@ summary(BIC_model)
 predict_BIC<- predict(BIC_model, newdata = test_data_s)
 mse_BIC<- mean((test_data_s$Salary- predict_BIC)^2)
 
-par(mfrow=c(2,2))
-plot(BIC_model, main="Before Log")
 
-par(mfrow = c(2, 2))
-plot(BIC_model, which = 1, main = "Before Log")   #try to see what is causing the cluster, 
+
+#try to see what is causing the cluster, 
 #calculate residuals to plot by ggplot, true and fitted values to find the residuals 
 
 salary_fitted<- train_data_s %>% 
@@ -1038,11 +1101,9 @@ salary_fitted<- train_data_s %>%
 ggplot(data=salary_fitted, aes(x=fitted, y=res, colour = Education_Level))+ 
   geom_point()  #EDUCATION LEVEL IS THEONE CAUSING THE CLUSTER
 
-boxplot(salary_fitted$Salary)
+boxplot(data_salary$Salary)
 
-plot(BIC_model, which = 2, main = "Before Log")
-plot(BIC_log_salary, which = 1, main = "After Log")
-plot(BIC_log_salary, which = 2, main = "After Log")
+
 #############################
 ### LOG SALARY BIC
 
@@ -1053,16 +1114,27 @@ summary(BIC_log_salary)
 predict_BIC_s_log<- exp(predict(BIC_log_salary, newdata = test_data_s))
 mse_BIC_log<- mean((test_data_s$Salary- predict_BIC_s_log)^2)
 
-par(mfrow=c(2,2))
-plot(BIC_log_salary, main="After Log")
+
 
 #continue with no log 
 
 #if we do BIC no log, we get the same result as AIC no log
 #If we do BIC with log it gives slightly different result than the AIC log
 
+saveRDS(list(
+  fullmodel = fullmodel,
+  BIC_model = BIC_model,
+  model_log_salary = model_log_salary,
+  BIC_log_salary = BIC_log_salary,
+  final_model_salary = final_model_salary
+), "salary_models.rds")
 
 final_model_salary<- BIC_model
+par(mfrow = c(2, 2))
+plot(BIC_model, which = 1, main = "Before Log") 
+plot(BIC_model, which = 2, main = "Before Log")
+plot(BIC_log_salary, which = 1, main = "After Log")
+plot(BIC_log_salary, which = 2, main = "After Log")
 
 ###################################################
 ############### Additive model
@@ -1148,9 +1220,25 @@ final_GAM_salary<- gam(
   data=train_data_s,
   method="REML"
 )
+
 summary(final_GAM_salary)
 
-GAM_interaction<- gam(Salary~ s(GPA)+ Internship_Experience + Education_Level+ University_Ranking+ Language_Proficiency+ GPA:Internship_Experience+
+plot(final_GAM_salary)
+
+saveRDS(list(
+  salary_add = salary_add,
+  salary_no_gender = salary_no_gender,
+  salary_no_visa = salary_no_visa,
+  salary_no_field = salary_no_field,
+  salary_no_country = salary_no_country,
+  salary_no_years_age = salary_no_years_age,
+  final_GAM_salary = final_GAM_salary,
+  anova_gender = anova_gender,
+  anova_visa = anova_visa,
+  anova_field = anova_field,
+  anova_country = anova_country,
+  anova_years_age = anova_years_age
+), "GAM_salary_models.rds")GAM_interaction<- gam(Salary~ s(GPA)+ Internship_Experience + Education_Level+ University_Ranking+ Language_Proficiency+ GPA:Internship_Experience+
                         Internship_Experience:University_Ranking + Education_Level:Language_Proficiency, data=train_data_s,
                       method="REML")
 
@@ -1168,8 +1256,8 @@ data_education<- train_data_s %>%
   filter(Education_Level != "PhD")
 
 GAM_phd<- gam(Salary~ s(GPA)+ Internship_Experience +  University_Ranking+ Language_Proficiency+ GPA:Internship_Experience+
-                                  Internship_Experience:University_Ranking , data=data_phd,
-                                method="REML")
+                Internship_Experience:University_Ranking , data=data_phd,
+              method="REML")
 
 summary(GAM_phd)
 plot(GAM_phd)
