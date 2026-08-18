@@ -317,13 +317,13 @@ For this question, as explained previously, Employment Status was filtered to th
 
 To start with first method:
 
-> ###K-Nearest Neighbours Method:
+> ### K-Nearest Neighbours Method:
 
 Employment_Status was set as the response variable (Y), with the remaining variables forming the predictor set (X). Categorical predictors in X were 
 converted into dummy variables, while the continuous predictors (GPA, Age, Years_Since_Graduation) were identified separately so that they could later be scaled. A seed was fixed at 1 throughout to ensure 
 reproducible results.
 
-We started by creating Y set of factors of Employment status and X dataeet of the other predicteors left int he dataset, then we changed all the categorical ariables in the X set and splitted it into continious variables and dummy variavles. Then we set seed to 1 to have a static result everytime. After that we splitted the dataset by 80% trainign set and 20 % test set, we used the train index to find the mean sand the stnadard deviation of the it to scale the X values. Then we ended up splitting the dataset into X tain and X test then Y train and Y test. A k - nearedst neighbour algorthm was applied with k valuesof 50 and 10 cross validationa s explained in @sec-methods. What is basically happening we have 10 cross validation folds so we start with the first fold as test data and 9 remaining as  training folds, then the second fold as test data and the remiaing a terainign fold and so on, we do this for each value of k, 50 times, ofo each fold model we get a cross validation error, so for each value of k we get an average cross validation error over these 10 folds. Then after that we need ot choose the best k witht he highest cross validation accuracy, sfor this we plot a fplot of cross validation versus K values.  From the plot we can see that the best k value is 28, this means that each preiction is based ont he 28 neighbour points. Then using this k value, we predict the classes on the new data tet, the test data and compute the accuracy by $knn_acc<- mean(pred_knn == y_test)$. After that we oplotted the confusion matrix and computed all the performance metrics explained above in @sec-methods.
+We started by creating Y set of factors of Employment status and X dataeet of the other predicteors left int he dataset, then we changed all the categorical ariables in the X set and splitted it into continious variables and dummy variavles. Then we set seed to 1 to have a static result everytime. After that we splitted the dataset by 80% trainign set and 20 % test set, we used the train index to find the mean sand the stnadard deviation of the it to scale the X values. Then we ended up splitting the dataset into X tain and X test then Y train and Y test. A k - nearedst neighbour algorthm was applied with k valuesof 50 and 10 cross validationa s explained in @sec-methods. What is basically happening we have 10 cross validation folds so we start with the first fold as test data and 9 remaining as  training folds, then the second fold as test data and the remiaing a terainign fold and so on, we do this for each value of k, 50 times, ofo each fold model we get a cross validation error, so for each value of k we get an average cross validation error over these 10 folds. Then after that we need ot choose the best k witht he highest cross validation accuracy, sfor this we plot a fplot of cross validation versus K values.  From the plot we can see that the best k value is 28, this means that each preiction is based ont he 28 neighbour points. Then using this k value, we predict the classes on the new data tet, the test data and compute the accuracy. After that we oplotted the confusion matrix and computed all the performance metrics explained above in @sec-methods.
 
 
 The dataset was then split into 80% training and 20% test sets. Since KNN 
@@ -338,8 +338,6 @@ relies on distance calculations between observations, unscaled variables with la
 #| fig-cap: 10-Fold Cross-Validation Accuracy vs k
 
 
-
-#filter data
 data_emp<- data_uk %>% 
   filter(Employment_Status!="Continuing Education") %>%
   select(-Salary, -Job_Sector,-Region_of_Study)
@@ -372,24 +370,13 @@ X_test  <- X_scaled[-train_index, ]
 y_train <- Y[train_index]
 y_test  <- Y[-train_index]
 
+knn_results <- readRDS("knn_results.rds")
 
-library(class)
-
-set.seed(1)
-
-# splitting into 10 folds
-
-n <- nrow(X_train)
-fold_indices <- sample(rep(1:10, length.out = n))
-folds <- split(1:n, fold_indices)
-
-K_vals <- 1:50 #LIST OF 50 k values, SHOULD I CHOOSE  A DIFFERENT NB 
-cv_acc <- numeric(length(K_vals)) #vector of 50 values
-
-
-
-best_k<- K_vals[which.max(cv_acc)]
-#we select K with the highest CV accuracy 
+K_vals   <- knn_results$K_vals
+cv_acc   <- knn_results$cv_acc
+best_k   <- knn_results$best_k
+pred_knn <- knn_results$pred_knn
+knn_acc  <- knn_results$knn_acc
 
 # Plot CV accuracy
 plot(K_vals, cv_acc, type="b",
@@ -400,10 +387,7 @@ plot(K_vals, cv_acc, type="b",
      cex.lab=1.4,
      cex.axis=1.2)
 
-#very computationally expensive, and takes  lot of time,
 
-pred_knn <- knn(train = X_train, test = X_test, cl = y_train, k = best_k, prob = TRUE)
-knn_acc<- mean(pred_knn == y_test)
 
 
 ```
@@ -413,72 +397,12 @@ A K-nearest neighbours algorithm was applied, testing fifty candidate values of 
 For each candidate value of $k$, the training data was split into 10 folds: one fold was held out as validation while the remaining nine were used for training, and this was repeated so that each fold served as the validation set exactly once. This produced 10 accuracy estimates per value of $k$, which were averaged to give a cross-validated accuracy for that $k$. Repeating this process across all fifty candidate values of $k$ produced the cross-validated accuracy curve shown in @fig-knn-cv. The value of $k$ that maximised cross-validated accuracy, $k=$ `r best_k`, was selected as the final model, meaning each prediction is based on the `r best_k` nearest neighbouring observations.
 
 
-```{r}
-#| echo: false
-#| message: false
-#| label: tbl-confusionM-KNN
-#| tbl-cap: KNN Confusion Matrix
 
-#Confusion Matrix
-
-confusionM_KNN<- table(Predicted=pred_knn, Actual=y_test)
-
-
-confusionM_KNN_table<- data.frame(
-  Predicted=c("Employed","Unemployed"),
-  Employed=c(confusionM_KNN[1,1], confusionM_KNN[2,1]),
-  Unemployed=c(confusionM_KNN[1,2], confusionM_KNN[2,2])
-) %>% gt() %>%
-  tab_spanner(
-    label = "Actual",
-    
-    columns = c("Employed","Unemployed")
-  ) %>%
-  cols_label(
-    Predicted = "Predicted",
-    Employed = "Employed",
-    Unemployed = "Unemployed"
-  )
-
-confusionM_KNN_table
-
-
-sensitivity<- confusionM_KNN[1,1]/(confusionM_KNN[1,1]+confusionM_KNN[-1,1])
-specificity<- confusionM_KNN[-1,-1]/(confusionM_KNN[-1,-1]+confusionM_KNN[1,-1])
-precision<- confusionM_KNN[1,1]/(confusionM_KNN[1,1]+confusionM_KNN[1,-1])
-F1_score<- 2*((precision*sensitivity)/(precision+sensitivity))
-
-metrics_table_KNN <- data.frame(
-  Metric = c("Accuracy", "Sensitivity", "Specificity", "Precision", "F1 Score"),
-  Value  = c(knn_acc, sensitivity, specificity, precision, F1_score)
-)
-
-metrics_table_KNN %>% gt()
-
-```
 
 Using this value of $k$, class predictions were made on the test 
 set, and test accuracy was computed as the proportion of correctly 
-classified observations. The resulting confusion matrix and performance 
-metrics, defined in @sec-methods, are reported below.
+classified observations. 
 
-The confusion matrix in @tbl-confusionM-KNN shows the model's predictions 
-against the true classes on the test set. Based on this, the KNN model 
-achieved an overall accuracy of `r round(knn_acc*100,1)`%, meaning it 
-correctly classified this proportion of graduates in the test set.
-
-- Sensitivity (recall) was `r round(sensitivity*100,1)`%, indicating that the model correctly identified the large majority of graduates who were actually employed. 
-- Specificity was considerably lower, at `r round(specificity*100,1)`%, meaning the model correctly identified only around two-thirds of graduates who were actually unemployed, unemployed graduates were misclassified as employed.
-
-- Precision was `r round(precision*100,1)`%, meaning that when the model 
-predicted a graduate as employed, it was correct in the large majority of 
-cases.
-
-- F1 score of `r round(F1_score*100,1)`% reflects strong performance 
-on the positive (Employed) class specifically, but does not capture the 
-weaker specificity observed above, since F1 is calculated from precision and sensitivity alone and does not involve true negatives.
-
-This pattern — strong sensitivity but weaker specificity — is consistent with the class imbalance identified in @sec-EDA (@fig-employment), where employed graduates substantially outnumber unemployed graduates in the dataset. With more employed examples to learn from, the model is more inclined to predict the majority class, which improves its ability to catch employed graduates but reduces its ability to correctly flag unemployed ones. This imbalance is also why PR-AUC, reported in the next section, is used alongside accuracy to better capture performance on the minority (Unemployed) class.
 
 > ### Classification Trees
 
@@ -524,7 +448,7 @@ num_splits<- tree$cptable [which.min(tree$cptable[, "xerror"]), "nsplit"]
 tree_prune<- prune(tree, cp=best_cp)
 #Predict and evaluate perfromance
 pred1 <- predict(tree_prune, newdata = test_data_c, type = "class")
-mean(pred1 == test_data_c$Employment_Status)
+
 #shouldi add arguments like minsplit and minbucket? how will this help? nothing changed
 
 ```
@@ -594,14 +518,132 @@ results %>% gt()
 
 ```
 
-To decide between the pruning strategies, and to check whether a single tree was competitive with ensemble methods, four models were compared on test accuracy: the minimum-error tree, the 1-SE tree, bagging, and random forest — both grown as 500-tree ensembles on bootstrap samples of the training data, as described in @sec-methods. @tbl-tree-comparison shows the minimum-error tree achieved the highest accuracy at r round(mean(pred1==test_data_c$Employment_Status)*100,1)%, with bagging and random forest at r round(mean(pred3==test_data_c$Employment_Status)*100,1)% and r round(mean(pred4==test_data_c$Employment_Status)*100,1)% respectively, and the 1-SE tree close behind at r round(mean(pred2==test_data_c$Employment_Status)*100,1)%.
+To decide between the pruning strategies, and to check whether a single tree was competitive with ensemble methods, four models were compared on test accuracy: the minimum-error tree, the 1-SE tree, bagging, and random forest — both grown as 500-tree ensembles on bootstrap samples of the training data, as described in @sec-methods. @tbl-tree-comparison shows the minimum-error tree achieved the highest accuracy at `r mean(pred1==test_data_c$Employment_Status)`, with bagging and random forest at `r mean(pred3==test_data_c$Employment_Status)` and `r mean(pred4==test_data_c$Employment_Status)` respectively, and the 1-SE tree close behind at `r mean(pred2==test_data_c$Employment_Status)`.
+
+
+
+Despite not achieving the highest accuracy, the 1-SE tree was selected as the model to report in detail. The gap to the minimum-error tree and to the ensemble methods was marginal, while the 1-SE tree offers a substantially simpler, more interpretable partition of the feature space — a single tree that can be read and explained node-by-node, unlike a 500-tree ensemble where no individual tree can be inspected. Since identifying interpretable drivers of employment status is part of the aim of this analysis, this trade-off was judged worthwhile, and the 1-SE tree is examined in detail below.
+
+
+> ### Support Vector Machine (SVM)
+
+As a further approach to classifying employment status, we fitted support vector machine (SVM) models with four different kernels: linear, radial(guassian), polynomial of degree 2, and polynomial of degree 3. A seed of 1 was set again for each of these models for reproducibility. This was by far the most computationally expensive step in the analysis, in particular, tuning the linear kernel took over two hours to run. Given this cost,we focused on trying different kernels rather than tuning.
+
+Each of the four fitted models was then used to predict employment status on the same test set used for th classification tree, and we compared their test set accuracy as shown in @tbl-SVM.
+
+ 
+```{r}
+#| echo: false
+#| message: false
+
+svm_models <- readRDS("svm_models.rds")
+
+Model_svm           <- svm_models$Model_svm
+predsvm              <- svm_models$predsvm
+model_svm_guassian   <- svm_models$model_svm_guassian
+predsvm_guassian      <- svm_models$predsvm_guassian
+model_svm_poli2       <- svm_models$model_svm_poli2
+predsvm_poli2          <- svm_models$predsvm_poli2
+model_svm_poli3        <- svm_models$model_svm_poli3
+predsvm_poli3           <- svm_models$predsvm_poli3
+
+model_SVM_metric <- data.frame(
+  `SVM Model` = c("Linear Kernel", "Radial Kernel", "Polynomial Gegree 2 Kernel", "Polynomial Degree 3 Kernel"),
+  Accuracy  = c(mean(predsvm == test_data_c$Employment_Status), mean(predsvm_guassian == test_data_c$Employment_Status) ,
+                mean(predsvm_poli2 == test_data_c$Employment_Status), mean(predsvm_poli3 == test_data_c$Employment_Status))
+)
+
+model_SVM_metric %>% gt()
+
+```
+
+@tbl-SVM shows that the radial(gaussian) kernel acheived the highest test set accuracy among the four models. A radial kernel can capture more flexible, non-linear decision boundaries than a linear kernel, without imposing the specific polynomial structure of the degree 2 and degree 3 kernels, so it is reasonable choice when the true decision boundary is unknown. 
+
+## Research Question 2: Evaluating Model Performance
+
+In this section, we evaluate and compare the performance of the three classification methods used to predict employment status: K-nearest neighbours(KNN), the pruned classification tree selected under the 1-SE rule, and the support vector machine with the Gaussian (radial) kernel, each identified as the best-performing within its own method in the previous section @sec-RS1. For each of these 3 models, we computed a confusion matrix, a precision0recall (PR) curve, and a receiver operating characteristic (ROC) curve on the test set. As discussed earlier, we place more weight and importance on the PR curve than the ROC curve. 
+
+To compare the three models directly, @tbl-comparison draws together the accuracy, sensitivity, specificity, precision, F1 score, PR-AUC, ROC-AUC of each model, taken from their respective confusion matrices, PR curves and ROC curves. The confusionmatrix here the columns represent the actual classes where the rows represent the predicted classes. 
+
+
+```{r}
+#| echo: false
+#| message: false
+#| tbl-cap: Comparison matric of all the models
+#| label: tbl-comparison
+
+knn_results <- readRDS("knn_results.rds")
+cm_knn         <- knn_results$cm_knn
+pr_curve_knn   <- knn_results$pr_curve_knn
+roc_curve_knn  <- knn_results$roc_curve_knn
+
+
+svm_models <- readRDS("svm_models.rds")
+cm_SVM         <- svm_models$cm_SVM
+pr_curve_SVM   <- svm_models$pr_curve_SVM
+roc_curve_SVM  <- svm_models$roc_curve_SVM
+
+tree_results <- readRDS("tree_results.rds")
+tree_prune_1se   <- tree_results$tree_prune_1se
+pred_1SE_tree    <- tree_results$pred_1SE_tree
+accuracy_1se     <- tree_results$accuracy_1se
+confusionM_tree  <- tree_results$confusionM_tree
+cm_tree          <- tree_results$cm_tree
+pr_curve_tree    <- tree_results$pr_curve_tree
+roc_curve_tree   <- tree_results$roc_curve_tree
+
+comparison_metrics <- data.frame(
+  KNN = c(cm_knn$overall["Accuracy"],
+          cm_knn$byClass["Sensitivity"],
+          cm_knn$byClass["Specificity"],
+          cm_knn$byClass["Pos Pred Value"],
+          cm_knn$byClass["F1"],
+          pr_curve_knn$auc.integral,
+          roc_curve_knn$auc),
+  
+  `Tree (1SE rule)` = c(cm_tree$overall["Accuracy"],
+                       cm_tree$byClass["Sensitivity"],
+                       cm_tree$byClass["Specificity"],
+                       cm_tree$byClass["Pos Pred Value"],
+                       cm_tree$byClass["F1"],
+                       pr_curve_tree$auc.integral,
+                       roc_curve_tree$auc),
+  
+  SVM = c(cm_SVM$overall["Accuracy"],
+          cm_SVM$byClass["Sensitivity"],
+          cm_SVM$byClass["Specificity"],
+          cm_SVM$byClass["Pos Pred Value"],
+          cm_SVM$byClass["F1"],
+          pr_curve_SVM$auc.integral,
+          roc_curve_SVM$auc),
+  
+  row.names = c("Accuracy", "Sensitivity", "Specificity", "Precision", "F1", "PR_AUC", "ROC_AUC"),
+  check.names = FALSE
+)
+
+comparison_metrics$Metric <- rownames(comparison_metrics)
+comparison_metrics <- comparison_metrics[, c("Metric", "KNN", "Tree (1SE rule)", "SVM")]
+
+comparison_metrics %>%
+  gt(rowname_col = "Metric") %>%
+  cols_align(align = "center", columns = everything())
+```
+
+@tbl-comparison show sthat the pruned classification tree (1SE-rule) achieves the highest accuracy `r cm_tree$overall["Accuracy"]`, specificity `r cm_tree$byClass["Specificity"]` , precision `r cm_tree$byClass["Pos Pred Value"]`, F1 score `r cm_tree$byClass["F1"]`, PR-AUC `r pr_curve_tree$auc.integral ` , and ROC-AUC `r roc_curve_tree$auc` of the three models. The one exception is sensitivity( recall) for the "Employyed" class, where KNN scores highest at `r cm_knn$byClass["Sensitivity"]`, compared to `r cm_tree$byClass["Sensitivity"]` for the tree.
+
+This reflects a genuine trade-off between the models. KNN is more willing to predict " Employed", which lets it correctly catch a large number of truly employed graduates. The tree, on contrast, is far more ocnservative about predicting "Employed", it misses more genuinely employed gradutes than KNN does. 
+
+We therefore proceed with examining th eclassification tree confusion matrix and precision recall curve in more details below as it' th ebest-eperfroming model. @tbl-confusionM-tree
+
+
 
 ```{r}
 #| echo: false
 #| message: false
 #| label: tbl-confusionM-tree
 #| tbl-cap: Classification Tree (1-SE Rule) Confusion Matrix
-#| 
+
+
 pred_1SE_tree<- predict(tree_prune_1se, newdata = test_data_c, type = "class")
 accuracy_1se<- mean(pred_1SE_tree == test_data_c$Employment_Status)
 
@@ -625,36 +667,574 @@ confusionM_tree_table<- data.frame(
     Employed = "Employed",
     Unemployed = "Unemployed"
   )
+confusionM_tree_table
 
 ```
- 
+
+
+
+@tbl-confusionM-tree shows the 1-SE tree's predictions against the true classes on the test set. Of the `r sum(confusionM_tree[,2])` graduates who were actually unemployed, only `r confusionM_tree[1,2]` were misclassified as employed, consistent with the tree's high precision `r pr_curve_tree$auc.integral `. However, a much larger number of employed graduates `r confusionM_tree[2,1]` where miscalssified as unemployed. The gap between the two numbers `r sum(confusionM_tree[,2])` for unemployed vs `r sum(confusionM_tree[,1])` for employed looks large, but this is mostly a reflection of class imbalance in the test data. 
+
+This means the tree is not so much better at recognising nempoyed graduates as it is more conservative overall about predicting "Employed": it only predictes a graduate as employed whne it is fairly confident, which keeps false positve very low but comes at the cost of meaningful number of missed true positive. 
+
+To investigate what distingusohes correctly, we compared the two groups accross several predictor. 
+
+in this confusion matrix, we can see that there are 18 unemployed were miscallsified as employed but 1030 employed were misclassified as unemployed, which a very huge difference in number. to investigate this and see why is th emodel doing this, we can see tht the model is better at predicting unemployed and it knows exactyl what makes a graduate unemployed, so it confuses some employed ot be unempoloyed? 
+
 ```{r}
 #| echo: false
 #| message: false
-#| label: tbl-metrics-tree
-#| tbl-cap: Classification Tree (1-SE Rule) Performance Metrics
+#| label: tbl-misclassified-employed
+#| tbl-cap: Predictor profile of employed graduates - misclassified as unemployed vs correctly classified
 
-sensitivity<- confusionM_tree[1,1]/(confusionM_tree[1,1]+confusionM_tree[-1,1])
-specificity<- confusionM_tree[-1,-1]/(confusionM_tree[-1,-1]+confusionM_tree[1,-1])
-precision<- confusionM_tree[1,1]/(confusionM_tree[1,1]+confusionM_tree[1,-1])
-F1_score<- 2*((precision*sensitivity)/(precision+sensitivity))
+misclassified_emp <- test_data_c[test_data_c$Employment_Status=="Employed" & pred_1SE_tree=="Unemployed", ]
+true_employed      <- test_data_c[test_data_c$Employment_Status=="Employed" & pred_1SE_tree=="Employed", ]
+
+categorical_predictors <- c("Education_Level", "Internship_Experience",
+                             "University_Ranking", "Language_Proficiency", "Gender")
+
+build_comparison <- function(var) {
+  mis <- round(prop.table(table(misclassified_emp[[var]])) * 100, 1)
+  cor <- round(prop.table(table(true_employed[[var]])) * 100, 1)
+  data.frame(
+    Predictor = var,
+    Level = names(mis),
+    `Misclassified (%)` = as.numeric(mis),
+    `Correctly Classified (%)` = as.numeric(cor)[match(names(mis), names(cor))],
+    check.names = FALSE
+  )
+}
+
+misclass_summary <- do.call(rbind, lapply(categorical_predictors, build_comparison))
+
+misclass_summary %>%
+  gt(groupname_col = "Predictor") %>%
+  fmt_number(columns = c("Misclassified (%)", "Correctly Classified (%)"), decimals = 1)
+```
+
+@tbl-misclassified-employed shows that employed graduates misclassified as unemployed generally have a weaker profile than those correctly classified: more often Bachelor's-only (52.4% vs 20.2%), less often holding internship experience (58.6% vs 74.1%) or a high-ranked university place (23.2% vs 40.1%), and weaker language proficiency (33.8% advanced/fluent vs 74.0%). Gender shows no meaningful difference between groups. This suggests the tree associates employment with a specific combination of stronger predictor values, and tends to misclassify employed graduates who don't fit that profile.
+
+```{r}
+#| echo: false
+#| message: false
+#| label: tbl-misclassified-unemployed
+#| tbl-cap: Predictor profile of unemployed graduates - misclassified as employed vs correctly classified
+
+misclassified_unemp <- test_data_c[test_data_c$Employment_Status=="Unemployed" & pred_1SE_tree=="Employed", ]
+true_unemployed      <- test_data_c[test_data_c$Employment_Status=="Unemployed" & pred_1SE_tree=="Unemployed", ]
+
+build_comparison_unemp <- function(var) {
+  mis <- round(prop.table(table(misclassified_unemp[[var]])) * 100, 1)
+  cor <- round(prop.table(table(true_unemployed[[var]])) * 100, 1)
+  data.frame(
+    Predictor = var,
+    Level = names(mis),
+    `Misclassified (%)` = as.numeric(mis),
+    `Correctly Classified (%)` = as.numeric(cor)[match(names(mis), names(cor))],
+    check.names = FALSE
+  )
+}
+
+misclass_summary_unemp <- do.call(rbind, lapply(categorical_predictors, build_comparison_unemp))
+
+misclass_summary_unemp %>%
+  gt(groupname_col = "Predictor") %>%
+  fmt_number(columns = c("Misclassified (%)", "Correctly Classified (%)"), decimals = 1)
+```
 
 
-metrics_table_tree <- data.frame(
-  Metric_TREE = c("Accuracy", "Sensitivity", "Specificity", "Precision", "F1 Score"),
-  Value  = c(accuracy_1se, sensitivity, specificity, precision, F1_score)
+@tbl-misclassified-unemployed shows the 18 misclassified unemployed graduates skew toward weaker profiles too — no internship experience (100% vs 44.1%), more often Bachelor's-level (83.3% vs 63.4%) — which is the opposite of what the employed-misclassification pattern would predict (there, weak profiles led to "Unemployed", not "Employed"). With only 18 cases, this may be sampling noise, or the tree may be relying on other predictors not shown here (e.g. GPA). Worth investigating further before drawing a conclusion.
+
+
+To conclude the analysis, we examine the precision-recall curve of the classification tree in more detail @fig-PR
+
+```{r}
+#| echo: false
+#| message: false
+
+library(PRROC)
+pred_test_probability<- predict(tree_prune_1se, newdata = test_data_c, type = "prob") 
+pr_curve_tree<- pr.curve(scores.class0 = pred_test_probability[test_data_c$Employment_Status=="Employed", "Employed"],
+                         scores.class1 = pred_test_probability[test_data_c$Employment_Status=="Unemployed", "Employed"],
+                         curve = TRUE)
+
+plot(pr_curve_tree)
+```
+
+
+@fig-PR shows th eprecision-recall curve with area under the curve of `r pr_curve_tree$auc.integral`. The curve stays close to a precision of 1.0 accross roughlt the first 85% of recall, meaning that for the tree can recover an increasing share of truly employed graduates without sacrificig almost any precision. Beyiond 85 % recall, precision falls away sharply, dropping roughly 0.7 as recall approaches 1.0. This sharp drop is consistent witht he sensitivity value of `r cm_tree$byClass["Sensitivity"] `. 
+
+## Research Question 3: Which factors are the most important predictors of employment outcomes?
+
+In this section, we investigate which factors are the most important predictors of employment status. To answer this, we identify the best-fitting model using two approaches explained earlier in @sec-methods: stepwise subset selection and Lasso regression. 
+
+Since employment status is a binary response, we frame this as logistic regression problem, where the goal is to estimate the probability of being employed versus unemployed. We first constructed a binary response variable, coding "Employed" as 1 and " Unemployed" as 0, and removed the original `Employmnet_Status` variable now that the `Employmnet_binary` served as the response variable. A seed set to 1 to ensure reproducibility of results. Since we are also interested in the predictive accuracy of the resulting model, we also split the data into training and test data sets. 
+
+We first fit a full logistic model containing all predictors and applied `stepAIC()`, a both-direction stepwise selection using AIC. This flagged `Gender` as a non-significant predictor, with p-values above 0.05 for both the Male and Other categories. To confirm this, we compared the AIC-selected model against a nested model with `Gender` removed using a likelihood-ratio test (`anova()`). After selecting the nested model without `Gender`, we generated the predictions on the test data and calculated the classification accuracy. As a second stepwise approach, we repeated this procedure using BIC criteria instead of AIC, again generating predictions and accuracy on the test data.  
+
+
+```{r}
+#| echo: false
+#| message: false
+
+
+
+#
+#  Which factors are the most important predictors of employment outcomes?
+
+
+#fit a binary logistic regression for the employment status of the categories( employed, Unemployed)
+
+data_emp_logistic<- data_emp %>%
+  mutate(Employment_binary= (ifelse(Employment_Status=="Employed",1,0) )) %>%
+  select(-Employment_Status)
+
+set.seed(1)
+n<- nrow(data_emp_logistic)
+train_ind <- sample(1:n, size = 0.8*n)
+train_data<- data_emp_logistic[train_ind, ]
+test_data<- data_emp_logistic[-train_ind, ]
+full_model<- glm(Employment_binary ~ . , data=train_data, family = binomial)
+
+
+log_res <- readRDS("logistic_selection_results.rds")
+model_AIC             <- log_res$model_AIC
+model_AIC_no_gender    <- log_res$model_AIC_no_gender
+predict_AIC_logistic   <- log_res$predict_AIC_logistic
+model_BIC              <- log_res$model_BIC
+predict_BIC_logistic   <- log_res$predict_BIC_logistic
+
+
+
+
+```
+The resulting accuracies were `r mean(predict_AIC_logistic==test_data$Employment_binary)` for the AIC model after removing `Gender` and `r mean(predict_BIC_logistic==test_data$Employment_binary)` for the BIC model, which are exactly the same.
+
+
+The second approach considered was Lasso regression which, as discussed earlier in @sec-methods, automatically performs variable selection by shrinking the coefficients of uninformative predictors to exactly zero. To fit the LASSO model, the data set was split into training and test data set of the predictor matrix `X` and response vector `Y` (`Employment_binary`). Since our primary interest was LASSO, we also fitted ridge regression (`alpha=0`) and elastic net (`alpha=0.5`) for comparison purposes -here alpha controls the **type** of the penalty, type of shrinkage method; the same procedure applied to LASSo was applied to these two models, but only LASSO results are discussed in details in this report. The plot below , @fig-lasso, shows the coefficient path of LASSO model fitted with `glmnet()`, using a binary family and `alpha=1`.
+
+
+```{r}
+#| echo: false
+#| message: false
+#| fig-cap: Lasso Model
+#| label: fig-lasso
+
+
+data_emp_logistic<- data_emp %>%
+  mutate(Employment_binary= (ifelse(Employment_Status=="Employed",1,0) )) %>%
+  select(-Employment_Status)
+
+library(glmnet)
+
+set.seed(1)
+y<- data_emp_logistic$Employment_binary
+x<- model.matrix(
+  Employment_binary ~ . ,
+  data = data_emp_logistic
+) [, -1]
+
+
+X_train <- x[train_ind, ]
+Y_train <- y[train_ind ] #y is a vector and not a matrix
+
+X_test<- x[-train_ind, ]
+Y_test<- y[-train_ind ]
+
+set.seed(1)
+#TO PLOT
+model_l <- glmnet(X_train, Y_train, family = "binomial", alpha=1)
+plot(model_l, label = TRUE)
+
+```
+
+In this plot, coefficient values are shown on the y-axis, and $-\log(\lambda)$ is shown on the bottom x-axis. Moving from left to right, $-\log(\lambda)$ increases, meaning $\lambda$ decreases so the penalty on the coefficients is decreasing(the far right of the plot corresponds to almost no penalty). The top axis shows the number of non-zero coefficients in the model at each point along the path: at the far left(strong penalty) with only 2 predictors remain non-zero; at far right( low penalty), 25 predictors remain non-zero. Each colored line represents one predictor, or, for a categorical variable, one dummy-coded level. 
+
+The direction of each line indicates the sign of that predictor's coefficient on the log-odds of being employed. The numbers on the right edge of the plot correspond to column indices of `X_train`. For example, tracing index 28 shows that this is `r colnames(X_train)[28]`. This line is moving upward- positive coefficient- means the predictor is positively associated with employment: for instance, a higher `r colnames(X_train)[28]` is associated with higher portability of being employed.
+
+This plot illustrated how the number of non-zero coefficients change across values of $\lambda$, but it does not identify the best-performing model. For that, we use cross-validation via `cv.glmnet()` to find the best $\lambda$.
+
+
+```{r}
+#| echo: false
+#| message: false
+
+set.seed(1)
+lambda_lasso<- cv.glmnet(X_train,Y_train,alpha=1)
+model_lasso <- glmnet(X_train, Y_train, family = "binomial", alpha=1, lambda = lambda_lasso$lambda.min)
+
+```
+
+After applying `cv.glmnet()`, we selected the cross-validated lambda value that minimizes deviance, `lambda.min` equal to `r lambda_lasso$lambda.min`, and refit the model using `glmnet()` with this $\lambda$ value. We then evaluated the model's performance in predicting employment status on the test set. The same cross-validation procedure was applied to select $\lambda$ for the ridge and elastic net models. We then compared the accuracy of the three shrinkage methods to determine which performed best; see @tbl-result_shrinkagemethods below. 
+
+```{r}
+#| echo: false
+#| message: false
+#| tbl-cap: Shrinkafe method comparison
+#| label: tbl-result_shrinkagemethods
+
+
+set.seed(1)
+lambda_ridge<- cv.glmnet(X_train, Y_train, alpha=0)
+model_ridge<- glmnet(X_train, Y_train, family = "binomial", alpha=0, lambda = lambda_ridge$lambda.min)
+
+
+set.seed(1)
+lambda_other<- cv.glmnet(X_train, Y_train, alpha=0.5)
+model_other<- glmnet(X_train, Y_train, family = "binomial", alpha=0.5, lambda = lambda_other$lambda.min)
+
+result_ridge<- predict(model_ridge, s= lambda_ridge$lambda.min, type="class", newx = X_test)
+result_other<- predict(model_other, s= lambda_other$lambda.min, type="class", newx = X_test)
+result_lasso<- predict(model_lasso, s= lambda_lasso$lambda.min, type="class", newx = X_test)
+
+results_model <- data.frame(
+  Model = c("Ridge", 
+            "Other", 
+            "Lasso"),
+  
+  Accuracy = c(
+    mean(Y_test==result_ridge),
+    mean(Y_test==result_other),
+    mean(Y_test==result_lasso)
+  )
+) 
+
+results_model %>% gt() 
+
+coef_lasso<-coef(model_lasso)
+
+# Convert  matrix to a regular numeric vector
+coef_vals <- as.numeric(coef_lasso)
+names(coef_vals) <- rownames(coef_lasso)
+
+# Names of variables LASSO shrank to exactly zero
+zero_vars <- names(coef_vals)[coef_vals == 0]
+
+
+
+
+model_glm <- glm(
+  Employment_binary ~ . -Age -Visa_Type,
+  data = train_data,
+  family = binomial
 )
 
-metrics_table_tree %>% gt()
+
+model_no_country <- readRDS("model_no_country.rds")
+
+
+final_Lasso_model<- model_no_country
+
+predict_final<- ifelse( predict(final_Lasso_model, newdata = test_data, type="response") >0.5, 1, 0)
+
+
+```
+
+From this table, LASSO achieved the highest accuracy at `r mean(Y_test==result_lasso)`.
+
+Using LASSO as variable-selection filter, we examined the coefficients of the LASSO model to identify which predictors were shrunk to exactly zero. The variables `r zero_vars` were shrunk to zero, this included `Age` and all three categories of `Visa_Type`, whereas only two of the eight `Country_of_Origin` categories, and one of the six `Field_of_Study` categories. We conclude it was reasonable to drop `Age` and `Visa_Type`.
+
+We then refit a GLM using all predictors except `Age` and `Visa_Type`. Examining this model's summary, `Gender` had a p-value above 0.05, indicating non-significance; we therefore removed `Gender` and used a likelihood-ratio test (`anova()`) to confirm that the nested model (without `Gender`) was preferred. We repeated this process over several steps, sequentially removing `Field_of_Study` and then `Country_of_Origin` (in that order), arriving at a final model containing `Education_Level`, `Language_Proficiency`, `University_Ranking`, `GPA`, `Years_Since_Graduation`, and `Internship_Experience`.
+
+A notable finding was that this final LASSO-informed model, the BIC-selected model, and the AIC-selected model (after removing `Gender`) all converged on the same predictors, coefficients, p-values, and test-set accuracy. All three variable-selection approaches produced an identical final model. This is summarised by accuracy in @tbl-models below.
+
+
+```{r}
+#| echo: false
+#| message: false
+#| label: tbl-models
+#| tbl-cap: Intreresting finding about the 3 models used
+
+metric<- data.frame(
+  Model = c(
+    "Lasso (After variable removal)",
+    "AIC (Gender Removed)",
+    "BIC"),
+  
+  Accuracy = c(
+    mean(predict_final==test_data$Employment_binary),
+    mean(predict_AIC_logistic==test_data$Employment_binary),
+    mean(test_data$Employment_binary==predict_BIC_logistic)
+  )
+) 
+
+metric %>% gt()
+
+```
+
+We next explored whether meaningful interaction effects existed among predictors, motivated by sensible reasoning. A higher GPA may increase the likelihood of securing an internship, motivating an interaction between `GPA` and `Internship_Experience`. The likelihood of securing an internship may also depend on university ranking, as students from higher-ranked universities may be perceived by employers as more capable or better prepared, and education level may moderate the effect of language proficiency on employment outcomes.
+
+We compared this interaction model against the final LASSO-informed model to assess which better predicted employment status.
+
+
+```{r}
+#| echo: false
+#| message: false
+#| tbl-cap: Confusion matrix of interaction 
+#| label: tbl-interactionConfusion
+
+
+interaction_model <- glm(
+  Employment_binary ~ GPA +
+    Internship_Experience +
+    Education_Level +
+    University_Ranking +
+    Language_Proficiency +
+    Years_Since_Graduation +
+    GPA:Internship_Experience+
+    Internship_Experience:University_Ranking + Education_Level:Language_Proficiency,
+  data = train_data,
+  family = binomial
+)
+
+
+anova(final_Lasso_model, interaction_model, test = "Chisq") #simpler model, then more complicated model
+#This means the interaction model fits the training data significantly better than the simpler model.
+AIC(final_Lasso_model, interaction_model)
+
+predict_interaction<- ifelse( predict(interaction_model, newdata = test_data, type="response") >0.5, 1, 0)
+
+
+library(caret)
+
+
+cm_logistic_interaction <- confusionMatrix(
+  factor(predict_interaction, levels = c(0,1)),
+  factor(test_data$Employment_binary, levels = c(0,1)),
+  positive = "1"
+)
+
+cm_table <- cm_logistic_interaction$table
+
+confusionM_logistic_table <- data.frame(
+  Predicted = c("Unemployed", "Employed"),   # careful: your factor levels are 0/1, not the KNN/tree labels
+  Unemployed = c(cm_table[1,1], cm_table[2,1]),
+  Employed   = c(cm_table[1,2], cm_table[2,2])
+) %>% gt() %>%
+  tab_spanner(
+    label = "Actual",
+    columns = c("Unemployed", "Employed")
+  ) %>%
+  cols_label(
+    Predicted = "Predicted",
+    Unemployed = "Unemployed",
+    Employed = "Employed"
+  )
+
+confusionM_logistic_table 
+
+```
+
+The likelihood-ratio test, comparing the interaction model with the simpler final LASSO model, indicated that the interaction model provides a significantly better fit with accuracy `r mean(predict_interaction==test_data$Employment_binary)`. 
+We therefore, proceed with the interactive model, examining its confusion matrix and precision-recall curve. 
+
+
+the @tbl-interactionConfusion, shows that 679 employed graduates which were misclassified as unemployed, and 909 unemployed were misclassified as employed. 
+
+```{r}
+#| echo: false
+#| message: false
+#| fig-cap: Prroc graph of the interaction model
+#| label: fig-PRcurveinteraction
+
+library(PRROC)
+
+prob_interaction<- predict(interaction_model, newdata = test_data, type = "response")
+library(PRROC)
+pr_interaction<- pr.curve(scores.class0 = prob_interaction[test_data$Employment_binary==1],
+                          scores.class1 = prob_interaction[test_data$Employment_binary==0],
+                          curve = TRUE)
+plot(pr_interaction)
+
+```
+
+To understand the @fig-PRcurveinteraction, we consider the precision and recall of the interaction model. Recall(sensitivity) is `r cm_logistic_interaction$byClass[1]`, which is very high, indicating that the model correctly identifies the large majority of truly employed graduates as employed. Precision is `r cm_logistic_interaction$byClass[5]`, also high, indicating that when the model predicts a graduate is employed, it is correct prediction. Together, these translate into a high precision-recall AUC of `r pr_interaction$auc.integral`, indicating that the model maintains strong precision and recall simultaneously.
+
+
+## Research Question 4: 
+
+To this esection, we investigate which factors are strongly associated with salary. To do this, we restricted the sample to employed graduates only by removing observations with `Salary = 0`, since these correspond to graduates who were unemployed or still in education. The resulting dataset also excluded `Job_Sector`, `Employment_Status` which has only one category- Employed, and `Region_of_Study` from the predictor set.
+
+As in Research Question 3, we used split the data set to training and test sets and applied both-direction stepwise selection based on BIC to a full model containing all remaining predictors. Since salary is a strictly positive, right-skewed variable by looking at the box plot in @fig-box,
+```{r}
+#| echo: false
+#| message: false
+#| fig-cap: Salary Distribution
+#| label: fig-box
+
+
+#only employed people
+data_salary<- data_uk %>% filter(Salary!=0) %>%
+  select( - Job_Sector, - Employment_Status, - Region_of_Study ) 
+boxplot(data_salary$Salary)
+
+```
+we also considered whether a log-transformation of `Salary` improved model fit: we fitted a second full model using `log(Salary)` as the response, and again applied BIC stepwise selection. The residual diagnostics for both models: the untransformed model (`BIC_model`) and the log-transformed model (`BIC_log_salary`) are compared in @fig-residualplot.
+
+
+```{r}
+#| echo: false
+#| message: false
+#| label: fig-residualplot
+#| fig-cap: comparison between the residual plots of before and after logging salary 
+
+
+
+#only employed people
+data_salary<- data_uk %>% filter(Salary!=0) %>%
+  select( - Job_Sector, - Employment_Status, - Region_of_Study ) 
+
+
+#using BIC
+set.seed(1)
+n<- nrow(data_salary)
+train_ind_s <- sample(1:n, size = 0.8*n)
+train_data_s<- data_salary[train_ind_s, ]
+test_data_s<- data_salary[-train_ind_s, ]
+
+
+
+salary_models <- readRDS("salary_models.rds")
+
+fullmodel          <- salary_models$fullmodel
+BIC_model          <- salary_models$BIC_model
+model_log_salary   <- salary_models$model_log_salary
+BIC_log_salary     <- salary_models$BIC_log_salary
+final_model_salary <- salary_models$final_model_salary
+
+
+predict_BIC<- predict(BIC_model, newdata = test_data_s)
+mse_BIC<- mean((test_data_s$Salary- predict_BIC)^2)
+
+par(mfrow = c(2, 2))
+plot(BIC_model, which = 1, main = "Before Log")  
+plot(BIC_model, which = 2, main = "Before Log")
+plot(BIC_log_salary, which = 1, main = "After Log")
+plot(BIC_log_salary, which = 2, main = "After Log")
+
 
 
 ```
 
 
+Comparing the two sets of diagnostics, the log-transformed model's residuals are noticeably right-skewed, and its Q–Q plot departs clearly from the line at both tails, indicating that the log-transformed residuals are not well approximated by a normal distribution. The untransformed model's residuals, by contrast, are reasonably symmetric around zero, and its Q–Q plot follows the line closely across almost its entire range. We therefore proceeded with the untransformed salary model.
 
-Despite not achieving the highest accuracy, the 1-SE tree was selected as the model to report in detail. The gap to the minimum-error tree and to the ensemble methods was marginal, while the 1-SE tree offers a substantially simpler, more interpretable partition of the feature space — a single tree that can be read and explained node-by-node, unlike a 500-tree ensemble where no individual tree can be inspected. Since identifying interpretable drivers of employment status is part of the aim of this analysis, this trade-off was judged worthwhile, and the 1-SE tree is examined in detail below.
+One notable feature of the untransformed model's residuals-versus-fitted plot (@fig-residualplot) is that the points form clusters. To investigate this, we plotted the same residuals against fitted values, colouring points by `Education_Level` (@fig-cluster).
 
-@tbl-confusionM-tree shows the 1-SE tree's predictions against the true classes on the test set. Of the `r sum(confusionM_tree[,2])` graduates actually unemployed, `r confusionM_tree[1,2]` were misclassified as employed.
+
+
+```{r}
+#| echo: false
+#| message: false
+#| fig-cap: The reason of the clustering
+#| label: fig-cluster
+
+
+
+salary_fitted<- train_data_s %>% 
+  select(Salary, Gender,Years_Since_Graduation, Age, Language_Proficiency, Education_Level, Language_Proficiency, Visa_Type, University_Ranking, Internship_Experience) %>% mutate(fitted=fitted.values(BIC_model), res=residuals.lm(BIC_model))
+ggplot(data=salary_fitted, aes(x=fitted, y=res, colour = Education_Level))+ 
+  geom_point()  #EDUCATION LEVEL IS THEONE CAUSING THE CLUSTER
+
+```
+
+@fig-cluster shows that this clustering is explained almost entirely by `Education_Level`: PhD graduates form a distinct cluster at the highest fitted salaries, Master's graduates form a lower cluster, and Bachelor's and Diploma graduates cluster together at the lowest fitted salaries, consistent with the expectation that further study is associated with higher earnings.
+
+As a second approach, we fitted a generalised additive model (GAM) using the `mgcv` package with `method = "REML"`, restricted to the variables retained by the BIC-selected linear model. LASSO was deliberately not used to select variables for this stage, since research Question 3 showed that the BIC and LASSO-selected variable sets were identical.
+
+After fitting the initial additive model, we examined the smooth function plots to check for non-linear relationships between the continuous predictors (`Age`, `Years_since_Graduation` and `GPA`) and salary. GPA was the only predictor showing a clearly non-linear effect on salary.
+
+We then examined the model summary and removed non-significant predictors one at a time, confirming each removal with a likelihood-ratio test (`anova()`) between the reduced and full models. Following this procedure, we sequentially removed `Gender`, `Visa_Type`, `Field_of_Study`, `Country_of_Origin`, and finally the linear continuous terms `Years_Since_Graduation` and `Age`, finishing at a final model containing `GPA`, `Internship_Experience`, `Education_Level`, `University_Ranking`, and `Language_Proficiency`.
+
+For this step-by-step comparison, each candidate model was refitted using `method = "ML"` rather than `"REML"`, since the models being compared differ in which predictors they include, so REML likelihoods aren't valid for that comparison. ML likelihoods don't have this restriction, so ML is the correct choice while terms are being tested and removed. Once the final variable set was settled, the model was refit with `method = "REML"`.
+
+The plot below shows the non linear effect with salary @fig-salaryGPA
+
+
+```{r}
+#| echo: false
+#| method: false
+#| fig-cap: Slary GPA  non loinear effect 
+#| label: fig-salaryGPA
+
+library(mgcv)
+gam_res <- readRDS("GAM_salary_models.rds")
+
+salary_add        <- gam_res$salary_add
+salary_no_gender  <- gam_res$salary_no_gender
+salary_no_visa    <- gam_res$salary_no_visa
+salary_no_field   <- gam_res$salary_no_field
+salary_no_country <- gam_res$salary_no_country
+salary_no_years_age <- gam_res$salary_no_years_age
+final_GAM_salary  <- gam_res$final_GAM_salary
+
+anova_gender      <- gam_res$anova_gender
+anova_visa        <- gam_res$anova_visa
+anova_field       <- gam_res$anova_field
+anova_country     <- gam_res$anova_country
+anova_years_age   <- gam_res$anova_years_age
+
+plot(final_GAM_salary)
+
+```
+
+The estimated smooth term for GPA has an effective degrees of freedom (edf) of approximately 8.70. This is far from the edf = 1 that would indicate a linear relationship, confirming a genuinely non-linear, fairly complex relationship between GPA and salary. 
+
+The direction of this relationship is unexpected: across most of the GPA range, a higher GPA is associated with a lower predicted salary. One plausible, non-statistical explanation is that GPA and career-relevant employability skills are not the same thing. Students who prioritise maximising their GPA may spend relatively more time on coursework and exam preparation and relatively less time on internships, networking, or other extracurricular activities that employers may weight heavily, and that GPA does not capture at all. Since `Internship_Experience` is already included in the model as a separate term, the remaining GPA effect may partly reflect this kind of trade-off rather than GPA being unimportant to employability in general. 
+
+We also examined whether allowing for interaction effects changed the model. Using the same interaction terms considered in Research Question 3 (`GPA:Internship_Experience`,`Internship_Experience:University_Ranking`, and `Education_Level:Language_Proficiency`), a likelihood-ratio test indicated that the interaction model provided a significantly better fit than the additive model. 
+
+Fitting this interaction model, however, changed the shape of the estimated GPA effect quite substantially, as shown in @fig-GPA .
+
+
+```{r}
+#| echo: false
+#| message: false
+#| fig-cap: nonlinear effct after interction
+#| label: fig-GPA
+
+
+GAM_interaction<- gam(Salary~ s(GPA)+ Internship_Experience + Education_Level+ University_Ranking+ Language_Proficiency+ GPA:Internship_Experience+
+                        Internship_Experience:University_Ranking + Education_Level:Language_Proficiency, data=train_data_s,
+                      method="REML")
+
+
+
+plot(GAM_interaction)
+
+```
+
+Rather than decreasing steadily across the full range of GPA, as in the additive model, the interaction model's estimated smooth effect decreases sharply at low GPA values, flattens and dips slightly around the middle of the range, and then rises again for GPA above roughly 3.3, before levelling off at higher GPA values.  In other words, once the interaction terms are included, very high-GPA students are no longer predicted to have the lowest salaries; it is students in the low-to-middle part of the GPA range who are predicted to have the lowest fitted salaries, holding the interacting predictors fixed. This is a genuinely different, and somewhat more intuitive, pattern than in the additive model, and suggests that part of the apparent negative GPA effect there was being absorbed by not allowing GPA's effect to vary with `Internship_Experience`.
+
+To check whether this reversed pattern was simply an artefact of pooling all education levels together, we refit the interaction model separately within `Education_Level` subgroups — PhD students only, and Master's and Bachelor's students combined. The GPA effect did not change materially in either subgroup, indicating that the pattern is not being driven by confounding with education level. We also checked the model's sensitivity to the number of basis functions (`k`) used for the GPA smooth term: increasing `k` beyond the default increased the edf and produced a visibly more wiggly, less stable fit, without a clear justification for the additional flexibility, so we retained the default `k`.
+
+Finally, we compared the predictive performance of the interaction GAM against the BIC-selected linear model, using both RMSE and R² (@tbl-GAM_BIC).
+
+```{r}
+#| echo: false
+#| message: false
+#| tbl-caption: Performance of model?
+#| label: tbl-GAM_BIC
+
+predict_GAM <- predict(GAM_interaction, newdata=test_data_s)
+
+mse_GAM <- mean((test_data_s$Salary - predict_GAM)^2)
+
+R2_BIC<- cor(test_data_s$Salary, predict_BIC)^2
+R2_GAM<- cor(test_data_s$Salary, predict_GAM)^2
+GAM_BIC<- data.frame(
+  Model = c("BIC Linear", "GAM"),
+  RMSE = c(sqrt(mse_BIC), sqrt(mse_GAM)),
+  R2=c(R2_BIC, R2_GAM)
+)  
+
+
+GAM_BIC %>% gt()
+
+```
+
+On the test set, the GAM achieved a lower RMSE `r sqrt(mse_GAM)`  than the BIC linear model `r sqrt(mse_BIC)`, and a higher R² (`r R2_GAM` against  `r R2_BIC`). Meaning GAM is the best fitted model. This is consistent with the earlier finding that GPA, and its interactions, has a genuinely non-linear relationship with salary: allowing for this flexibility improves predictive accuracy, not just interpretability.
+
 # Conclusions and discussion
 
 You can add options to executable code like this
