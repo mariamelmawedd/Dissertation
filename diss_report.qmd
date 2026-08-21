@@ -59,7 +59,18 @@ Supervisor: **[Supervisor Name]**
 
 # Introduction
 
+Employability is one of the most important outcomes of higher education, and for many students it becomes a concern from the very start of their university journey, not only after graduation. Across the world, factors such as the quality of education, university ranking, and the skills gained during study all play a significant role in shaping a graduate's employability (Fakunle, 2021). As competition increases and labour markets become harder to enter, students everywhere are looking for a degree that does more than provide knowledge — they want an experience that helps them stand out from other graduates.
 
+In many countries, including India and China, this pressure is especially strong In China, admission to a strong master's programme is highly competitive in itself, and graduates then enter a domestic labour market that is similarly competitive. In India, the challenge is somewhat different: rather than only intense competition for existing places, there is a broader lack of strong master's-level opportunities and institutions where students can genuinely develop and specialise in their field, and this is often paired with weaker salary prospects for graduates in the domestic job market. In both cases, students are left looking for a stronger alternative, and this pushes many of them towards master's study abroad.
+
+The UK is one of the main destinations these students choose. In 2024/25, 685,565 international students were enrolled at UK higher education providers, making up around 24% of the total student population (HESA, 2024/25).47% of all non-EU international students in the UK. It has a strong higher education system, well-established career support services, and a high concentration of globally ranked universities, 17 UK universities were placed in the world's top 100 in the QS World University Rankings 2026 (QS, 2026). Survey evidence shows that international students are aware of this and specifically value it: in a 2021 study of over 1,000 international students across 118 UK universities, 92% said the employability skills they expected to gain were important or very important when choosing where to study, and 82% said the same about the careers support they expected (HEPI & Kaplan International Pathways, 2021). This suggests that students are not only choosing the UK for the qualification itself, but for the combination of degree and experience that they believe will make them more competitive both internationally and back in their home countries.
+
+This is reinforced by the UK's post-study work offer, which allows students to gain UK work experience alongside their degree. Fakunle (2021) found that employability is consistently the main reason international students give for studying abroad, and many students in her study also planned or hoped to stay in the UK to work, at least for a period, after finishing their studies. A UK degree and UK work experience are therefore seen by many students as a way to strengthen their position both in the UK job market and in their home country's job market once they return.
+
+
+However, arriving in the UK is only the beginning of this journey, not the end of it.Students still have to compete for jobs and work placements, and it is not automatically guaranteed that studying in the UK will lead to strong employment outcomes (Di Pietro, 2019, cited in Fakunle, 2021).
+
+This raises an important question: what actually determines whether an international student is able to find employment after their studies, and what increases their chances of doing so? This dissertation uses data on international students in the UK to examine which factors are associated with employment status after graduation. The findings are intended to help universities better understand the gap between the student experience and the demands of the labour market, so that they can offer more targeted support and guidance. This would allow universities to differentiate themselves not simply as providers of education, but as institutions that genuinely support students' employability and post-graduate career outcomes. It will also help students understand which factors matter most for their own transition into employment, so they know where to focus their efforts during their studies. 
 
 # Description of the data and Exploratory Data Analysis {#sec-EDA}
 
@@ -73,12 +84,12 @@ library(ggplot2)
 library(dplyr) 
 library(skimr)
 library(gt)
-library(moderndive)
-library(gapminder)
+#library(moderndive)
+#library(gapminder)
 library(GGally)
 
 #read data 
-data<- read.csv("dataset.csv")
+data<- read.csv("data_dissertation.csv")
 data_uk<- data %>% filter(`Region_of_Study`=="UK")
 ```
 
@@ -116,6 +127,34 @@ data_uk %>%
 
 <p style="text-align: center; font-size: 0.9em; margin-top: 0.5em;">
 <strong>Figure 1:</strong> Employment status distribution and proportions among international graduates in the UK. <em>Left:</em> bar chart of employment status counts. <em>Right:</em> corresponding proportions by category.
+</p>
+
+<div style="display: flex; gap: 20px;">
+<div>
+<p style="text-align: center; font-size: 0.85em; margin-bottom: 0.2em;">(a)</p>
+```{r}
+#| echo: false
+#| message: false
+#| fig-width: 5
+#| fig-height: 3
+ggplot(data_uk, aes(x = Employment_Status, fill = Employment_Status)) +
+  geom_bar()
+```
+</div>
+<div>
+<p style="text-align: center; font-size: 0.85em; margin-bottom: 0.2em;">(b)</p>
+```{r}
+#| echo: false
+#| message: false
+data_uk %>%
+  count(Employment_Status) %>%
+  mutate(prop = n / sum(n)) %>% gt()
+```
+</div>
+</div>
+
+<p style="text-align: center; font-size: 0.9em; margin-top: 0.5em;">
+<strong>Figure 1:</strong> Employment status distribution among international graduates in the UK: (a) counts by category, (b) corresponding proportions.
 </p>
 
 
@@ -156,7 +195,7 @@ boxplot(data_salary$Salary)
 # Description of the methods {#sec-methods}
 
 ## Classification methods
-
+ 
 Classification methods are prediction models and algorithms used to classify or categorize objects based on their measurements. Analysis typically begins with "labelled" data, which are observations with measurements on one or more explanatory variables (features) as well as a label variable (outcome) indicating which class the object belongs to. The goal is to construct a classification rule from these labelled observations that can predict the class of future, unlabelled observations sharing the same explanatory variables.
 
 In this dissertation, this goal translates to building a classification rule for *Employment_Status (Employed vs Unemployed)* using each graduate's features, such as GPA, Internship_Experience, and Education_Level.
@@ -172,7 +211,7 @@ $$
 d(x, x_i) = \sqrt{\sum_{j=1}^{p} (x_j - x_{ij})^2}
 $$
 
-Having defined distance, the value of k must then be chosen, and this choice creates a bias-variance trade-off. When k is small, each prediction depends on only a handful of nearby points, $k=1$ relies on a single neighbour. This makes the classifier very flexible, closely tracing the training data, but also sensitive to noise: a single unusual or mislabelled point can flip a prediction, and a slightly different training sample could give quite different results. This instability is high variance, and the classifier is said to overfit. When k is large, predictions are averaged over many neighbours instead. This makes predictions stable, no single noisy point can swing the outcome, so variance is low. The classifier becomes too simple to capture the true classification boundary. This is high bias, and the classifier is said to underfit. The aim is therefore to choose a value of k that balances these two effects.
+Having defined distance, the value of k must then be chosen, and this choice creates a bias-variance trade-off. When k is small, each prediction depends on only a handful of nearby points, $k=1$ relies on a single neighbour. This makes the classifier very flexible, a single mislabelled point can flip a prediction. This instability is high variance, and the classifier is said to overfit. When k is large, predictions are averaged over many neighbours instead. This makes predictions stable, so variance is low. The classifier becomes too simple to capture the true classification boundary. This is high bias, and the classifier is said to underfit. The aim is therefore to choose a value of k that balances these two effects.
 
 To select k objectively rather than arbitrarily, 10-fold cross-validation was used: for each candidate value of $k=1,…,50$ the training data was split into 10 folds, the model was fitted on 9 folds and evaluated on the remaining fold, and this was repeated across all 10 folds to obtain an average cross-validated accuracy for that k. The value of k that maximised cross-validated accuracy was then selected for the final model.
 
@@ -211,8 +250,6 @@ $$
 $$ 
 
 where $\text{sign}(\cdot)$ returns $+1$ for positive values and $-1$ for negative values. That is, $x_{new}$ is substituted into the estimated hyperplane equation, and the sign of the resulting value determines the predicted class: observations on one side of the hyperplane are assigned class $-1$, and observations on the other side are assigned class $+1$.
-
-In practice, classes are rarely perfectly separable, so SVM allows some points to fall on the wrong side of the margin or hyperplane, controlled by a **cost** parameter: a higher cost more heavily penalises misclassified points, producing a narrower margin that fits the training data more closely, while a lower cost allows a wider margin at the expense of some misclassification.
 
 The boundary described so far is linear. SVM can be extended to nonlinear boundaries by mapping the input features into a higher-dimensional space using a **kernel function**, within which a linear boundary is fitted; when mapped back to the original feature space, this linear boundary corresponds to a nonlinear boundary. Common kernel choices include the **linear kernel** (no transformation, producing a straight-line boundary), the **polynomial kernel**, and the **radial (Gaussian) kernel**, each producing increasingly flexible, curved decision boundaries. The choice of kernel is typically guided by whether the classes appear linearly separable in the original feature space and by comparing predictive performance across kernels.
 
@@ -756,7 +793,7 @@ comparison_metrics <- data.frame(
           pr_curve_knn$auc.integral,
           roc_curve_knn$auc),
   
-  `Tree (1SE rule)` = c(cm_tree$overall["Accuracy"],
+  `Tree(1SE_rule)` = c(cm_tree$overall["Accuracy"],
                        cm_tree$byClass["Sensitivity"],
                        cm_tree$byClass["Specificity"],
                        cm_tree$byClass["Pos Pred Value"],
@@ -772,16 +809,21 @@ comparison_metrics <- data.frame(
           pr_curve_SVM$auc.integral,
           roc_curve_SVM$auc),
   
-  row.names = c("Accuracy", "Sensitivity", "Specificity", "Precision", "F1", "PR_AUC", "ROC_AUC"),
+  row.names = c("Accuracy",
+                "Sensitivity",
+                "Specificity",
+                "Precision",
+                "F1",
+                "PR_AUC",
+                "ROC_AUC"),
   check.names = FALSE
 )
 
 comparison_metrics$Metric <- rownames(comparison_metrics)
-comparison_metrics <- comparison_metrics[, c("Metric", "KNN", "Tree (1SE rule)", "SVM")]
+comparison_metrics <- comparison_metrics[, c("Metric", "KNN", "Tree(1SE_rule)", "SVM")]
 
-comparison_metrics %>%
-  gt(rowname_col = "Metric") %>%
-  cols_align(align = "center", columns = everything())
+comparison_metrics %>% gt() %>% cols_align(align = "center", columns = everything())
+
 ```
 </div>
 <div>
@@ -889,12 +931,24 @@ test_data<- data_emp_logistic[-train_ind, ]
 full_model<- glm(Employment_binary ~ . , data=train_data, family = binomial)
 
 
+
 log_res <- readRDS("logistic_selection_results.rds")
-model_AIC             <- log_res$model_AIC
+full_model             <- log_res$full_model
+model_AIC              <- log_res$model_AIC
 model_AIC_no_gender    <- log_res$model_AIC_no_gender
-predict_AIC_logistic   <- log_res$predict_AIC_logistic
-model_BIC              <- log_res$model_BIC
-predict_BIC_logistic   <- log_res$predict_BIC_logistic
+anova_AIC_gender        <- log_res$anova_AIC_gender
+predict_AIC_logistic    <- log_res$predict_AIC_logistic
+model_BIC               <- log_res$model_BIC
+predict_BIC_logistic    <- log_res$predict_BIC_logistic
+model_glm               <- log_res$model_glm
+anova_nogender          <- log_res$anova_nogender
+model_no_field          <- log_res$model_no_field
+anova_nofield           <- log_res$anova_nofield
+model_no_country        <- log_res$model_no_country
+anova_nocountry         <- log_res$anova_nocountry
+final_Lasso_model       <- log_res$final_Lasso_model
+interaction_model       <- log_res$interaction_model
+anova_interaction       <- log_res$anova_interaction
 
 
 
@@ -996,19 +1050,6 @@ names(coef_vals) <- rownames(coef_lasso)
 zero_vars <- names(coef_vals)[coef_vals == 0]
 
 
-
-
-model_glm <- glm(
-  Employment_binary ~ . -Age -Visa_Type,
-  data = train_data,
-  family = binomial
-)
-
-
-model_no_country <- readRDS("model_no_country.rds")
-
-
-final_Lasso_model<- model_no_country
 
 predict_final<- ifelse( predict(final_Lasso_model, newdata = test_data, type="response") >0.5, 1, 0)
 
