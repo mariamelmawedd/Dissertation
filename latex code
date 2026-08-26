@@ -1,0 +1,822 @@
+\documentclass[12pt]{article}
+
+% ---------- Packages ----------
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{titlesec}
+
+\setcounter{secnumdepth}{4}
+
+\titleformat{\paragraph}
+  {\normalfont\large\bfseries}{\theparagraph}{1em}{}
+\titlespacing*{\paragraph}
+  {0pt}{2.5ex plus 1ex minus .2ex}{1em}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=black,
+    urlcolor=blue
+}
+
+\setlength{\parskip}{0.6em}
+\setlength{\parindent}{0pt}
+
+\title{}
+\date{}
+
+\begin{document}
+
+% ======================================================
+% TITLE PAGE
+% ======================================================
+\begin{titlepage}
+\thispagestyle{empty}
+
+\begin{center}
+\includegraphics[width=8cm]{Uni_Glasgow_1.jpg}
+
+\vspace{1cm}
+
+
+{\large\scshape University of Glasgow}\\[2pt]
+{\normalsize School of Mathematics \& Statistics}
+
+\vspace{1.5cm}
+
+{\Huge\bfseries Predictive Modelling and Feature Analysis for Employment Status for International Students in the UK}
+
+\vspace{1cm}
+
+{\Large\itshape Using Statistical Analysis and Machine Learning}
+
+\vspace{0.5cm}
+
+{\large MSc Data Analytics}
+
+\vspace{0.5cm}
+
+\rule{0.4\textwidth}{0.4pt}
+
+\vspace{0.5cm}
+
+{\Large \textbf{Mariam El Mawed}}
+
+\vspace{0.2cm}
+
+{\large
+\begin{tabular}{rl}
+Supervisor: Dr Ioannis Kalogridis \\
+\end{tabular}
+}
+\end{center}
+
+\vspace*{\fill}
+\vspace*{\fill}
+
+\end{titlepage}
+% ======================================================
+% TABLE OF CONTENTS
+% ======================================================
+\newpage
+\tableofcontents
+\newpage
+
+% ======================================================
+% 1. INTRODUCTION
+% ======================================================
+\section{Introduction}
+
+Employability is one of the most important outcomes of higher education, and for many students it becomes a concern from the very start of their university journey, not only after graduation. Across the world, factors such as the quality of education, university ranking, and the skills gained during study all play a significant role in shaping a graduate's employability(Fakulne, 2021). As competition increases and labour markets become harder to enter, students everywhere are looking for a degree that does more than provide knowledge, they want an experience that helps them stand out from other graduates. 
+
+In some countries, such as China, admissions to a strong master's program is highly competitive, and graduates then enter an equally competitive domestic job market. In others, such as India, the issue is more about the shortage of strong master's-level programs and institutions where students can genuinely specialize in their field paired with weaker salary prospects for graduates in the domestic job market. 
+
+The UK is one of the main destinations students choose. In 2024/25, 685,565 international students were enrolled at UK higher education institutions, making up around 24\% of the total student population (HESA, 2024/25). The UK has strong higher education system, well-established career support services, and high number of globally ranked universities: 17 UK universities were placed in the world's top 100 in the Q World University Ranking 2026 (QS,2026). A 2021 survey by the Higher Education Policy Institute (HEPI) and Kaplan International Pathways, covering over 1,000 international students across 118 UK universities, found that 92\% students rated the employability skills they expected to gain were important or very important when choosing where to study, and 82\% said the same about the careers support they expected (HEPI, Kaplan International Pathways, 2021). This suggests that students are not only choosing the UK for the qualification itself, but for the combination of degree and experience that they believe will make them more competitive both internationally and back in their home countries. 
+
+Fakulne (2021) found that employability is consistently the main reason international students give for studying abroad, and many students in her study also planned or hoped to stay in the UK to work, at least for a period, after finishing their studies A U degree and UK work experience are therefore seen by many students as a way to strengthen heir position both int he UK job market and int heir home country's once they return. 
+
+However, arriving in the UK is only the beginning of this journey. Students still have to compete for jobs, as it is not automatically guaranteed that studying in the UK will lead to strong employment outcomes (Di Pietro, 2019, cited in Fakulne, 2021).
+
+This raises an important question: what actually determines whether an international student is able to find employment after their studies, and what increases their chances of doing so? This dissertation uses data on international students in the UK to examine which factors are associated with employment status after graduation. The findings are intended to help universities better understand the gap between the student experience and the demands of the labour market, so that they can offer more targeted support and guidance. This would allow universities to differentiate themselves not simply as providers of education, but as institutions that genuinely support students' employability and post-graduate career outcomes. It will also help students understand which factors matter the most for their own transition to employment, that they know where to focus their efforts during their studies. 
+
+% ======================================================
+% 2. DATA DESCRIPTION AND EDA
+% ======================================================
+\section{Description of the data}
+\label{sec:EDA}
+
+This dataset contains anonymized records for over 300,000 international graduates. It is sourced from Kaggle but originates from HESA (Higher Education Statistics Agency), the official body responsible for UK higher education data. The analysis here focuses on UK international students' employability outcomes, so the dataset was filtered to students who studied in the UK, giving 74,901 rows. It combines graduate-outcomes survey data with visa, language, and academic information, allowing predictive analysis of two outcomes: Employment Status (employed, unemployed, or continuing education) and Salary (annual salary for those employed).
+
+The data set contains 15 variables: 11 categorical (Employment\_Status, Visa\_Type, Country\_of\_Origin, Language\_Proficiency, Field\_of\_Study, Gender, University\_Ranking, Education\_Level, Internship\_Experience, Job\_Sector and Region\_of\_Study) and 4 numerical (Age, GPA, Salary, Years\_Since\_Graduation).
+
+Moving to \textbf{exploratory data analysis (EDA)}, this section focuses on the distributions of the two main response variables, Employment Status and Salary, in relation to the other predictors. For Employment Status, we examine its own distribution alongside its relationship with each categorical predictor. For Salary, we examine its own distribution as well as its relationship with both the numerical and categorical predictors. This section focuses specifically on the distributions of Employment Status and Salary, since these shape how the data was prepared and structured for the modeling that follows.
+
+Since this analysis focuses on employability, Continuing Education was excluded, as these graduates have not yet entered the labour market. Even after this exclusion, Figure~\ref{fig:employment} and Table~\ref{tbl:employment} show that the remaining data is still imbalanced between the Employed and Unemployed categories. This imbalance motivates the choice of evaluation approach used later in the analysis, the use of precision-recall curves rather than ROC curves , which will be discussed further in the Analysis chapter. 
+\vspace{-5pt}
+\begin{table}[H]
+\centering
+\caption{Employment Status Distribution}
+\label{tbl:employment}
+\fontsize{12pt}{14pt}\selectfont
+\setlength{\tabcolsep}{8pt} % reduce column spacing
+\begin{tabular}{lrr}
+\toprule
+Employment\_Status & n & prop \\ 
+\midrule\addlinespace[2.5pt]
+Continuing Education & 18637 & 0.2488218 \\ 
+Employed & 39038 & 0.5211946 \\ 
+Unemployed & 17226 & 0.2299836 \\ 
+\bottomrule
+\end{tabular}
+\end{table}
+\vspace{-10pt}
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{0.48\linewidth}
+\centering
+    \includegraphics[width=\linewidth]{Rplot13.png}
+    \caption{Employment Status Distribution}
+\label{fig:employment}
+\end{minipage}
+\hfill
+\begin{minipage}{0.44\linewidth}
+\centering
+    \includegraphics[width=\linewidth]{Rplot14.png}
+    \captionsetup{skip=20pt}
+    \caption{Salary Distribution}
+    
+\label{fig:salary}
+\end{minipage}
+\end{figure}
+
+As shown in Figure~\ref{fig:salary}, salary is positive only for graduates who are employed. For this reason, the dataset is filtered to include only employed graduates when examining the salary variable.
+
+% ======================================================
+% 3. METHODS
+% ======================================================
+\section{Description of the methods}
+\label{sec:methods}
+
+\subsection{Classification methods}
+
+ 
+Classification methods are prediction models and algorithms used to classify or categorize objects based on their measurements. Analysis typically begins with "labeled" data, which are observations with measurements on one or more explanatory variables (features) as well as a label variable (outcome) indicating which class the object belongs to. The goal is to construct a classification rule from these labeled observations that can predict the class of future, unlabeled observations that share the same explanatory variables.
+
+In this dissertation, this goal translates into the building of a classification rule for \textbf{Employment\_Status (Employed vs. unemployed)} using the features of each graduate, such as GPA, Internship\_Experience, and Education\_Level.
+
+
+\subsubsection{K-Nearest Neighbor (KNN)}
+
+K-Nearest Neighbours is a nonparametric classification method. For each point, we look at its k nearest labelled points and predict its class to be that of the majority of its neighbours, we use the observations in the training set closest to a given point. This requires four steps: deciding the value of k; defining closeness via a distance metric; sorting distances to determine the nearest neighbours; and assigning the class held by the majority of those neighbours.
+
+Several distance metrics exist, including Euclidean, Manhattan, and Mahalanobis distance. This analysis uses the standard choice, Euclidean distance, defined as the square root of the sum of squared differences between two points across all predictors. For $p$-dimensional continuous variables, the distance between two points $x$ and $x_i$ is defined as:
+
+\begin{equation}
+d(x, x_i) = \sqrt{\sum_{j=1}^{p} (x_j - x_{ij})^2}
+\end{equation}
+
+Having defined distance, the value of k must then be chosen, and this choice creates a bias-variance trade-off. When k is small, each prediction depends on only a handful of nearby points, $k=1$ relies on a single neighbor. This makes the classifier very flexible, a single mislabeled point can flip a prediction. This instability is high variance, and the classifier is said to overfit. When k is large, predictions are averaged over many neighbors instead. This makes predictions stable, so variance is low. The classifier becomes too simple to capture the true classification boundary. This is high bias, and the classifier is said to underfit. The aim is therefore to choose a value of k that balances these two effects.
+
+To select k objectively rather than arbitrarily, a 10 fold cross-validation was used: for each candidate value of $k=1,\dots,50$ the training data was split into 10 folds, the model was fitted on 9 folds and evaluated on the remaining fold, and this was repeated across all 10 folds to obtain an average cross-validated accuracy for that k. The value of k that maximized cross-validated accuracy was then selected for the final model.
+
+
+\subsubsection{Classification Tree}
+
+Classification trees are another type of non-parametric classification method, also known as partitioning methods, since the result is a partition of the feature space (the set of possible values of the explanatory variables). Classification trees involve two steps. First, the feature space is divided into a number of disjoint, non-overlapping regions. Second, for a given test observation, its class is predicted to be the most common class among the training observations in the region to which it belongs.
+
+A tree is built from a sequence of features, each with a cut-off point chosen on that feature; a given feature can appear more than once in the tree, with different cut-off points at different splits. Each split leads either to a further split or to a terminal (leaf) node, where a class is predicted. Once the tree is built, each leaf is assigned the class held by the majority of training observations that fall into it. To make a prediction, an observation starts at the root node and follows the branches determined by whether it satisfies each split condition, until it reaches a leaf.
+
+Choosing the best feature and cut-off point at each split requires a measure of node impurity to optimize. This analysis uses the \textbf{Gini index}, defined as:
+
+
+
+
+\begin{equation}
+Gini = \sum_{k=1}^{K} \hat{p}_k(1 - \hat{p}_k)
+\end{equation}
+
+where $K$ is the total number of classes and $\hat{p}_k$ is the proportion of training observations in the node belonging to class $k$. A node containing only one class has a Gini index of $0$ (pure), while a node with an even mix of classes has a higher Gini index (impure); at each stage, the split chosen is the one producing the greatest reduction in impurity. This approach is greedy where at each step, the best split is chosen given the splits already made so far, without looking ahead to whether a different choice would lead to a better tree in some future step.
+
+A fully grown tree tends to overfit the training data, so it is \textbf{pruned} to reduce complexity. Pruning is controlled by a complexity parameter ($cp$), and two strategies were compared to select its value: the \textbf{minimum error rule}, which prunes the tree back to the point where the cross-validated error is at a minimum; and the \textbf{1-SE (smallest tree) rule}, which first adds one standard error to the minimum cross-validated error to obtain a threshold, then selects the largest value of ($cp$) (the smallest tree) whose cross-validated error falls within that threshold. The 1-SE rule prunes slightly further than the minimum-error point, typically yielding a smaller, more interpretable tree.
+
+
+
+\paragraph{Bagging and Random Forest}
+
+Bagging, or bootstrap aggregation, is an ensemble technique that reduces the variance of a prediction by combining the results of many models fitted to different bootstrap samples of the training data (samples drawn with replacement from the original data). For classification, trees are grown, each on a different bootstrap sample, and the final prediction is made by majority vote across all trees. Bagging works particularly well for high-variance, low-bias procedures such as classification trees, since averaging over many trees smooths out the instability of any single tree.
+
+Random forest is a modification of bagging that further de-correlates the trees in the ensemble: rather than each tree splitting on the best feature from the full set of predictors at every split, random forest restricts each split to a random subset of the available features. This prevents strong predictors from dominating every tree in the ensemble, producing a more diverse set of trees whose averaged predictions further reduce variance compared to standard bagging.
+
+\subsubsection{Support Vector Machine}
+
+
+Support Vector Machines (SVM) are a supervised classification technique that finds a boundary separating classes by maximising the margin between them. The boundary is a hyperplane, and the margin is the perpendicular distance from the hyperplane to the nearest point(s) of either class. Where multiple hyperplanes could separate the classes, SVM selects the one that maximises this distance,the largest margin, \textbf{maximal margin hyperplane}.
+
+Once the optimal hyperplane has been found, with estimated weight vector $\hat{w}$ and estimated bias term $\hat{b}$, classification of a new observation $x_{new}$ reduces to determining which side of the hyperplane it falls on. This is given by:
+
+\begin{equation}
+\hat{g}(x_{new}) = \text{sign}(\hat{w}^T x_{new} + \hat{b})
+\end{equation}
+
+
+where $\text{sign}(\cdot)$ returns $+1$ for positive values and $-1$ for negative values. That is, $x_{new}$ is substituted into the estimated hyperplane equation, and the sign of the resulting value determines the predicted class: observations on one side of the hyperplane are assigned class $-1$, and observations on the other side are assigned class $+1$.
+
+
+
+The boundary described so far is linear. SVM can be extended to nonlinear boundaries by mapping the input features into a higher-dimensional space using a \textbf{kernel function}, within which a linear boundary is fitted; when mapped back to the original feature space, this linear boundary corresponds to a nonlinear boundary. Common kernel choices include the \textbf{linear kernel} (no transformation, producing a straight-line boundary), the \textbf{polynomial kernel}, and the \textbf{radial (Gaussian) kernel}, each producing increasingly flexible, curved decision boundaries. The choice of kernel is typically guided by whether the classes appear linearly separable in the original feature space and by comparing predictive performance across kernels.
+
+
+\subsection{Model Selection}
+
+For our third and fourth research questions, model selection techniques were used to ensure that the analysis retained only the variables with the most interpretable and significant effects on Employment status and Salary. There are several different model selection techniques; for this analysis we focus on \textbf{stepwise selection} and \textbf{shrinkage methods}.
+
+
+\subsubsection{Stepwise Selection}
+
+Stepwise selection has 3 types: forward, backward and both-directions. For this analysis, the Both-direction was used. In Both-Direction stepwise selection was used. We start with a full model containing all predictors). At each step, the algorithm considers both removing  variables currently in the model that contributes the least( based on AIC/BIC criteria) and adding variables not currently in the model. It keeps iterating by adding or removing one variable at a time until no further step improves the criterion, effectively reaching the lowest achievable AIC/BIC value.
+
+\subsubsection{Shrinkage Methods}
+
+
+Unlike stepwise selection, which searches over a discrete subsets of predictions, shrinkage methods fit the full model but penalize the coefficients/. This constraint reduces variance at the cost of a small increase in bias and depending on the penalty used we can also perform variable selection by shrinking some coefficient exactly to zero.
+
+A general way to express this is to minimize the residual sum of squares subject to a combination of two penalty terms: 
+
+\begin{equation}
+\hat{\beta} = \arg\min_{\beta} \left\{ \sum_{i=1}^{N}\left(y_i - \beta_0 - \sum_{j=1}^{p}\beta_j x_{ij}\right)^2 + \lambda_1 \sum_{j=1}^{p}|\beta_j| + \lambda_2 \sum_{j=1}^{p}\beta_j^2 \right\}
+\label{eq:general-penalty}
+\end{equation}
+
+The two penalty terms behave differently:
+
+\begin{itemize}
+\item The term $\sum_{j=1}^{p}|\beta_j|$ is the \textbf{L1 penalty}: the sum of the \textit{absolute values} of the coefficients.
+\item The term $\sum_{j=1}^{p}\beta_j^2$ is the \textbf{L2 penalty}: the sum of the \textit{squared} coefficients.
+\end{itemize}
+
+The tuning parameters $\lambda_1$ and $\lambda_2$ control how much weight is given to each penalty.
+
+\paragraph{Lasso}
+
+
+Lasso is is a penalized regression method. Instead of testing subsets of variables like stepwise selection, it fits all the predictors at once but adds a penalty to the loss function that constrains the total size of the coefficients( the sum of their absolute values), this penalty shrinkage the coefficients to zero, so it automatically performs variable selection technique. it takes care of the bias-variance trade off by continuous shrinkage
+
+Setting $\lambda_2 = 0$ in Equation~\ref{eq:general-penalty} leaves only the L1 penalty, giving the lasso:
+
+\begin{equation}
+\hat{\beta}^{lasso} = \arg\min_{\beta} \left\{ \sum_{i=1}^{N}\left(y_i - \beta_0 - \sum_{j=1}^{p}\beta_j x_{ij}\right)^2 + \lambda_1 \sum_{j=1}^{p}|\beta_j| \right\}
+\end{equation}
+
+
+
+\paragraph{Ridge}
+
+Ridge regression estimates coefficients by minimizing the residual sum of squares subject to a penalty of the sum of squared coefficients. Unlike Lasso, it does not shrink coefficients exactly to zero, it only makes them as small as possible and therefore does not perform variable selection.
+
+Setting $\lambda_1 = 0$ in Equation~\ref{eq:general-penalty} leaves only the L2 penalty.  As $\lambda_2$ increases, coefficients are shrunk further toward zero, though never exactly to zero:
+
+\begin{equation}
+\hat{\beta}^{ridge} = \arg\min_{\beta} \left\{ \sum_{i=1}^{N}\left(y_i - \beta_0 - \sum_{j=1}^{p}\beta_j x_{ij}\right)^2 + \lambda_2 \sum_{j=1}^{p}\beta_j^2 \right\}
+\end{equation}
+
+\paragraph{Elastic Net}
+
+The elastic net combines both the L1 and L2 penalties, allowing it to perform coefficient shrinkage and variable selection simultaneously as in Equation~\ref{eq:general-penalty}.
+
+\subsection{Statistical Models}
+
+\subsubsection{Multiple Linear Regression}
+
+Multiple linear regression models a continuous response variable as a linear combination of predictors. For salary, the model takes the form:
+
+\begin{equation}
+y_i = \beta_0 + \sum_{j=1}^{p}\beta_j x_{ij} + \epsilon_i
+\end{equation}
+
+where $y_i$ is the salary of the $i$th individual, $x_{ij}$ are the predictor values, $\beta_j$ are the coefficients to be estimated, and $\epsilon_i$ is the error term, assumed to be independently and normally distributed with mean zero and constant variance.
+
+\subsubsection{Logistic Regression}
+
+For employment status, a binary outcome (employed/unemployed), ordinary least squares is not appropriate, since predictions are not constrained to lie between 0 and 1. Instead, logistic regression models the probability of the outcome using the logit link function:
+
+\begin{equation}
+\log\left(\frac{p_i}{1-p_i}\right) = \beta_0 + \sum_{j=1}^{p}\beta_j x_{ij}
+\end{equation}
+
+where $p_i = P(y_i = 1 \mid x_i)$ is the probability that individual $i$ is employed. 
+
+Coefficients are estimated by maximum likelihood rather than least squares. Exponentiating a coefficient, $\exp(\beta_j)$, gives the odds ratio associated with a one-unit increase in $x_j$: values greater than 1 indicate the predictor increases the odds of employment, while values less than 1 indicate it decreases the odds.
+
+\subsubsection{Generalized Additive Models (GAM)}
+Multiple linear regression assumes a strictly linear relationship between each predictor and the response. Generalized additive models (GAMs) relax this assumption by allowing continuous predictors to enter the model through smooth, non-linear functions while keeping the model additive and interpretable:
+
+\begin{equation}
+y_i = \beta_0 + \sum_{k} f_k(x_{ik}) + \sum_{j} \beta_j x_{ij} + \epsilon_i
+\end{equation}
+
+where $f_k(\cdot)$ are smooth functions (typically splines) fitted to continuous predictors such as GPA, age, and years since graduation, and $\beta_j$ are ordinary linear coefficients for categorical predictors. The smoothness of each $f_k$ is controlled by a penalty term, tuned automatically via generalized cross-validation (GCV) or restricted maximum likelihood (REML), preventing overfitting while allowing the model to capture non-linear patterns that a purely linear model would miss.
+
+\subsection{Model Evaluation Metrics}
+
+After applying a classification method on a data set, for each observation we predict a class, so this prediction may be right where we are getting the predicted class same as the true class or the prediction is wrong were we get the predicted class different than the true class. For this we need to evaluate the performance of the classification method: how good it is at classifying observation, mans how good the method is overall. 
+
+\subsubsection{Confusion Matrix}
+
+It is a cross-tabulation of predicted class versus true class, where the$ij$-th element in the table gives the number of observations that were actually in class $i$ but predicted to be in class $j$. 
+
+We'll consider four different cases for this matrix. Assume we have two classes: sick ($y=1$) as the True class, and healthy($y=0$) as the False class. We want to predict whether a person is sick or healthy. A positive prediction means the person is predicted to be sick , and a negative prediction means the person is predicted to be healthy.
+
+These four cases fill the confusion matrix as follows Table~\ref{tbl:confusionMatrix}:
+
+\begin{itemize}
+\item \textbf{True Positive (TP):} a person is originally sick and predicted to be sick --- correctly identified.
+\item \textbf{False Positive (FP):} a person is healthy but predicted to be sick --- incorrectly identified.
+\item \textbf{True Negative (TN):} a person is healthy and predicted to be healthy --- correctly rejected.
+\item \textbf{False Negative (FN):} a person is sick but predicted to be healthy --- incorrectly rejected.
+\end{itemize}
+
+\begin{table}[H]
+\centering
+\caption{Confusion Matrix}
+\label{tbl:confusionMatrix}
+\fontsize{12.0pt}{14.0pt}\selectfont
+\begin{tabular}{lll}
+\toprule
+ & \multicolumn{2}{c}{{Actual}} \\ 
+\cmidrule(lr){2-3}
+Predicted & True & False \\ 
+\midrule\addlinespace[2.5pt]
+Positive & TP & FP \\ 
+Negative & FN & TN \\ 
+\bottomrule
+\end{tabular}
+\end{table}
+
+From these values, we can find performance metrics:
+
+\begin{itemize}
+\item \textbf{Sensitivity/Recall (True Positive Rate)}: the proportion of all observations that we correctly predicted as \textbf{positive}, $TP/(TP+FN)$.
+\item \textbf{Specificity (True Negative Rate)}: the proportion of all observations that were correctly predicted as \textbf{negative}, $TN/(TN+FP)$.
+\item \textbf{Accuracy (Correct Classification Rate)}: the number of correctly classified observations in their true class, whether positive or negative; this lies on the diagonal of the table, so we take the trace of the diagonal over the total number of observations, $(TP+TN)/n$. 
+\textit{(Misclassification Rate is $1-\text{accuracy}$, which is the trace of the values that lie on the off-diagonal over the total number of observations.)}
+\item \textbf{Precision (Positive Predictive Value)}: the proportion of correctly predicted positive observations, $TP/(TP+FP)$.
+\item \textbf{$F_1$ Score}: a single-number summary of precision and recall.
+\end{itemize}
+
+\subsubsection{ROC and Precision-Recall Curves}
+
+\begin{itemize}
+
+\item \textbf{ROC (Receiver Operating Characteristic):} commonly used to assess the trade-off between sensitivity and specificity for a binary classifier. It plots Sensitivity (True Positive Rate) on the y-axis against 1 − Specificity (False Positive Rate) on the x-axis across all classification thresholds, capturing both how many actual positives are correctly caught and how many actual negatives are incorrectly classified as positive.Overall performance is summarized by the area under the curve (AUC), with values closer to 1 indicating better discrimination between classes.
+
+\item \textbf{Precision-Recall Curve:} used when the class distribution is imbalanced, as is the case in this dataset (see @fig-employment in @sec-EDA)(see Figure~\ref{fig:employment} in Section~\ref{sec:EDA}). It plots Recall on the x-axis against Precision on the y-axis across all classification thresholds, capturing how many of the actual positives were correctly caught, and capturing how many of the predicted positives were actually correct. This focuses specifically on performance for the \textbf{positive class only}.Overall performance is summarized by the area under the curve (AUC), with values closer to 1 indicating stronger precision-recall trade-off.
+
+\end{itemize}
+
+% ======================================================
+% 4. ANALYSIS
+% ======================================================
+\section{Analysis of the data}
+
+\subsection{Research Question 1: Classification models to predict employment status}
+\label{sec:RS1}
+
+For this question, as explained previously, Employment Status was filtered to the Employed/ Unemployed categories to frame this as a binary classification problem. Non-informative columns were removed: Region\_of\_Study (constant at "UK" after filtering), and Salary and Job\_Sector, since these are outcomes of employment status rather than predictors of it.
+
+\subsubsection{K-Nearest Neighbours Method}
+
+Employment\_Status was set as the response variable (Y), with the remaining variables forming the predictor set (X). Categorical predictors in X were 
+converted into dummy variables, while the continuous predictors (GPA, Age, Years\_Since\_Graduation) were identified separately so that they could later be scaled. A seed was fixed at 1 throughout to ensure 
+reproducible results.
+
+
+The dataset was then split into 80\% training and 20\% test sets. Since KNN 
+relies on distance calculations between observations, unscaled variables with larger ranges would disproportionately dominate the distance metric, so the continuous predictors were standardized. To avoid data leakage, the scaling parameters (mean and standard deviation) were computed using only the training data, and these same parameters were then applied to scale both X continuous values of the training and test sets.
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.74\linewidth]{Rplot12.png}
+    \caption{10-Fold Cross-Validation Accuracy vs k}
+    \label{fig:knn-cv}
+\end{figure}
+
+A K-nearest neighbors algorithm was applied, testing fifty candidate values of $k$ (1 to 50) using 10-fold cross-validation, as described in Section~\ref{sec:methods}. For each candidate value of $k$, the training data was split into 10 folds: one fold was held out as validation while the remaining nine were used for training, and this was repeated so that each fold served as the validation set exactly once. This produced 10 accuracy estimates per value of $k$, which were averaged to give a cross-validated accuracy for that $k$. Repeating this process across all fifty candidate values of $k$ produced the cross-validated accuracy curve shown in Figure~\ref{fig:knn-cv}. The value of $k$ that maximized cross-validated accuracy, $k=28$, was selected as the final model, meaning each prediction is based on the $28$ nearest neighboring observations.
+
+Using this value of $k$, class predictions were made on the test 
+set, and test accuracy was computed as the proportion of correctly 
+classified observations. 
+
+\subsubsection{Classification Trees}
+
+
+As with the KNN model, the data was split into 80\% training and 20\% test sets, using the same seed for consistency across methods. Employment\_Status was set as a factor to indicate a classification, rather than regression task.
+
+A full classification tree was first grown with cost complexity set to zero $cp=0$, letting it split repeatedly until every terminal node was pure. This produced an extremely large, complex tree, a clear sign of overfitting.The tree was therefore pruned, using the approaches described
+in Section~\ref{sec:methods}: the minimum cross-validated error rule and the 1-SE rule.
+
+Pruning via the minimum-error rule selected $cp=0.0004$, producing a tree with $21$ splits. The 1-SE rule, which first adds one standard error to the minimum cross-validated error to obtain a threshold and then selects the smallest tree whose error falls within that threshold, selected a smaller, less complex tree. A 2-SE variant was also considered, using two standard errors instead of one to push toward an even smaller tree; this produced only a marginal further reduction, differing from the 1-SE tree by a small number of nodes rather than a meaningfully different structure. Given this negligible difference, the 1-SE tree was retained rather than the 2-SE version, as the standard and more commonly used choice.
+
+To decide between the pruning strategies, and to check whether a single tree was competitive with ensemble methods, four models were compared on test accuracy: the minimum-error tree, the 1-SE tree, bagging, and random forest, both grown as 500-tree ensembles on bootstrap samples of the training data, as described in Section~\ref{sec:methods}. Table~\ref{tbl:tree-comparison} shows the minimum-error tree achieved the highest accuracy at 0.9073, with bagging and random forest at  0.8966 and 0.8981 respectively, and the 1-SE tree close behind at 0.9069.
+
+
+Despite not achieving the highest accuracy, the 1-SE tree was selected as the model to report in detail as it offers a substantially simpler, more interpretable partition of the feature space. 
+
+
+\subsubsection{Support Vector Machine (SVM)}
+
+As a further approach to classifying employment status, we fitted support vector machine (SVM) models with four different kernels: linear, radial(gaussian), polynomial of degree 2, and polynomial of degree 3. A seed of 1 was set again for each of these models for reproducibility. This was by far the most computationally expensive step in the analysis, in particular, tuning the linear kernel took over two hours to run. Given this cost,we focused on trying different kernels rather than tuning.
+
+Each of the four fitted models was then used to predict employment status on the same test set used for the classification tree, and we compared their test set accuracy as shown in Table~\ref{tbl:SVM}.
+
+Table~\ref{tbl:SVM} shows that the radial(gaussian) kernel achieved the highest test set accuracy among the four models. A radial kernel can capture more flexible, non-linear decision boundaries than a linear kernel, without imposing the specific polynomial structure of the degree 2 and degree 3 kernels, so it is reasonable choice when the true decision boundary is unknown.
+
+\begin{table}[H]
+\centering
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\fontsize{10pt}{12pt}\selectfont
+\caption{Classification Tree Accuracy by Model}
+\label{tbl:tree-comparison}
+\begin{tabular}{lr}
+\toprule
+Model & Accuracy \\ 
+\midrule\addlinespace[2.5pt]
+Tree (min xerror) & 0.9073136 \\ 
+Tree (1-SE rule) & 0.9068693 \\ 
+Bagging & 0.8965609 \\ 
+Random Forest & 0.8980716 \\ 
+\bottomrule
+\end{tabular}
+
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\fontsize{10pt}{12pt}\selectfont
+\captionsetup{skip=24pt}
+\caption{SVM Accuracy by Kernel}
+
+\label{tbl:SVM}
+\begin{tabular}{lr}
+
+\toprule
+SVM.Model & Accuracy \\ 
+\midrule\addlinespace[2.5pt]
+Linear Kernel & 0.8539945 \\ 
+Radial Kernel & 0.8709677 \\ 
+Polynomial Degree 2 Kernel & 0.8715898 \\ 
+Polynomial Degree 3 Kernel & 0.8698125 \\ 
+\bottomrule
+\end{tabular}
+
+\end{minipage}
+\end{table}
+
+
+
+
+
+
+\subsection{Research Question 2: Evaluating Model Performance}
+\label{sec:RS2}
+
+In this section, we evaluate and compare the performance of the three classification methods used to predict employment status: K-nearest neighbours(KNN), the pruned classification tree selected under the 1-SE rule, and the support vector machine with the Gaussian (radial) kernel, each identified as the best-performing within its own method in the previous section(Section~\ref{sec:RS1}).  For each of these 3 models, we computed a confusion matrix, a precision-recall (PR) curve, and a receiver operating characteristic (ROC) curve on the test set. As discussed earlier, we place more weight and importance on the PR curve than the ROC curve. 
+
+To compare the three models directly, Table~\ref{tbl:comparison} draws together the accuracy, sensitivity, specificity, precision, F1 score, PR-AUC, ROC-AUC of each model, taken from their respective confusion matrices, PR curves and ROC curves. In the confusion matrix, columns represent the actual classes and rows represent the predicted classes. 
+
+\vspace{-10pt}
+\begin{table}[H]
+\centering
+\begin{minipage}[t]{0.52\textwidth}
+\centering
+\caption{Model Comparison Across Metrics}
+\label{tbl:comparison}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{cccc}
+\toprule
+Metric & KNN & Tree.1SE\_rule. & SVM \\ 
+\midrule\addlinespace[2.5pt]
+Accuracy & 0.8458189 & 0.9068693 & 0.8709677 \\ 
+Sensitivity & 0.9448940 & 0.8676943 & 0.9147078 \\ 
+Specificity & 0.6234141 & 0.9948097 & 0.7727797 \\ 
+Precision & 0.8492265 & 0.9973424 & 0.9003667 \\ 
+F1 & 0.8945096 & 0.9280121 & 0.9074806 \\ 
+PR\_AUC & 0.9729373 & 0.9828725 & 0.9796069 \\ 
+ROC\_AUC & 0.9377187 & 0.9548529 & 0.9519617 \\ 
+\bottomrule
+\end{tabular}%
+}
+
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.44\textwidth}
+\centering
+\captionsetup{skip=10pt}
+\caption{Classification Tree (1-SE Rule) Confusion Matrix}
+\label{tbl:confusionM-tree}
+\resizebox{0.9\linewidth}{!}{%
+\begin{tabular}{lrr}
+\toprule
+ & \multicolumn{2}{c}{{Actual}} \\ 
+\cmidrule(lr){2-3}
+Predicted & Employed & Unemployed \\ 
+\midrule\addlinespace[2.5pt]
+Employed & 6755 & 18 \\ 
+Unemployed & 1030 & 3450 \\ 
+\bottomrule
+\end{tabular}%
+}
+
+\end{minipage}
+\end{table}
+\vspace{-5pt}
+
+Table~\ref{tbl:comparison} shows that the pruned classification tree (1SE-rule) achieves the highest accuracy, 0.9069, and leads on every metric except for sensitivity (recall), where KNN scores higher: 0.9449, compared to 0.8677 for the tree.
+
+This reflects a genuine trade-off between the models. KNN is more willing to predict " Employed", which lets it correctly catch a large number of truly employed graduates. The tree, on contrast, is far more conservative, it only predicts "Employed" when confident, which means it misses more genuinely employed graduates but is rarely wrong when it does predict "Employed". 
+
+We therefore proceed with examining the classification tree confusion matrix and precision recall curve in more details below as it is the best-performing model (Table~\ref{tbl:confusionM-tree}).
+
+
+Table~\ref{tbl:confusionM-tree} shows the 1-SE tree's predictions against the true classes on the test set. Of the 3468 graduates who were actually unemployed, only 18 were misclassified as employed, while 1030 of the 7785 actual employed graduates were misclassified as unemployed. The gap between the two numbers 3468 for unemployed vs 7785 for employed, looks large, but this is mostly a reflection of class imbalance in the test data. 
+
+\vspace{-10pt}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{Rplot02.png}
+    \captionsetup{skip=0pt}
+    \caption{Precision recall curve}
+    \label{fig:PR}
+\end{figure}
+\vspace{-10pt}
+
+As Figure~\ref{fig:PR} shows the precision-recall curve with area under the curve of 0.9829.The curve stays close to a precision of 1.0 across roughly the first 85\% of recall, meaning that for the tree can correctly identify the majority of truly employed graduates using only its most confidently classified splits, with almost no unemployed misclassified as employed. Beyond 85\% recall, capturing the remaining employed graduates requires relaxing the classification threshold, which misclassified unemployed graduates as employed, so precision falls to roughly 0.7 as recall approaches 1.0. This reflects a subset of employed graduated whose predictors closely resembles those of unemployed graduates, making them difficult for the tree to separate cleanly.
+
+
+As noted in Section~\ref{sec:RS1}, a 2-SE pruned tree was also produced for comparison reasons with 1-SE pruned tree. Comparing the two, the 2-SE tree with 18 splits, 19 leaves and 37 nodes, was structurally very similar to the 1-SE tree with negligible difference in predictive performance. The 1-SE tree is therefore chosen for this analysis. 
+
+The pruned classification tree (1-SE rule) with 39 nodes, selected 19 splits, resulting in 20 terminal nodes(leaves). The first split was on Language\_Proficiency(Advanced/Fluent versus other), the strongest predictor of employment status, followed by Education\_Level, GPA, University\_Ranking, Years\_Since\_Graduation, and Internship\_Experience at lower levels of the tree. This indicates that language proficiency and education level provide the greatest initial separation between employed and unemployed graduates.
+
+\vspace{-10pt}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{Rplot01.png}
+    \captionsetup{skip=2pt}
+    \caption{Pruned Classification Tree (1-SE Rule)}
+    \label{fig:tree-pruned}
+\end{figure}
+
+\subsection{Research Question 3: Which factors are the most important predictors of employment outcomes?}
+\label{sec:RS3}
+
+
+In this section, we investigate which factors are the most important predictors of employment status. To answer this, we identify the best-fitting model using two approaches explained earlier in Section~\ref{sec:methods}: stepwise subset selection and Lasso regression. 
+
+Since employment status is a binary response, we frame this as logistic regression problem, where the goal is to estimate the probability of being employed versus unemployed. We first constructed a binary response variable, coding "Employed" as 1 and " Unemployed" as 0, and removed the original `Employmnet\_Status` variable now that the `Employmnet\_binary` served as the response variable. A seed set to 1 to ensure reproducibility of results. Since we are also interested in the predictive accuracy of the resulting model, we also split the data into training and test data sets. 
+
+
+We first fit a full logistic model containing all predictors and applied \texttt{stepAIC()}, a both-direction stepwise selection using AIC. This flagged `Gender` as a non-significant predictor, with p-values above 0.05 for both the Male and Other categories. To confirm this, we compared the AIC-selected model against a nested model with Gender removed using a likelihood-ratio test (\texttt{anova()}). After selecting the nested model without `Gender`, we generated the predictions on the test data and calculated the classification accuracy. As a second stepwise approach, we repeated this procedure using BIC criteria instead of AIC, again generating predictions and accuracy on the test data.  
+
+The resulting accuracies were 0.8533724 for the AIC model after removing Gender and 0.8533724 for the BIC model, which are exactly the same.
+
+The second approach considered was Lasso regression which, as discussed earlier in Section~\ref{sec:methods}, automatically performs variable selection by shrinking the coefficients of uninformative predictors to exactly zero. To fit the LASSO model, the data set was split into training and test data set of the predictor matrix `X` and response vector `Y` (Employment\_binary). Since our primary interest was LASSO, we also fitted ridge regression ($\alpha=0$) and elastic net ($\alpha=0.5$) for comparison purposes; the same procedure applied to LASSo was applied to these two models, but only LASSO results are discussed in details in this report. The plot below , Figure~\ref{fig:lasso}, shows the coefficient path of LASSO model fitted with \texttt{glmnet()}, using a binary family and $\alpha=1$.
+\vspace{-10pt}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{Rplot03.png}
+    \captionsetup{skip=-2pt}
+    \caption{Lasso Model}
+    \label{fig:lasso}
+\end{figure}
+\vspace{-10pt}
+
+
+In this plot, coefficient values are shown on the y-axis, and $-\log(\lambda)$ is shown on the bottom x-axis. Moving from left to right, $-\log(\lambda)$ increases, meaning $\lambda$ decreases so the penalty on the coefficients is decreasing(the far right of the plot corresponds to almost no penalty). The top axis shows the number of non-zero coefficients in the model at each point along the path: at the far left(strong penalty) with only 2 predictors remain non-zero; at far right( low penalty), 25 predictors remain non-zero. Each colored line represents one predictor, or, for a categorical variable, one dummy-coded level. 
+
+
+The direction of each line indicates the sign of that predictor's coefficient on the log-odds of being employed. The numbers on the right edge of the plot correspond to column indices of `X\_train`. For example, tracing index 28 shows that this is GPA. This line is moving upward- positive coefficient- means the predictor is positively associated with employment: for instance, a higher GPA is associated with higher portability of being employed.
+
+This plot illustrated how the number of non-zero coefficients change across values of $\lambda$, but it does not identify the best-performing model. For that, we use cross-validation via \texttt{cv.glmnet()} to find the best $\lambda$. \\
+
+After applying `cv.glmnet()`, we selected the cross-validated lambda value that minimizes deviance, `lambda.min` equal to 0.0008, and refit the model using `glmnet()` with this $\lambda$ value. We then evaluated the model's performance in predicting employment status on the test set. The same cross-validation procedure was applied to select $\lambda$ for the ridge and elastic net models. We then compared the accuracy of the three shrinkage methods to determine which performed best.
+From Table~\ref{tbl:result-shrinkagemethods}, LASSO achieved the highest accuracy at 0.8519.
+
+
+Using LASSO as variable-selection filter, we examined the coefficients of the LASSO model to identify which predictors were shrunk to exactly zero. The following variables were shrunk to zero: `Age`, all three categories of `Visa\_Type`, only two of the eight `Country\_of\_Origin` categories, and one of the six `Field\_of\_Study` categories. We conclude it was reasonable to drop `Age` and `Visa\_Type`.
+
+We then refit a GLM using all predictors except `Age` and `Visa\_Type`. Examining this model's summary, `Gender` had a p-value above 0.05, indicating non-significance; we therefore removed `Gender` and used a likelihood-ratio test (\texttt{anova()}) to confirm that the nested model (without `Gender`) was preferred. We repeated this process over several steps, sequentially removing `Field\_of\_Study` and then `Country\_of\_Origin` (in that order), arriving at a final model containing `Education\_Level`, `Language\_Proficiency`, `University\_Ranking`, `GPA`, `Years\_Since\_Graduation`, and `Internship\_Experience`.
+
+A notable finding was that this final LASSO-informed model, the BIC-selected model, and the AIC-selected model (after removing Gender) all converged on the same predictors, coefficients, p-values, and test-set accuracy of \textbf{0.8533724}. All three variable-selection approaches produced an identical final model.
+
+We next explored whether meaningful interaction effects existed among predictors, motivated by sensible reasoning. A higher GPA may increase the likelihood of securing an internship, motivating an interaction between `GPA` and `Internship\_Experience`. The likelihood of securing an internship may also depend on university ranking, as students from higher-ranked universities may be perceived by employers as more capable or better prepared, and education level may moderate the effect of language proficiency on employment outcomes.
+
+We compared this interaction model against the final LASSO-informed model to assess which better predicted employment status.
+
+\vspace{5pt}
+
+\begin{table}[H]
+\centering
+\begin{minipage}{0.48\linewidth}
+\centering
+\vspace{-10pt}
+\fontsize{12.0pt}{14.0pt}\selectfont
+\caption{Shrinkage method comparison}
+\label{tbl:result-shrinkagemethods}
+\begin{tabular}{lcc}
+\toprule
+Model & Accuracy \\ 
+\midrule\addlinespace[2.5pt]
+Ridge & 0.8513285 \\ 
+Other & 0.8507953 \\ 
+Lasso & 0.8518617 \\ 
+\bottomrule
+\end{tabular}
+\captionsetup{skip=12pt}
+
+\end{minipage}
+\hfill
+\begin{minipage}{0.48\linewidth}
+\centering
+\fontsize{12.0pt}{14.0pt}\selectfont
+\caption{Confusion Matrix of Ineraction Model}
+\label{tbl:interactionConfusion}
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lrr}
+\toprule
+ & \multicolumn{2}{c}{{Actual}} \\ 
+\cmidrule(lr){2-3}
+Predicted & Employed & Unemployed \\ 
+\midrule\addlinespace[2.5pt]
+Employed & 7106 & 909 \\ 
+Unemployed & 679 & 2559 \\ 
+\bottomrule
+\end{tabular*}
+\end{minipage}
+\end{table}
+
+\vspace{-5pt}
+
+The likelihood-ratio test, comparing the interaction model with the final LASSO model, indicated that the interaction terms significantly improve model fit ($p<0.05$). This is a separate claim from predictive performance, on the test set the interaction model also achieved a higher accuracy, 0.8589, suggesting the improved fit translates into a gain in predictive accuracy.
+We therefore, proceed with the interactive model, examining its confusion matrix and precision-recall curve. The Table~\ref{tbl:interactionConfusion}  shows that 679 employed graduates which were misclassified as unemployed, and 909 unemployed were misclassified as employed. 
+
+To understand Figure~\ref{fig:PRcurveinteraction}, we consider the precision and recall of the interaction model. Recall(sensitivity) is 0.9129 , which is very high, indicating that the model correctly identifies the large majority of truly employed graduates as employed. Precision is 0.8866 , also high, indicating that when the model predicts a graduate is employed, it is correct prediction. Together, these translate into a high precision-recall AUC of 0.9758, indicating that the model maintains strong precision and recall simultaneously.
+\vspace{-13pt}
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{Rplot09.png}
+    \captionsetup{skip=-6pt}
+    \caption{PR curve of the interaction model}
+\label{fig:PRcurveinteraction}
+\end{figure}
+\vspace{-16pt}
+
+\subsection{Research Question 4: Which factors are strongly associated with salary?}
+\label{sec:RS4}
+
+To this section, we investigate which factors are strongly associated with salary. To do this, we restricted the sample to employed graduates only by removing observations with Salary$=0$, since these correspond to graduates who were unemployed or still in education. The resulting dataset also excluded `Job\_Sector`, `Employment\_Status` which has only one category- Employed, and `Region\_of\_Study` from the predictor set.
+
+As in  Section~\ref{sec:RS3}, we used split the data set to training and test sets and applied both-direction stepwise selection based on BIC to a full model containing all remaining predictors. Since salary is a strictly positive, right-skewed variable by looking at the box plot in Figure~\ref{fig:salary}, we also considered whether a log-transformation of `Salary` improved model fit: we fitted a second full model using $\log(\text{Salary})$ as the response, and again applied BIC stepwise selection. The residual diagnostics for both models: the untransformed model (BIC\_model) and the log-transformed model (BIC\_log\_salary) are compared in Figure~\ref{fig:residualplot}.
+
+
+Comparing the two sets of diagnostics, the log-transformed model's residuals are noticeably right-skewed, and its Q–Q plot departs clearly from the line at both tails, indicating that the log-transformed residuals are not well approximated by a normal distribution. The untransformed model's residuals, by contrast, are reasonably symmetric around zero, and its Q–Q plot follows the line closely across almost its entire range. We therefore proceeded with the untransformed salary model.
+
+One notable feature of the untransformed model's residuals-versus-fitted plot is that the points form clusters. To investigate this, we plotted the same residuals against fitted values, coloring points by Education\_Level as shown in Figure~\ref{fig:cluster}. It shows that this clustering is explained almost entirely by `Education\_Level`. PhD graduates form a distinct cluster at the highest fitted salaries, Master's graduates form a lower cluster, and Bachelor's and Diploma graduates cluster together at the lowest fitted salaries, consistent with the expectation that further study is associated with higher earnings.
+
+
+
+\vspace{-10pt}
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{Rplot07.png}
+    \caption{Residual plots: before and after logging salary}
+    \label{fig:residualplot}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.51\linewidth}
+        \centering
+    \includegraphics[width=\linewidth]{Rplot08.png}
+    \captionsetup{skip=30pt}
+    \caption{The reason of the clustering}
+\label{fig:cluster}
+ \end{minipage}
+\end{figure}
+\vspace{-10pt}
+
+As a second approach, we fitted a generalized additive model (GAM) using the \texttt{mgcv} package with \texttt{method = "REML"}, restricted to the variables retained by the BIC-selected linear model.
+
+After fitting the initial additive model, we examined the smooth function plots to check for non-linear relationships between the continuous predictors (`Age`, `Years\_since\_Graduation` and `GPA`) and salary. GPA was the only predictor showing a clearly non-linear effect on salary.
+
+
+We then examined the model summary and removed non-significant predictors one at a time, confirming each removal with a likelihood-ratio test (\texttt{anova()}) between the reduced and full models. Following this procedure, we sequentially removed `Gender`, `Visa\_Type`, `Field\_of\_Study`, `Country\_of\_Origin`, and finally the linear continuous terms `Years\_Since\_Graduation` and `Age`, finishing at a final model containing `GPA`, `Internship\_Experience`, `Education\_Level`, `University\_Ranking`, and `Language\_Proficiency`.
+
+For this step-by-step comparison, each candidate model was refitted using \texttt{method = "ML"} rather than \texttt{"REML"}, since the models being compared differ in which predictors they include, so REML likelihoods aren't valid for that comparison. ML likelihoods don't have this restriction. Once the final variable set was settled, the model was refit with \texttt{method = "REML"}.
+
+The plot below shows the non linear effect with salary (Figure~\ref{fig:salaryGPA}). The estimated smooth term for GPA has an effective degrees of freedom (edf) of approximately 8.70. This is far from the edf$= 1$ that would indicate a linear relationship, confirming a genuinely non-linear, fairly complex relationship between GPA and salary. 
+
+The direction of this relationship is unexpected: across most of the GPA range, a higher GPA is associated with a lower predicted salary. One plausible, non-statistical explanation is that GPA and career-relevant employability skills are not the same thing. Students who prioritize maximizing their GPA may spend relatively more time on coursework and exam preparation and relatively less time on internships, networking, or other extracurricular activities that employers may weight heavily, and that GPA does not capture at all. 
+
+We also examined whether allowing for interaction effects changed the model. Using the same interaction terms considered in section ~\ref{sec:RS3} (GPA:Internship\_Experience, Internship\_Experience: University\_Ranking, and Education\_Level:Language\_Proficiency), a likelihood-ratio test indicated that the interaction model provided a significantly better fit than the additive model. 
+
+Fitting this interaction model, however, changed the shape of the estimated GPA effect quite substantially, as shown in Figure~\ref{fig:GPA}.
+
+
+\vspace{-30pt}
+\begin{figure}[H]
+\centering
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
+% TODO: insert non-linear GPA smooth term plot (additive model) here
+\includegraphics[width=\linewidth]{Rplot10.png}
+\caption{Salary--GPA non-linear effect (Additive model)}
+\label{fig:salaryGPA}
+\end{subfigure}
+\hfill
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
+% TODO: insert non-linear GPA smooth term plot (interaction model) here
+\includegraphics[width=\linewidth]{Rplot11.png}
+\caption{Salary--GPA non-linear effect (Interaction model)}
+\label{fig:GPA}
+\end{subfigure}
+
+\end{figure}
+
+In the interaction model, predicted salary is high for students with low GPA. As GPA increases, salary goes down. Unlike the first model, salary does not go back up for high GPA students, it stays low and flat. This means high GPA students now have the lowest predicted salary, not middle GPA students. This simpler, steadier model suggests that once we account for internship experience, GPA's effect on salary is steady decline, without a strange rise seen before. 
+
+A likely reason for the additive model's irregular shape in Figure~\ref{fig:salaryGPA} is that GPA's relationship with salary may differ by internship experience. For example, GPA may barely affect salary for students with strong internship experience, whereas GPA may affect salary for student with little or no internship experience. Since the additive model fits only one GPA curve for everyone, it must average these two cases, producing an unclear shape. Once interaction term is added, this averaging is no longer needed, the interaction absorbs the internship-GPA variation, leaving a simpler GPA effect in Figure~\ref{fig:GPA} where lowest predicted salaries belong to high GPA students.
+
+
+To check if this pattern was just caused by mixing all education levels together, we refit the interaction model separately within Education\_Level subgroups: PhD students only, and Master's and Bachelor's students combined. The GPA effect did not change in either subgroup, indicating that the pattern is not being driven by confounding with education level. We also checked the model's sensitivity to the number of basis functions ($k$) used for the GPA smooth term: increasing $k$ beyond the default increased the edf and produced a visibly more wiggly, less stable fit, without a clear justification for the additional flexibility, so we retained the default $k$.
+
+Finally, in Table~\ref{tbl:GAM-BIC} we compared the predictive performance of the interaction GAM against the BIC-selected linear model, using both RMSE and $R^2$.
+
+\begin{table}[H]
+\centering
+\fontsize{12.0pt}{14.0pt}\selectfont
+\caption{Performance of model -- GAM vs BIC linear model}
+\label{tbl:GAM-BIC}
+\begin{tabular}{lcc}
+\toprule
+Model & RMSE & $R^2$ \\ 
+\midrule\addlinespace[2pt]
+BIC Linear & 5457.113 & 0.9075640 \\ 
+GAM & 5260.535 & 0.9141007 \\ 
+\bottomrule
+\end{tabular}
+
+\end{table}
+
+
+On the test set, the GAM achieved a lower RMSE (5260.54) than the BIC linear model (5457.11), and a higher $R^2$ (0.9141 against 0.9076). This is consistent with the earlier finding that GPA has a genuinely non-linear relationship with salary. Two points are worth noting: first, RMSE falls by only around 3.6\% and $R^2$ improves by less than one percentage point; second, the two models differ in interpertability, with the linear model giving GPA's effect as a single number while the GAM gives it as a curve that is harder to explain. Since the priority is predictive performance, the interaction GAM is a better choice.
+
+
+
+
+% ======================================================
+% 5. CONCLUSIONS
+% ======================================================
+\section{Conclusions and discussion}
+
+This dissertation examined what shapes employment outcomes for international graduates int he UK using classification and regression models. 
+Across the classification methods tested, the pruned classification tree (1-SE rule) was the best-performing model overall, with both the highest accuracy and the greatest interpretability among the models compared. The most significant predictors of employment status were \texttt{Education\_Level}, \texttt{Language\_Proficiency}, \texttt{University\_Ranking}, \texttt{GPA}, \texttt{Years\_Since\_Graduation}, and \texttt{Internship\_Experience}, with an interaction model performing better. \\
+Notably, \texttt{Years\_Since\_Graduation} was associated with employment status but not salary. The dataset itself cannot explain this pattern, since it records no information on what graduates actually do during this time. One plausible interpretation is that time since graduation proxies for accumulated job-search experience, self-directed preparation, or growing familiarity with the labor market, though this remains a hypothesis rather than a finding this analysis can directly test. For salary, a generalized additive model (GAM) outperformed a linear model, revealing a non-linear relationship between GPA and salary. Overall, these findings suggest that employment status and salary for international graduates depend on combination of academic performance, practical experience and institutional reputation, rather than any single factor.
+
+\subsection{Limitations}
+
+Several should be acknowledged. \texttt{Employment\_Status} was imbalanced between classes, although the classification tree was the best-performing model overall it still misses a meaningful proportion of genuinely employed graduates as a result. In addition, the dataset was dominated by categorical variables, with relatively few continuous predictors available, which may have limited how well relationships such as salary variation could be captured and modeled.
+
+\subsection{Recommendations}
+
+To frame these findings, it is worth noting that this dissertation's  findings align closely with those of an employability research internship at the College of Science and Engineering, University of Glasgow, in which I personally participated. The internship aimed to understand the gap between students' and employers' expectations about employability and to identify what the university need to do to help students transition more successfully into employment. The qualitative analysis of interview data from students and employers in that internship and the quantitative analysis of this dissertation reinforce one another.  In particular, both pieces of work point toward the importance of actual work experience: embedding internships within the curriculum rather than treating them as optional and providing careers support that is tailored to each school or discipline. Together, this gives universities a strong evidence base for prioritizing these two areas to work to close the gap between the student experience and labor market demands. 
+\section{AI Usage }
+I acknowledge the use of Claude, https://claude.ai) as a tool during the preparation of this report. Claude was used to design and format the LateX title age to paraphrase and clarify the language of the analysis, to adjust the sizing and positioning of tables and figures and to convert R output tables into LateX codes using \texttt{as\_latex()}. The tool was used between 26 July till 27 August 2026.
+
+\section{References}
+
+\bibitem{davis2006}
+Davis, J. and Goadrich, M. (2006) 'The relationship between precision-recall and ROC curves', \textit{Proceedings of the 23rd International Conference on Machine Learning}. Pittsburgh, PA, pp. 233--240.
+
+\bibitem{hastie2009}
+Hastie, T., Tibshirani, R. and Friedman, J. (2009) \textit{The Elements of Statistical Learning: Data Mining, Inference, and Prediction}. 2nd edn. New York: Springer.
+
+\bibitem{glmnet}
+Hastie, T., Qian, J. and Tay, K. (2021) \textit{An Introduction to glmnet}.\\\textit{ https://glmnet.stanford.edu/articles/glmnet.html}
+
+\bibitem{employability1}
+HEPI \& Kaplan International Pathways (2021), Paying more for less? Careers and employability support for international students at UK universities
+
+\bibitem{fakunle2021}
+Fakunle (2021), “International students' perspective on developing employability during study abroad”, Higher Education Quarterly, 75(4), 575–590
+\end{document}
