@@ -96,17 +96,17 @@ Supervisor: Dr Ioannis Kalogridis \\
 % ======================================================
 \section{Introduction}
 
-Employability is one of the most important outcomes of higher education, and for many students it becomes a concern from the very start of their university journey, not only after graduation. Across the world, factors such as the quality of education, university ranking, and the skills gained during study all play a significant role in shaping a graduate's employability(Fakulne, 2021). As competition increases and labour markets become harder to enter, students everywhere are looking for a degree that does more than provide knowledge, they want an experience that helps them stand out from other graduates. 
+Employability is one of the most important outcomes of higher education, and for many students it becomes a concern from the very start of their university journey, not only after graduation. Across the world, factors such as the quality of education, university ranking, and the skills gained during study all play a significant role in shaping a graduate's employability(Fakulne, 2021). As competition increases and labor markets become harder to enter, students everywhere are looking for a degree that does more than provide knowledge, they want an experience that helps them stand out from other graduates. 
 
-In some countries, such as China, admissions to a strong master's program is highly competitive, and graduates then enter an equally competitive domestic job market. In others, such as India, the issue is more about the shortage of strong master's-level programs and institutions where students can genuinely specialize in their field paired with weaker salary prospects for graduates in the domestic job market. 
+In some countries, such as China, admissions to a strong master's program is highly competitive, and graduates then enter a competitive domestic job market. In others, such as India, the issue is more about the shortage of strong master's-level programs and institutions paired with weaker salary prospects in the domestic job market. 
 
-The UK is one of the main destinations students choose. In 2024/25, 685,565 international students were enrolled at UK higher education institutions, making up around 24\% of the total student population (HESA, 2024/25). The UK has strong higher education system, well-established career support services, and high number of globally ranked universities: 17 UK universities were placed in the world's top 100 in the Q World University Ranking 2026 (QS,2026). A 2021 survey by the Higher Education Policy Institute (HEPI) and Kaplan International Pathways, covering over 1,000 international students across 118 UK universities, found that 92\% students rated the employability skills they expected to gain were important or very important when choosing where to study, and 82\% said the same about the careers support they expected (HEPI, Kaplan International Pathways, 2021). This suggests that students are not only choosing the UK for the qualification itself, but for the combination of degree and experience that they believe will make them more competitive both internationally and back in their home countries. 
+The UK is one of the main destinations that students choose. In 2024/25, 685,565 international students were enrolled at UK higher education institutions, making up around 24\% of the total student population (HESA, 2024/25). The UK has a strong higher education system, well-established career support services, and a high number of globally ranked universities: 17 UK universities were placed in the world's top 100 in the Q World University Ranking 2026 (QS,2026). A 2021 survey by the Higher Education Policy Institute (HEPI) and Kaplan International Pathways, covering over 1,000 international students across 118 UK universities, found that 92\% students rated the employability skills they expected to gain were important or very important when choosing where to study, and 82\% said the same about the careers support they expected (HEPI, Kaplan International Pathways, 2021). This suggests that students are not only choosing the UK for the qualification itself, but for the combination of degree and experience that they believe will make them more competitive both internationally and back in their home countries. 
 
-Fakulne (2021) found that employability is consistently the main reason international students give for studying abroad, and many students in her study also planned or hoped to stay in the UK to work, at least for a period, after finishing their studies A U degree and UK work experience are therefore seen by many students as a way to strengthen heir position both int he UK job market and int heir home country's once they return. 
+Fakulne (2021) found that employability is consistently the main reason international students give for studying abroad, and many students in her study also planned or hoped to stay in the UK to work, at least for a period, after finishing their studies. A UK degree and UK work experience are therefore seen by many students as a way to strengthen their position both in the UK job market and in their home country's once they return. 
 
-However, arriving in the UK is only the beginning of this journey. Students still have to compete for jobs, as it is not automatically guaranteed that studying in the UK will lead to strong employment outcomes (Di Pietro, 2019, cited in Fakulne, 2021).
+However, arriving in the UK is only the beginning of this journey. Students still have to compete for jobs, as it is not guaranteed that studying in the UK will lead to strong employment outcomes (Di Pietro, 2019, cited in Fakulne, 2021).
 
-This raises an important question: what actually determines whether an international student is able to find employment after their studies, and what increases their chances of doing so? This dissertation uses data on international students in the UK to examine which factors are associated with employment status after graduation. The findings are intended to help universities better understand the gap between the student experience and the demands of the labour market, so that they can offer more targeted support and guidance. This would allow universities to differentiate themselves not simply as providers of education, but as institutions that genuinely support students' employability and post-graduate career outcomes. It will also help students understand which factors matter the most for their own transition to employment, that they know where to focus their efforts during their studies. 
+This raises an important question: what actually determines whether an international student is able to find employment after their studies, and what increases their chances of doing so? This dissertation uses data on international students in the UK to examine which factors are associated with employment status after graduation. The findings are intended to help universities better understand the gap between the student experience and the demands of the labor market, so that they can offer more targeted support and guidance. This would allow universities to differentiate themselves not simply as providers of education, but as institutions that genuinely support students' employability and post-graduate career outcomes. It will also help students understand which factors matter the most for their own transition to employment. 
 
 % ======================================================
 % 2. DATA DESCRIPTION AND EDA
@@ -116,29 +116,12 @@ This raises an important question: what actually determines whether an internati
 
 This dataset contains anonymized records for over 300,000 international graduates. It is sourced from Kaggle but originates from HESA (Higher Education Statistics Agency), the official body responsible for UK higher education data. The analysis here focuses on UK international students' employability outcomes, so the dataset was filtered to students who studied in the UK, giving 74,901 rows. It combines graduate-outcomes survey data with visa, language, and academic information, allowing predictive analysis of two outcomes: Employment Status (employed, unemployed, or continuing education) and Salary (annual salary for those employed).
 
-The data set contains 15 variables: 11 categorical (Employment\_Status, Visa\_Type, Country\_of\_Origin, Language\_Proficiency, Field\_of\_Study, Gender, University\_Ranking, Education\_Level, Internship\_Experience, Job\_Sector and Region\_of\_Study) and 4 numerical (Age, GPA, Salary, Years\_Since\_Graduation).
+The data set contains 15 variables: \textbf{11 categorical} (Employment\_Status, Visa\_Type, Country\_of\_Origin, Language\_Proficiency, Field\_of\_Study, Gender, University\_Ranking, Education\_Level, Internship\_Experience, Job\_Sector and Region\_of\_Study) and \textbf{4 numerical} (Age, GPA, Salary, Years\_Since\_Graduation).
 
 Moving to \textbf{exploratory data analysis (EDA)}, this section focuses on the distributions of the two main response variables, Employment Status and Salary, in relation to the other predictors. For Employment Status, we examine its own distribution alongside its relationship with each categorical predictor. For Salary, we examine its own distribution as well as its relationship with both the numerical and categorical predictors. This section focuses specifically on the distributions of Employment Status and Salary, since these shape how the data was prepared and structured for the modeling that follows.
 
-Since this analysis focuses on employability, Continuing Education was excluded, as these graduates have not yet entered the labour market. Even after this exclusion, Figure~\ref{fig:employment} and Table~\ref{tbl:employment} show that the remaining data is still imbalanced between the Employed and Unemployed categories. This imbalance motivates the choice of evaluation approach used later in the analysis, the use of precision-recall curves rather than ROC curves , which will be discussed further in the Analysis chapter. 
-\vspace{-5pt}
-\begin{table}[H]
-\centering
-\caption{Employment Status Distribution}
-\label{tbl:employment}
-\fontsize{12pt}{14pt}\selectfont
-\setlength{\tabcolsep}{8pt} % reduce column spacing
-\begin{tabular}{lrr}
-\toprule
-Employment\_Status & n & prop \\ 
-\midrule\addlinespace[2.5pt]
-Continuing Education & 18637 & 0.2488218 \\ 
-Employed & 39038 & 0.5211946 \\ 
-Unemployed & 17226 & 0.2299836 \\ 
-\bottomrule
-\end{tabular}
-\end{table}
-\vspace{-10pt}
+Figure~\ref{fig:employment} shows that the data is imbalanced between the three employment status categories, with 18,637 graduates in Continuing Education, 39,038 Employed and 17,226 Unemployed. Since this analysis focuses on employability, Continuing Education was excluded, as these graduates have not yet entered the labor market. Even after this exclusion, the figure still shows that the remaining data is still imbalanced between the Employed and Unemployed categories. This imbalance motivates the choice of evaluation approach used later in the analysis, the use of precision-recall curves rather than ROC curves , which will be discussed further in the Analysis chapter. 
+
 
 \begin{figure}[H]
 \centering
@@ -177,102 +160,88 @@ In this dissertation, this goal translates into the building of a classification
 
 \subsubsection{K-Nearest Neighbor (KNN)}
 
-K-Nearest Neighbours is a nonparametric classification method. For each point, we look at its k nearest labelled points and predict its class to be that of the majority of its neighbours, we use the observations in the training set closest to a given point. This requires four steps: deciding the value of k; defining closeness via a distance metric; sorting distances to determine the nearest neighbours; and assigning the class held by the majority of those neighbours.
+K-Nearest Neighbors is a nonparametric classification method. For each point, we look at its k nearest labeled points and predict its class to be that of the majority of its neighbors, we use the observations in the training set closest to a given point. This requires four steps: deciding the value of k, defining closeness via a distance metric, sorting distances to determine the nearest neighbors; and assigning the class held by the majority of those neighbors. (Hastie et al., 2008, p. 14)
 
-Several distance metrics exist, including Euclidean, Manhattan, and Mahalanobis distance. This analysis uses the standard choice, Euclidean distance, defined as the square root of the sum of squared differences between two points across all predictors. For $p$-dimensional continuous variables, the distance between two points $x$ and $x_i$ is defined as:
-
+Several distance metrics exist, including the Euclidean, Manhattan, and Mahalanobis distance. This analysis uses the standard choice, Euclidean distance, defined as the square root of the sum of squared differences between two points across all predictors. For $p$-dimensional continuous variables, the distance between two points $x$ and $x_i$ is defined as (Hastie et al., 2008, p.465):
+\vspace{-2pt}
 \begin{equation}
 d(x, x_i) = \sqrt{\sum_{j=1}^{p} (x_j - x_{ij})^2}
 \end{equation}
 
-Having defined distance, the value of k must then be chosen, and this choice creates a bias-variance trade-off. When k is small, each prediction depends on only a handful of nearby points, $k=1$ relies on a single neighbor. This makes the classifier very flexible, a single mislabeled point can flip a prediction. This instability is high variance, and the classifier is said to overfit. When k is large, predictions are averaged over many neighbors instead. This makes predictions stable, so variance is low. The classifier becomes too simple to capture the true classification boundary. This is high bias, and the classifier is said to underfit. The aim is therefore to choose a value of k that balances these two effects.
+Having defined distance, the value of k must then be chosen, and this choice creates a bias-variance trade-off. When k is small, each prediction depends on only nearby points, $k=1$ relies on a single neighbor. This makes the classifier very flexible, a single mislabeled point can flip a prediction. This instability is high variance, and the classifier is said to overfit. When k is large, predictions are averaged over many neighbors instead. This makes predictions stable, so variance is low. The classifier becomes too simple to capture the true classification boundary. This is high bias, and the classifier is said to be underfit (Boehmke and Greenwell, 2020, Chapter 8; Hastie et al., 2008, p. 37). The aim is therefore to choose a value of k that balances these two effects; this is commonly done via 10-fold cross validation rather than an arbitrary choice. (Hastie et al., 2008, pp. 241, 465)
 
-To select k objectively rather than arbitrarily, a 10 fold cross-validation was used: for each candidate value of $k=1,\dots,50$ the training data was split into 10 folds, the model was fitted on 9 folds and evaluated on the remaining fold, and this was repeated across all 10 folds to obtain an average cross-validated accuracy for that k. The value of k that maximized cross-validated accuracy was then selected for the final model.
 
 
 \subsubsection{Classification Tree}
 
-Classification trees are another type of non-parametric classification method, also known as partitioning methods, since the result is a partition of the feature space (the set of possible values of the explanatory variables). Classification trees involve two steps. First, the feature space is divided into a number of disjoint, non-overlapping regions. Second, for a given test observation, its class is predicted to be the most common class among the training observations in the region to which it belongs.
+Classification trees are a non-parametric classification method, also known as partitioning methods, since the feature space (the set of possible values of the explanatory variables) is divided into disjoint, non-overlapping regions.(Yang, 2026, Week 4).
 
-A tree is built from a sequence of features, each with a cut-off point chosen on that feature; a given feature can appear more than once in the tree, with different cut-off points at different splits. Each split leads either to a further split or to a terminal (leaf) node, where a class is predicted. Once the tree is built, each leaf is assigned the class held by the majority of training observations that fall into it. To make a prediction, an observation starts at the root node and follows the branches determined by whether it satisfies each split condition, until it reaches a leaf.
+A tree is built from a sequence of features and cut-off point chosen on that feature, a given feature can appear more than once with different cut-off points at different splits. Each split leads either to a further split or to a terminal (leaf) node, where a class is predicted by the majority class of training observations in that leaf. To classify a new observation, it starts at the root node and follows the branches determined by whether it satisfies each split condition until it reaches a leaf (Boehmke and Greenwell, 2020, Chapter 9; Yang, 2026, Week 4).
 
-Choosing the best feature and cut-off point at each split requires a measure of node impurity to optimize. This analysis uses the \textbf{Gini index}, defined as:
+Choosing the best feature and cut-off point at each split requires a measure of node impurity to optimize. This analysis uses the \textbf{Gini index}, defined as(Hastie et al., 2008, p. 309):
 
-
-
-
+\vspace{-5pt}
 \begin{equation}
 Gini = \sum_{k=1}^{K} \hat{p}_k(1 - \hat{p}_k)
 \end{equation}
 
-where $K$ is the total number of classes and $\hat{p}_k$ is the proportion of training observations in the node belonging to class $k$. A node containing only one class has a Gini index of $0$ (pure), while a node with an even mix of classes has a higher Gini index (impure); at each stage, the split chosen is the one producing the greatest reduction in impurity. This approach is greedy where at each step, the best split is chosen given the splits already made so far, without looking ahead to whether a different choice would lead to a better tree in some future step.
+where $K$ is the total number of classes and $\hat{p}_k$ is the proportion of training observations in the node belonging to class $k$. A pure node (single class) has a Gini index of $0$, while a node with an even mix of classes has a higher Gini index (impure); the split chosen at each stage is the one producing the greatest reduction in impurity. This approach is greedy where at each step, the best split is chosen based only on the current step, without looking ahead to whether a different choice would lead to a better tree in some future step. (Yang, 2026, week 4)
 
-A fully grown tree tends to overfit the training data, so it is \textbf{pruned} to reduce complexity. Pruning is controlled by a complexity parameter ($cp$), and two strategies were compared to select its value: the \textbf{minimum error rule}, which prunes the tree back to the point where the cross-validated error is at a minimum; and the \textbf{1-SE (smallest tree) rule}, which first adds one standard error to the minimum cross-validated error to obtain a threshold, then selects the largest value of ($cp$) (the smallest tree) whose cross-validated error falls within that threshold. The 1-SE rule prunes slightly further than the minimum-error point, typically yielding a smaller, more interpretable tree.
-
+A fully grown tree tends to overfit, so it is \textbf{pruned} to reduce complexity. Pruning is controlled by a complexity parameter ($cp$), and two strategies were compared to select its value: the \textbf{minimum error rule}, which prunes the tree back to the point of minimum the cross-validated error; and the \textbf{1-SE (smallest tree) rule}, which adds one standard error to the minimum cross-validated error to obtain a threshold, then selects the largest value of ($cp$) (the smallest tree) whose cross-validated error falls within that threshold. The 1-SE rule prunes slightly further than the minimum-error point, typically yielding a smaller, more interpretable tree. (Yang, 2026, week 4; Hastie et al., 2008, p. 313).
 
 
 \paragraph{Bagging and Random Forest}
 
-Bagging, or bootstrap aggregation, is an ensemble technique that reduces the variance of a prediction by combining the results of many models fitted to different bootstrap samples of the training data (samples drawn with replacement from the original data). For classification, trees are grown, each on a different bootstrap sample, and the final prediction is made by majority vote across all trees. Bagging works particularly well for high-variance, low-bias procedures such as classification trees, since averaging over many trees smooths out the instability of any single tree.
+Bagging, or bootstrap aggregation, is an ensemble technique that reduces the variance of a prediction by combining the results of many models fitted to different bootstrap samples of the training data (samples drawn with replacement from the original data). For classification, trees are grown, each on a different bootstrap sample, and the final prediction is made by majority vote across all trees. Bagging works particularly well for high-variance, low-bias procedures such as classification trees, since averaging over many trees smooths out the instability of any single tree. (Boehmke and Greenwell, 2020, Chapter 10)
 
-Random forest is a modification of bagging that further de-correlates the trees in the ensemble: rather than each tree splitting on the best feature from the full set of predictors at every split, random forest restricts each split to a random subset of the available features. This prevents strong predictors from dominating every tree in the ensemble, producing a more diverse set of trees whose averaged predictions further reduce variance compared to standard bagging.
+Random forest is a modification of bagging that further de-correlates the trees in the ensemble: rather than each tree splitting on the best feature from the full set of predictors at every split, random forest restricts each split to a random subset of the available features. This prevents strong predictors from dominating every tree in the ensemble, producing a more diverse set of trees whose averaged predictions further reduce variance compared to standard bagging.(Hastie et al., 2008, p. 587; Yang, 2026, Week 4)
 
 \subsubsection{Support Vector Machine}
 
 
-Support Vector Machines (SVM) are a supervised classification technique that finds a boundary separating classes by maximising the margin between them. The boundary is a hyperplane, and the margin is the perpendicular distance from the hyperplane to the nearest point(s) of either class. Where multiple hyperplanes could separate the classes, SVM selects the one that maximises this distance,the largest margin, \textbf{maximal margin hyperplane}.
+Support Vector Machines (SVM) are a supervised classification technique that finds a boundary separating classes by maximizing the margin. The boundary is a hyperplane, and the margin is the perpendicular distance from the hyperplane to the nearest point(s) of either class. Where multiple hyperplanes could separate the classes, SVM selects the one that maximizes this distance,the largest margin, \textbf{maximal margin hyperplane}. (Hastie et al., 2008, p. 423; Boehmke and Greenwell, 2020, Chapter 14)
 
-Once the optimal hyperplane has been found, with estimated weight vector $\hat{w}$ and estimated bias term $\hat{b}$, classification of a new observation $x_{new}$ reduces to determining which side of the hyperplane it falls on. This is given by:
+
+Once the optimal hyperplane has been found, with estimated weight vector $\hat{w}$ and estimated bias term $\hat{b}$, a new observation $x_{new}$ is classified by substituting it into the hyperplane equation and taking the sign of the result which determines which side of the hyperplane it falls on. This is given by:
 
 \begin{equation}
 \hat{g}(x_{new}) = \text{sign}(\hat{w}^T x_{new} + \hat{b})
 \end{equation}
 
 
-where $\text{sign}(\cdot)$ returns $+1$ for positive values and $-1$ for negative values. That is, $x_{new}$ is substituted into the estimated hyperplane equation, and the sign of the resulting value determines the predicted class: observations on one side of the hyperplane are assigned class $-1$, and observations on the other side are assigned class $+1$.
+where $\text{sign}(\cdot)$ returns $+1$ for positive values and $-1$ for negative values. Observations with a positive value, on one side of the hyperplane, are assigned class $+1$ and those with a negative value are assigned to class $-1$ (Yang, 2026, Week 5).
 
 
-
-The boundary described so far is linear. SVM can be extended to nonlinear boundaries by mapping the input features into a higher-dimensional space using a \textbf{kernel function}, within which a linear boundary is fitted; when mapped back to the original feature space, this linear boundary corresponds to a nonlinear boundary. Common kernel choices include the \textbf{linear kernel} (no transformation, producing a straight-line boundary), the \textbf{polynomial kernel}, and the \textbf{radial (Gaussian) kernel}, each producing increasingly flexible, curved decision boundaries. The choice of kernel is typically guided by whether the classes appear linearly separable in the original feature space and by comparing predictive performance across kernels.
+The boundary described so far is linear. SVM can be extended to nonlinear boundaries by mapping the input features into a higher-dimensional space using a \textbf{kernel function}. A linear boundary is fitted when mapped back to the original feature space. Common kernel choices include the \textbf{linear kernel} (no transformation, producing a straight-line boundary), the \textbf{polynomial kernel}, and the \textbf{radial (Gaussian) kernel}, each producing increasingly flexible, curved decision boundaries. The choice of kernel is typically guided by whether the classes appear linearly separable in the original feature space and by comparing predictive performance across kernels. (Boehmke and Greenwell, 2020, Chapter 14; Hastie et al., 2008, p. 424)
 
 
 \subsection{Model Selection}
 
-For our third and fourth research questions, model selection techniques were used to ensure that the analysis retained only the variables with the most interpretable and significant effects on Employment status and Salary. There are several different model selection techniques; for this analysis we focus on \textbf{stepwise selection} and \textbf{shrinkage methods}.
-
+For our third and fourth research questions, model selection techniques were used to ensure that the analysis retained only the variables with the most interpretable and significant effects on Employment status and Salary. Model selection is used to address two main concerns with using all predictors: predictive accuracy and interpretability. Restricting the model to a smaller subset of predictors can improve overall prediction accuracy and a smaller subset of predictors is also easier to interpret, allowing the most important effects to be identified. (Hastie et al., 2008, p. 57). 
 
 \subsubsection{Stepwise Selection}
 
-Stepwise selection has 3 types: forward, backward and both-directions. For this analysis, the Both-direction was used. In Both-Direction stepwise selection was used. We start with a full model containing all predictors). At each step, the algorithm considers both removing  variables currently in the model that contributes the least( based on AIC/BIC criteria) and adding variables not currently in the model. It keeps iterating by adding or removing one variable at a time until no further step improves the criterion, effectively reaching the lowest achievable AIC/BIC value.
+Stepwise selection has three types: forward, backward and both-directions (stepwise selection). This analysis used stepwise selection, where variables can be added or removed. At each step, the algorithm considers both removing the variable currently in the model that contributes least (based on AIC/BIC criteria) and adding a variable not currently in the model, continuing until no further step improves the criterion. (Faraway, 2015, p. 151).
 
 \subsubsection{Shrinkage Methods}
 
 
-Unlike stepwise selection, which searches over a discrete subsets of predictions, shrinkage methods fit the full model but penalize the coefficients/. This constraint reduces variance at the cost of a small increase in bias and depending on the penalty used we can also perform variable selection by shrinking some coefficient exactly to zero.
+Unlike stepwise selection, which searches over discrete subsets of predictions, shrinkage methods fit the full model, but penalize the coefficients. This constraint reduces variance at the cost of a small increase in bias, and depending on the penalty used, we can also perform variable selection by shrinking some coefficient toward or exactly to zero. 
 
-A general way to express this is to minimize the residual sum of squares subject to a combination of two penalty terms: 
-
+A general way to express this is to minimize the residual sum of squares subject to a combination of two penalty terms (L1 penalty: $\sum_{j=1}^{p}|\beta_j|$ and L2 penalty: $\sum_{j=1}^{p}\beta_j^2$)  : 
+\vspace{-2pt}
 \begin{equation}
 \hat{\beta} = \arg\min_{\beta} \left\{ \sum_{i=1}^{N}\left(y_i - \beta_0 - \sum_{j=1}^{p}\beta_j x_{ij}\right)^2 + \lambda_1 \sum_{j=1}^{p}|\beta_j| + \lambda_2 \sum_{j=1}^{p}\beta_j^2 \right\}
 \label{eq:general-penalty}
 \end{equation}
 
-The two penalty terms behave differently:
-
-\begin{itemize}
-\item The term $\sum_{j=1}^{p}|\beta_j|$ is the \textbf{L1 penalty}: the sum of the \textit{absolute values} of the coefficients.
-\item The term $\sum_{j=1}^{p}\beta_j^2$ is the \textbf{L2 penalty}: the sum of the \textit{squared} coefficients.
-\end{itemize}
-
 The tuning parameters $\lambda_1$ and $\lambda_2$ control how much weight is given to each penalty.
 
-\paragraph{Lasso}
+\paragraph{LASSO}
 
 
-Lasso is is a penalized regression method. Instead of testing subsets of variables like stepwise selection, it fits all the predictors at once but adds a penalty to the loss function that constrains the total size of the coefficients( the sum of their absolute values), this penalty shrinkage the coefficients to zero, so it automatically performs variable selection technique. it takes care of the bias-variance trade off by continuous shrinkage
-
-Setting $\lambda_2 = 0$ in Equation~\ref{eq:general-penalty} leaves only the L1 penalty, giving the lasso:
-
+LASSO is a penalized regression method. Instead of testing subsets of variables like stepwise selection, it fits all the predictors at once but applies the L1 penalty, which shrinks the coefficients to exactly zero, so it automatically performs variable selection technique. (James et al., 2013, p. 219). Setting $\lambda_2 = 0$ in Equation~\ref{eq:general-penalty} leaves only the L1 penalty, giving the lasso:
+\vspace{-2pt}
 \begin{equation}
 \hat{\beta}^{lasso} = \arg\min_{\beta} \left\{ \sum_{i=1}^{N}\left(y_i - \beta_0 - \sum_{j=1}^{p}\beta_j x_{ij}\right)^2 + \lambda_1 \sum_{j=1}^{p}|\beta_j| \right\}
 \end{equation}
@@ -281,9 +250,9 @@ Setting $\lambda_2 = 0$ in Equation~\ref{eq:general-penalty} leaves only the L1 
 
 \paragraph{Ridge}
 
-Ridge regression estimates coefficients by minimizing the residual sum of squares subject to a penalty of the sum of squared coefficients. Unlike Lasso, it does not shrink coefficients exactly to zero, it only makes them as small as possible and therefore does not perform variable selection.
+Ridge regression applies L2 penalty. Unlike Lasso, it does not shrink coefficients toward to zero without setting them exactly to zero, and therefore it does not perform variable selection. (James et al., 2013, 215)
 
-Setting $\lambda_1 = 0$ in Equation~\ref{eq:general-penalty} leaves only the L2 penalty.  As $\lambda_2$ increases, coefficients are shrunk further toward zero, though never exactly to zero:
+Setting $\lambda_1 = 0$ in Equation~\ref{eq:general-penalty} leaves only the L2 penalty.  As $\lambda_2$ increases, the coefficients are reduced toward zero, though never exactly to zero:
 
 \begin{equation}
 \hat{\beta}^{ridge} = \arg\min_{\beta} \left\{ \sum_{i=1}^{N}\left(y_i - \beta_0 - \sum_{j=1}^{p}\beta_j x_{ij}\right)^2 + \lambda_2 \sum_{j=1}^{p}\beta_j^2 \right\}
@@ -291,31 +260,29 @@ Setting $\lambda_1 = 0$ in Equation~\ref{eq:general-penalty} leaves only the L2 
 
 \paragraph{Elastic Net}
 
-The elastic net combines both the L1 and L2 penalties, allowing it to perform coefficient shrinkage and variable selection simultaneously as in Equation~\ref{eq:general-penalty}.
+The elastic net combines both the L1 and L2 penalties, allowing it to perform coefficient shrinkage and variable selection simultaneously as in Equation~\ref{eq:general-penalty} (Hastie et al., 2008, p. 73).
 
 \subsection{Statistical Models}
 
 \subsubsection{Multiple Linear Regression}
 
 Multiple linear regression models a continuous response variable as a linear combination of predictors. For salary, the model takes the form:
-
+\vspace{-2pt}
 \begin{equation}
 y_i = \beta_0 + \sum_{j=1}^{p}\beta_j x_{ij} + \epsilon_i
 \end{equation}
 
-where $y_i$ is the salary of the $i$th individual, $x_{ij}$ are the predictor values, $\beta_j$ are the coefficients to be estimated, and $\epsilon_i$ is the error term, assumed to be independently and normally distributed with mean zero and constant variance.
+where $y_i$ is the response variable, $x_{ij}$ are the predictor variables, $\beta_j$ are the coefficients to be estimated and $\epsilon_i$ is the error term, assumed to be independently and normally distributed with mean zero and constant variance. (James et al., 2013, p. 71)
 
 \subsubsection{Logistic Regression}
 
-For employment status, a binary outcome (employed/unemployed), ordinary least squares is not appropriate, since predictions are not constrained to lie between 0 and 1. Instead, logistic regression models the probability of the outcome using the logit link function:
-
+For employment status, a binary outcome (employed/unemployed), predictions must be constrained to lie between 0 and 1. Logistic regression models the probability of the outcome using the logit link function:
+\vspace{-2pt}
 \begin{equation}
 \log\left(\frac{p_i}{1-p_i}\right) = \beta_0 + \sum_{j=1}^{p}\beta_j x_{ij}
 \end{equation}
 
-where $p_i = P(y_i = 1 \mid x_i)$ is the probability that individual $i$ is employed. 
-
-Coefficients are estimated by maximum likelihood rather than least squares. Exponentiating a coefficient, $\exp(\beta_j)$, gives the odds ratio associated with a one-unit increase in $x_j$: values greater than 1 indicate the predictor increases the odds of employment, while values less than 1 indicate it decreases the odds.
+where $p_i = P(y_i = 1 \mid x_i)$ is the probability that individual $i$ is employed, estimated by maximum likelihood. Exponentiating a coefficient, $\exp(\beta_j)$, gives the odds ratio associated with a one-unit increase in $x_j$: values above 1 indicate the predictor increases the odds of employment, while values below 1 decreases the odds (James et al., 2013, p. 132).
 
 \subsubsection{Generalized Additive Models (GAM)}
 Multiple linear regression assumes a strictly linear relationship between each predictor and the response. Generalized additive models (GAMs) relax this assumption by allowing continuous predictors to enter the model through smooth, non-linear functions while keeping the model additive and interpretable:
@@ -403,10 +370,10 @@ reproducible results.
 The dataset was then split into 80\% training and 20\% test sets. Since KNN 
 relies on distance calculations between observations, unscaled variables with larger ranges would disproportionately dominate the distance metric, so the continuous predictors were standardized. To avoid data leakage, the scaling parameters (mean and standard deviation) were computed using only the training data, and these same parameters were then applied to scale both X continuous values of the training and test sets.
 
-
+\vspace{-12pt}
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.74\linewidth]{Rplot12.png}
+    \includegraphics[width=0.68\linewidth]{Rplot12.png}
     \caption{10-Fold Cross-Validation Accuracy vs k}
     \label{fig:knn-cv}
 \end{figure}
@@ -581,16 +548,16 @@ The pruned classification tree (1-SE rule) with 39 nodes, selected 19 splits, re
 \label{sec:RS3}
 
 
-In this section, we investigate which factors are the most important predictors of employment status. To answer this, we identify the best-fitting model using two approaches explained earlier in Section~\ref{sec:methods}: stepwise subset selection and Lasso regression. 
+In this section, we investigate which factors are the most important predictors of employment status. To answer this, we identify the best-fitting model using two approaches explained earlier in Section~\ref{sec:methods}: stepwise subset selection and Lasso regression (Hastie et al., 2008, p. 69).  
 
-Since employment status is a binary response, we frame this as logistic regression problem, where the goal is to estimate the probability of being employed versus unemployed. We first constructed a binary response variable, coding "Employed" as 1 and " Unemployed" as 0, and removed the original `Employmnet\_Status` variable now that the `Employmnet\_binary` served as the response variable. A seed set to 1 to ensure reproducibility of results. Since we are also interested in the predictive accuracy of the resulting model, we also split the data into training and test data sets. 
+Since employment status is a binary response, we frame this as logistic regression problem, where the goal is to estimate the probability of being employed versus unemployed. We first constructed a binary response variable, coding "Employed" as 1 and " Unemployed" as 0, and removed the original `Employment\_Status` variable now that the `Employment\_binary` served as the response variable. A seed set to 1 to ensure reproducibility of results. Since we are also interested in the predictive accuracy of the resulting model, we also split the data into training and test data sets. 
 
 
-We first fit a full logistic model containing all predictors and applied \texttt{stepAIC()}, a both-direction stepwise selection using AIC. This flagged `Gender` as a non-significant predictor, with p-values above 0.05 for both the Male and Other categories. To confirm this, we compared the AIC-selected model against a nested model with Gender removed using a likelihood-ratio test (\texttt{anova()}). After selecting the nested model without `Gender`, we generated the predictions on the test data and calculated the classification accuracy. As a second stepwise approach, we repeated this procedure using BIC criteria instead of AIC, again generating predictions and accuracy on the test data.  
+We first fit a full logistic model containing all predictors and applied \texttt{stepAIC()}, a stepwise selection using AIC. This flagged `Gender` as a non-significant predictor, with p-values above 0.05 for both the Male and Other categories. To confirm this, we compared the AIC-selected model against a nested model with Gender removed using a likelihood-ratio test (\texttt{anova()}). After selecting the nested model without `Gender`, we generate the predictions on the test data and calculate the classification accuracy. As a second stepwise approach, we repeated this procedure using BIC criteria instead of AIC, again generating predictions and accuracy on the test data.  
 
 The resulting accuracies were 0.8533724 for the AIC model after removing Gender and 0.8533724 for the BIC model, which are exactly the same.
 
-The second approach considered was Lasso regression which, as discussed earlier in Section~\ref{sec:methods}, automatically performs variable selection by shrinking the coefficients of uninformative predictors to exactly zero. To fit the LASSO model, the data set was split into training and test data set of the predictor matrix `X` and response vector `Y` (Employment\_binary). Since our primary interest was LASSO, we also fitted ridge regression ($\alpha=0$) and elastic net ($\alpha=0.5$) for comparison purposes; the same procedure applied to LASSo was applied to these two models, but only LASSO results are discussed in details in this report. The plot below , Figure~\ref{fig:lasso}, shows the coefficient path of LASSO model fitted with \texttt{glmnet()}, using a binary family and $\alpha=1$.
+The second approach considered was Lasso regression which, as discussed earlier in Section~\ref{sec:methods}, automatically performs variable selection by shrinking the coefficients of uninformative predictors to exactly zero. To fit the LASSO model, the data set was split into training and test data set of the predictor matrix `X` and response vector `Y` (Employment\_binary). Since our primary interest was LASSO, we also fitted ridge regression ($\alpha=0$) and elastic net ($\alpha=0.5$) for comparison purposes; the same procedure applied to LASSO was applied to these two models, but only LASSO results are discussed in details in this report. The plot below , Figure~\ref{fig:lasso}, shows the coefficient path of LASSO model fitted with \texttt{glmnet()}, using a binary family and $\alpha=1$ (Hastie et al., 2026).
 \vspace{-10pt}
 \begin{figure}[H]
     \centering
@@ -607,7 +574,7 @@ In this plot, coefficient values are shown on the y-axis, and $-\log(\lambda)$ i
 
 The direction of each line indicates the sign of that predictor's coefficient on the log-odds of being employed. The numbers on the right edge of the plot correspond to column indices of `X\_train`. For example, tracing index 28 shows that this is GPA. This line is moving upward- positive coefficient- means the predictor is positively associated with employment: for instance, a higher GPA is associated with higher portability of being employed.
 
-This plot illustrated how the number of non-zero coefficients change across values of $\lambda$, but it does not identify the best-performing model. For that, we use cross-validation via \texttt{cv.glmnet()} to find the best $\lambda$. \\
+This plot illustrated how the number of non-zero coefficients change across values of $\lambda$, but it does not identify the best-performing model. For that, we use cross-validation via \texttt{cv.glmnet()} to find the best $\lambda$ (Hastie et al., 2026; James et al., 2013, 227). \\
 
 After applying `cv.glmnet()`, we selected the cross-validated lambda value that minimizes deviance, `lambda.min` equal to 0.0008, and refit the model using `glmnet()` with this $\lambda$ value. We then evaluated the model's performance in predicting employment status on the test set. The same cross-validation procedure was applied to select $\lambda$ for the ridge and elastic net models. We then compared the accuracy of the three shrinkage methods to determine which performed best.
 From Table~\ref{tbl:result-shrinkagemethods}, LASSO achieved the highest accuracy at 0.8519.
@@ -809,10 +776,16 @@ I acknowledge the use of Claude, https://claude.ai) as a tool during the prepara
 Davis, J. and Goadrich, M. (2006) 'The relationship between precision-recall and ROC curves', \textit{Proceedings of the 23rd International Conference on Machine Learning}. Pittsburgh, PA, pp. 233--240.
 
 \bibitem{hastie2009}
-Hastie, T., Tibshirani, R. and Friedman, J. (2009) \textit{The Elements of Statistical Learning: Data Mining, Inference, and Prediction}. 2nd edn. New York: Springer.
+Hastie, T., Tibshirani, R. and Friedman, J. (2008) \textit{The Elements of Statistical Learning: Data Mining, Inference, and Prediction}. 2nd edn. New York: Springer.
 
 \bibitem{glmnet}
 Hastie, T., Qian, J. and Tay, K. (2021) \textit{An Introduction to glmnet}.\\\textit{ https://glmnet.stanford.edu/articles/glmnet.html}
+
+\bibitem{faraway2015}
+Faraway, J.J. (2015), \textit{Linear Models with R}, 2nd edn, CRC Press, Boca Raton.
+
+\bibitem{james2013}
+James, G., Witten, D., Hastie, T. and Tibshirani, R. (2013), \textit{An Introduction to Statistical Learning: with Applications in R}, Springer, New York.
 
 \bibitem{employability1}
 HEPI \& Kaplan International Pathways (2021), Paying more for less? Careers and employability support for international students at UK universities
