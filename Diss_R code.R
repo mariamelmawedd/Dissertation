@@ -446,6 +446,20 @@ pred2 <- predict(tree_prune_1se, newdata = test_data_c, type = "class")
 mean(pred2 == test_data_c$Employment_Status)
 #this 1SE gives a less crowded tree
 
+# Total number of nodes (splits + leaves)
+n_nodes <- nrow(tree_prune_1se$frame)
+
+# Leaves = terminal nodes (var == "<leaf>")
+n_leaves <- sum(tree_prune_1se$frame$var == "<leaf>")
+
+# Internal splits = nodes that are NOT leaves
+n_splits <- n_nodes - n_leaves
+
+
+
+# Which variables were actually used for splitting
+vars_used <- unique(tree_prune_1se$frame$var[tree_prune_1se$frame$var != "<leaf>"])
+
 
 #2SE
 min_xerror_2 <- min(tree$cptable[, "xerror"])
@@ -545,7 +559,7 @@ cm_tree<- confusionMatrix(
 )
 
 
-c#install.packages("PRROC")
+#install.packages("PRROC")
 
 count_classes<- train_data_c %>%
   count(Employment_Status)
@@ -1015,33 +1029,31 @@ exp(coef(interaction_model))
 
 library(caret)
 
-
 cm_logistic_interaction <- confusionMatrix(
-  factor(predict_interaction, levels = c(0,1)),
-  factor(test_data$Employment_binary, levels = c(0,1)),
-  positive = "1"
+  factor(predict_interaction, levels = c(1,0), labels = c("Employed", "Unemployed")),
+  factor(test_data$Employment_binary, levels = c(1,0), labels = c("Employed", "Unemployed")),
+  positive = "Employed"
 )
 
 cm_table <- cm_logistic_interaction$table
 
+
 confusionM_logistic_table <- data.frame(
-  Predicted = c("Unemployed", "Employed"),   # careful: your factor levels are 0/1, not the KNN/tree labels
-  Unemployed = c(cm_table[1,1], cm_table[2,1]),
-  Employed   = c(cm_table[1,2], cm_table[2,2])
+  Predicted = c("Employed", "Unemployed"),
+  Employed = c(cm_table[1,1], cm_table[2,1]),
+  Unemployed = c(cm_table[1,2], cm_table[2,2])
 ) %>% gt() %>%
   tab_spanner(
     label = "Actual",
-    columns = c("Unemployed", "Employed")
+    columns = c("Employed", "Unemployed")
   ) %>%
   cols_label(
     Predicted = "Predicted",
-    Unemployed = "Unemployed",
-    Employed = "Employed"
+    Employed = "Employed",
+    Unemployed = "Unemployed"
   )
-
 confusionM_logistic_table
 
-cm_logistic_interaction$table 
 
 #this gives confusion matrix, without the precision, f1 and others 
 
