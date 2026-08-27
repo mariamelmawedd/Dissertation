@@ -6,10 +6,10 @@ library(ggplot2)
 library(dplyr) 
 library(skimr)
 library(gt)
-#library(moderndive)
-#library(gapminder)
 library(GGally)
 library(PRROC)
+
+#https://www.kaggle.com/datasets/quackquackrp/international-graduates-employment-dataset?resource=download&select=dataset.csv
 
 #read data 
 data<- read.csv("data_dissertation.csv")
@@ -20,8 +20,6 @@ glimpse(data)
 
 data_uk<- data %>% filter(`Region_of_Study`=="UK")
 write.csv(data_uk, "data_dissertation.csv", row.names = FALSE)
-getwd()
-list.files()
 
 glimpse(data_uk)
 data_uk %>% skim() #74901 rows
@@ -36,6 +34,10 @@ data_uk %>% skim() #74901 rows
 
 ggplot(data_uk,aes(x = Employment_Status, fill = Employment_Status)) +
   geom_bar()
+
+data_distribution<- data_uk %>%
+  count(Employment_Status) %>%
+  mutate(prop = n / sum(n))
 
 #employmnet with numerical values, 
 library(gridExtra)
@@ -71,51 +73,20 @@ p9<- ggplot(data_uk, aes(x = Education_Level, fill = Employment_Status)) +
 
 grid.arrange(p4,p5,p6,p7,p8,p9, ncol=2)
 
-#Employement Class
-data_uk %>%
-  count(Employment_Status) %>%
-  mutate(prop = n / sum(n))
-
-#distribution of employemnt status, we can do pie chart, and in research questions we can look at it again
-#after filtering out continuing education
-
-
 
 ########################################
 # Salary #
 ##########
 
-
-
-
 #Slary vs Employment 
+
 ggplot(data_uk, aes(x=Employment_Status, y=Salary))+
   geom_boxplot()
 
-data_salary_EDA<- data_uk %>% filter(Employment_Status=="Employed")
-
-
-ggplot(data_salary_EDA, aes(x=Employment_Status, y=Salary))+
-  geom_boxplot()
-
-#salary's distribution
-
-ggplot(data_salary_EDA, aes(x=Salary))+geom_histogram()
-ggplot(data_salary_EDA, aes(x=Salary))+geom_boxplot()
-
-ggplot(data_salary_EDA, aes(x=log(Salary)))+geom_histogram()
-ggplot(data_salary_EDA, aes(x=log(Salary)))+geom_boxplot()
-
 #Salary with numerical variables
 data_numerical<- data_salary_EDA %>% select(Salary, Years_Since_Graduation, GPA, Age)
-sum(is.na(data_numerical$Salary))
-sum(is.na(data_numerical$GPA))
-sum(is.na(data_numerical$Age))
-sum(is.na(data_numerical$Years_Since_Graduation))
 
 ggpairs(data_numerical)
-
-#use boxplots instead cause my variables are discrete numerical 
 
 library(gridExtra)
 p1<- ggplot(data_salary_EDA, aes(x=factor(Age), y=Salary))+
@@ -154,23 +125,14 @@ p6<- ggplot(data_salary_EDA, aes(x=Gender, y=Salary))+
   geom_boxplot()
 grid.arrange(p1, p2, p3, p4,p5,p6, ncol=2)
 
-#SALARY VS JOb_sector boxplot ]
+#SALARY VS JOb_sector boxplot
 ggplot(data_salary_EDA, aes(x=Job_Sector, y=Salary))+
   geom_boxplot()
-n_distinct(data_salary_EDA$Job_Sector)
+
 
 #salary vs country of origin 
 ggplot(data_salary_EDA, aes(x=Country_of_Origin, y=Salary))+
   geom_boxplot() #it doesnt really matter
-n_distinct(data_salary_EDA$Job_Sector)
-
-
-
-#All i did today was lookign at salary and others, next look for employement status with other variables.
-
-
-
-#basic EDA to explore Data. 
 
 
 ###########################################################################
@@ -178,7 +140,6 @@ n_distinct(data_salary_EDA$Job_Sector)
 ##################    Research Questions    ###############################
 ##################                          ###############################
 ###########################################################################
-
 
 
 '''
@@ -197,7 +158,6 @@ We applied 10‑fold cross‑validation to estimate the classification accuracy.
 
 '''
 
-
 ############################################################################
 ##################                           ###############################
 ##################    K-nearest Neighbours   ###############################
@@ -207,7 +167,7 @@ We applied 10‑fold cross‑validation to estimate the classification accuracy.
 
 '''
 KNN computes distance for every K, each time it compute the distance between the validation points
-and all training points. We will be doing this for 100 K values and 10 folds, so we will be training 1000 KNN models. 
+and all training points. We will be doing this for 50 K values and 10 folds, so we will be training 500 KNN models. 
 (for each K value, we train 10 models)
 '''
 
@@ -321,9 +281,6 @@ head(results[order(-results$CV_Accuracy), ], 10)
 pred_knn <- knn(train = X_train, test = X_test, cl = y_train, k = best_k, prob = TRUE)
 knn_acc<- mean(pred_knn == y_test)
 
-saveRDS(list(K_vals = K_vals, cv_acc = cv_acc, best_k = best_k,
-             pred_knn = pred_knn, knn_acc = knn_acc), "knn_results.rds")
-
 #Confusion Matrix
 
 confusionM_KNN<- table(Predicted=pred_knn, Actual=y_test)
@@ -360,6 +317,8 @@ metrics_table_KNN <- data.frame(
 
 metrics_table_KNN %>% gt()
 
+
+#confusion matrix using caret
 library(caret)
 cm_knn <- confusionMatrix(factor(pred_knn, levels = c("Employed","Unemployed")),
                           factor(y_test, levels = c("Employed","Unemployed")),
@@ -367,6 +326,8 @@ cm_knn <- confusionMatrix(factor(pred_knn, levels = c("Employed","Unemployed")),
 
 cm_knn
 
+
+# PR and ROC curve
 library(PRROC)
 
 pred_test_probability_knn<- ifelse(pred_knn=="Employed", 
@@ -413,7 +374,10 @@ tree <- rpart(Employment_Status ~. , data=train_data_c, method="class",cp=0)
 rpart.plot(tree)
 #very large 
 printcp(tree) # prune the tre,e find the best cot complecity 
-#plotcp(tree)
+plotcp(tree)
+
+
+###minimum rule 
 
 #find th eminimumm x error, the cv error
 xerror_min<- min(tree$cptable[, "xerror"])
@@ -423,13 +387,19 @@ best_cp<- tree$cptable [which.min(tree$cptable[, "xerror"]), "CP"]
 num_splits<- tree$cptable [which.min(tree$cptable[, "xerror"]), "nsplit"]
 
 tree_prune<- prune(tree, cp=best_cp)
-#rpart.plot(tree_prune)
-#Predict and evaluate perfromance
+rpart.plot(tree_prune)
+#Predict and evaluate performance
 pred1 <- predict(tree_prune, newdata = test_data_c, type = "class")
 mean(pred1 == test_data_c$Employment_Status)
-#shouldi add arguments like minsplit and minbucket? how will this help? nothing changed
 
-#after splitting data we get the pruning tree to be larger than without splitting 
+# Total number of nodes
+n_nodes_min <- nrow(tree_prune$frame)
+
+# Leaves
+n_leaves_min <- sum(tree_prune$frame$var == "<leaf>")
+
+# Internal splits
+n_splits_min <- n_nodes_min - n_leaves_min
 
 #we can also use the 1SE rule for choosing the best cp
 
@@ -446,19 +416,14 @@ pred2 <- predict(tree_prune_1se, newdata = test_data_c, type = "class")
 mean(pred2 == test_data_c$Employment_Status)
 #this 1SE gives a less crowded tree
 
-# Total number of nodes (splits + leaves)
-n_nodes <- nrow(tree_prune_1se$frame)
+# Total number of nodes
+n_nodes_1se <- nrow(tree_prune_1se$frame)
 
-# Leaves = terminal nodes (var == "<leaf>")
-n_leaves <- sum(tree_prune_1se$frame$var == "<leaf>")
+# Leaves
+n_leaves_1se <- sum(tree_prune_1se$frame$var == "<leaf>")
 
-# Internal splits = nodes that are NOT leaves
-n_splits <- n_nodes - n_leaves
-
-
-
-# Which variables were actually used for splitting
-vars_used <- unique(tree_prune_1se$frame$var[tree_prune_1se$frame$var != "<leaf>"])
+# Internal splits
+n_splits_1se <- n_nodes_1se - n_leaves_1se
 
 
 #2SE
@@ -468,14 +433,21 @@ smallest_Tree_2<- min_xerror_2+ 2* min_xstd_2
 best_2se_index <- which(tree$cptable[, "xerror"] <= smallest_Tree_2)[1] #take the first value
 best_cp_2se <- tree$cptable[best_2se_index, "CP"]
 tree_prune_2se<- prune(tree, cp=best_cp_2se)
-#rpart.plot(tree_prune_2se)
+rpart.plot(tree_prune_2se)
 #Predict and evaluate performance
 pred2se <- predict(tree_prune_2se, newdata = test_data_c, type = "class")
 mean(pred2se == test_data_c$Employment_Status)
-#nothing really changed
 
+# Total number of nodes
+n_nodes_2se <- nrow(tree_prune_2se$frame)
 
+# Leaves
+n_leaves_2se <- sum(tree_prune_2se$frame$var == "<leaf>")
 
+# Internal splits
+n_splits_2se <- n_nodes_2se - n_leaves_2se
+
+#A negligible difference with the 1-SE, proceeding with 1-SE
 
 ###############################
 
@@ -581,51 +553,6 @@ roc_curve_tree<-roc.curve(scores.class0 = pred_test_probability[test_data_c$Empl
                           curve = TRUE)
 plot(roc_curve_tree)
 
-png("plot_tree_pr.png", width = 500, height = 450)
-plot(pr_curve_tree)
-dev.off()
-
-png("plot_tree_roc.png", width = 500, height = 450)
-plot(roc_curve_tree)
-dev.off()
-############
-
-#undeerstand why 1030 employed where misclassified as unemployed
-
-misclassified_emp<- test_data_c[test_data_c$Employment_Status=="Employed" & pred_1SE_tree=="Unemployed",]
-true_employed<- test_data_c[test_data_c$Employment_Status=="Employed" & pred_1SE_tree=="Employed", ]
-
-
-ggplot(data=misclassified_emp, aes(x=Employment_Status, y=Age))+geom_boxplot()
-
-
-
-
-predictors <- c("Education_Level", "Internship_Experience", "Years_Since_Graduation",
-                "University_Ranking", "Language_Proficiency", "Gender")
-
-for (i in predictors) {
-  cat("\nMisclassified:\n")
-  print(round(prop.table(table(misclassified_emp[[i]])) * 100, 1))
-  cat("Correctly classified:\n")
-  print(round(prop.table(table(true_employed[[i]])) * 100, 1))
-  
-  
-} #the tree has defined some values to be unemployed so it misclassifies and assumes those employed with such values as unemployed
-
-misclassified_unemp<- test_data_c[test_data_c$Employment_Status=="Unemployed" & pred_1SE_tree=="Employed",]
-true_unemployed<- test_data_c[test_data_c$Employment_Status=="Unemployed" & pred_1SE_tree=="Unemployed", ]
-
-
-for (i in predictors) {
-  cat("\n---", i, "---\n")
-  cat("Misclassified:\n")
-  print(round(prop.table(table(misclassified_unemp[[i]])) * 100, 1))
-  cat("Correctly classified:\n")
-  print(round(prop.table(table(true_unemployed[[i]])) * 100, 1))
-  
-  
-} #look more into it 
 
 ###########################################################
 ###############################################################################################################################################
@@ -661,20 +588,6 @@ model_svm_poli3<- svm(Employment_Status ~. , data=train_data_c,  type="C-classif
 predsvm_poli3<- predict(model_svm_poli3, newdata = test_data_c, type = "class", probability = TRUE)
 mean(predsvm_poli3 == test_data_c$Employment_Status)  
 
-saveRDS(list(
-  Model_svm = Model_svm, predsvm = predsvm,
-  model_svm_guassian = model_svm_guassian, predsvm_guassian = predsvm_guassian,
-  model_svm_poli2 = model_svm_poli2, predsvm_poli2 = predsvm_poli2,
-  model_svm_poli3 = model_svm_poli3, predsvm_poli3 = predsvm_poli3
-), "svm_models.rds")
-
-
-model_SVM_metric <- data.frame(
-  `SVM Model` = c("Linear Kernel", "Radial Kernel", "Polynomial Gegree 2 Kernel", "Polynomial Degree 3 Kernel"),
-  Accuracy  = c(mean(predsvm == test_data_c$Employment_Status), mean(predsvm_guassian == test_data_c$Employment_Status) ,
-                mean(predsvm_poli2 == test_data_c$Employment_Status), mean(predsvm_poli3 == test_data_c$Employment_Status))
-)
-
 model_SVM_metric %>% gt()
 
 '''
@@ -685,13 +598,13 @@ I want to have a good strong classification so high c , didnt work, took too muc
 
 
 cm_SVM<- confusionMatrix(
-  factor(predsvm_guassian, levels = c("Employed","Unemployed")),
+  factor(predsvm_poli2, levels = c("Employed","Unemployed")),
   factor(test_data_c$Employment_Status, levels = c("Employed","Unemployed")),
   positive = "Employed"
 )
 cm_SVM
 
-pred_test_probability_svm<- attr(predsvm_guassian, "probabilities")[, "Employed"]
+pred_test_probability_svm<- attr(predsvm_poli2, "probabilities")[, "Employed"]
 
 pr_curve_SVM<- pr.curve(scores.class0 = pred_test_probability_svm[test_data_c$Employment_Status=="Employed"],
                         scores.class1 = pred_test_probability_svm[test_data_c$Employment_Status=="Unemployed"],
@@ -705,26 +618,9 @@ roc_curve_SVM<-roc.curve(scores.class0 = pred_test_probability_svm[test_data_c$E
 plot(roc_curve_SVM)
 
 
-saveRDS(list(K_vals = K_vals, cv_acc = cv_acc, best_k = best_k,
-             pred_knn = pred_knn, knn_acc = knn_acc,
-             cm_knn = cm_knn, pr_curve_knn = pr_curve_knn, roc_curve_knn = roc_curve_knn),
-        "knn_results.rds")
-
-saveRDS(list(
-  Model_svm = Model_svm, predsvm = predsvm,
-  model_svm_guassian = model_svm_guassian, predsvm_guassian = predsvm_guassian,
-  model_svm_poli2 = model_svm_poli2, predsvm_poli2 = predsvm_poli2,
-  model_svm_poli3 = model_svm_poli3, predsvm_poli3 = predsvm_poli3,
-  cm_SVM = cm_SVM, pr_curve_SVM = pr_curve_SVM, roc_curve_SVM = roc_curve_SVM
-), "svm_models.rds")
-
-saveRDS(list(
-  tree = tree, tree_prune_1se = tree_prune_1se,
-  pred_1SE_tree = pred_1SE_tree, accuracy_1se = accuracy_1se,
-  confusionM_tree = confusionM_tree, cm_tree = cm_tree,
-  pr_curve_tree = pr_curve_tree, roc_curve_tree = roc_curve_tree
-), "tree_results.rds")
 ######################################################################
+
+##RESEARCH QUESTION 2: Evaluating the Performance
 
 
 comparison_metrics <- data.frame(
@@ -767,19 +663,6 @@ comparison_metrics <- comparison_metrics[, c("Metric", "KNN", "Tree.1SE_rule.", 
 comparison_metrics %>% gt() %>% cols_align(align = "center", columns = everything())
 
 #best is the tree
-
-
-
-'''
-we did model selection by accurcay, and now we interpret by proc, pr curve and the other etrics found y confusion matrix 
-the recall is how many actual unemployed cases are correctly identified, precision is were correct fromt he predicted unemployed
-the pr curve measures how well the model identifies employed, a value of 0.9827009 mens the model maintains very high precision and very high recall simultaneously
-STRONG PERFORMANCE ont he positive class employed
-
-Roc curve, we use recall of the y axis (porpotion of employed predicted as employed) and false positive rate FPR on the xaxis which is how many actuall negative(unemployed) the model inccorrectly label as positive
-in other words it is the proportion of unemployed predicted as employed.
-
-'''
 
 
 
@@ -829,8 +712,6 @@ predict_BIC_logistic<- ifelse(predict(model_BIC, newdata=test_data, type="respon
 mean(predict_BIC_logistic==test_data$Employment_binary) #same model as AIC, same accuracy 
 
 
-
-
 #BIC BETTER CAUSE WE DIDNT HAVE TO REMOVE GENDER, CONTINUE WITH BIC
 
 #####################################
@@ -860,11 +741,11 @@ model_r<- glmnet(X_train, Y_train, family = "binomial", alpha=0)
 plot(model_r, label = TRUE)
 
 set.seed(1)
-lambda_other<- cv.glmnet(X_train, Y_train, alpha=0.5)
-model_other<- glmnet(X_train, Y_train, family = "binomial", alpha=0.5, lambda = lambda_other$lambda.1se)
+lambda_elastic<- cv.glmnet(X_train, Y_train, alpha=0.5)
+model_elastic<- glmnet(X_train, Y_train, family = "binomial", alpha=0.5, lambda = lambda_other$lambda.1se)
 #TO PLOT
-model_o<- glmnet(X_train, Y_train, family = "binomial", alpha=0.5)
-plot(model_o,label = TRUE)
+model_e<- glmnet(X_train, Y_train, family = "binomial", alpha=0.5)
+plot(model_e,label = TRUE)
 
 set.seed(1)
 lambda_lasso<- cv.glmnet(X_train,Y_train,alpha=1)
@@ -879,19 +760,19 @@ plot(lambda_lasso)
 
 
 result_ridge<- predict(model_ridge, s= lambda_ridge$lambda.min, type="class", newx = X_test)
-result_other<- predict(model_other, s= lambda_other$lambda.min, type="class", newx = X_test)
+result_elastic<- predict(model_elastic, s= lambda_elastic$lambda.min, type="class", newx = X_test)
 result_lasso<- predict(model_lasso, s= lambda_lasso$lambda.min, type="class", newx = X_test)
 
 
 
 results_model <- data.frame(
   Model = c("Ridge", 
-            "Other", 
+            "Elastic Net", 
             "Lasso"),
   
   Accuracy = c(
     mean(Y_test==result_ridge),
-    mean(Y_test==result_other),
+    mean(Y_test==result_elastic),
     mean(Y_test==result_lasso)
   )
 ) 
@@ -899,7 +780,7 @@ results_model <- data.frame(
 results_model %>% gt() 
 
 coef(model_ridge)
-coef(model_other)
+coef(model_elastic)
 coef_lasso<- coef(model_lasso)
 # Convert  matrix to a regular numeric vector
 coef_vals <- as.numeric(coef_lasso)
@@ -922,10 +803,8 @@ model_BIC_LASSO <- data.frame(
   )
 ) 
 
-model_BIC_LASSO %>% gt()  #why we get 0 accuracy for AIC? look at it
+model_BIC_LASSO %>% gt()
 
-#log odds of the model_lasso
-exp(coef(model_lasso)) # >1 increase odds, < 1 reduces odds of employability
 
 #####################################################################
 #################   MODEL AFTER removing variables seleted by LASSO
@@ -979,6 +858,7 @@ summary(final_Lasso_model)
 
 
 #same same for BIC AND AIC
+
 ################################
 #######   INTERACTIONS   #######
 
@@ -1007,24 +887,6 @@ predict_interaction<- ifelse( predict(interaction_model, newdata = test_data, ty
 mean(predict_final==test_data$Employment_binary)  #same as the AIC after removing gender, same as BIC ONE
 mean(predict_interaction==test_data$Employment_binary)
 
-saveRDS(list(
-  full_model = full_model,
-  model_AIC = model_AIC, model_AIC_no_gender = model_AIC_no_gender,
-  anova_AIC_gender = anova_AIC_gender, predict_AIC_logistic = predict_AIC_logistic,
-  model_BIC = model_BIC, predict_BIC_logistic = predict_BIC_logistic,
-  model_glm=model_glm,
-  anova_nogender=anova_nogender,
-  model_no_field=model_no_field,
-  anova_nofield=anova_nofield,
-  model_no_country=model_no_country,
-  anova_nocountry=anova_nocountry,
-  final_Lasso_model=final_Lasso_model,
-  interaction_model=interaction_model,
-  anova_interaction=anova_interaction
-), "logistic_selection_results.rds")
-# the final selected model 
-
-exp(coef(interaction_model))
 
 
 library(caret)
@@ -1116,7 +978,6 @@ predict_BIC<- predict(BIC_model, newdata = test_data_s)
 mse_BIC<- mean((test_data_s$Salary- predict_BIC)^2)
 
 
-
 #try to see what is causing the cluster, 
 #calculate residuals to plot by ggplot, true and fitted values to find the residuals 
 
@@ -1125,7 +986,6 @@ salary_fitted<- train_data_s %>%
 ggplot(data=salary_fitted, aes(x=fitted, y=res, colour = Education_Level))+ 
   geom_point()  #EDUCATION LEVEL IS THEONE CAUSING THE CLUSTER
 
-boxplot(data_salary$Salary)
 
 
 #############################
@@ -1140,26 +1000,19 @@ mse_BIC_log<- mean((test_data_s$Salary- predict_BIC_s_log)^2)
 
 
 
-#continue with no log 
-
-#if we do BIC no log, we get the same result as AIC no log
-#If we do BIC with log it gives slightly different result than the AIC log
-
-
-final_model_salary<- BIC_model
 par(mfrow = c(2, 2))
 plot(BIC_model, which = 1, main = "Before Log") 
 plot(BIC_model, which = 2, main = "Before Log")
 plot(BIC_log_salary, which = 1, main = "After Log")
 plot(BIC_log_salary, which = 2, main = "After Log")
+#continue with no log 
 
-saveRDS(list(
-  fullmodel = fullmodel,
-  BIC_model = BIC_model,
-  model_log_salary = model_log_salary,
-  BIC_log_salary = BIC_log_salary,
-  final_model_salary = final_model_salary
-), "salary_models.rds")
+#if we do BIC no log, we get the same result as AIC no log
+#If we do BIC with log it gives slightly different result than the AIC log
+
+final_model_salary<- BIC_model
+
+
 ###################################################
 ############### Additive model
 library(mgcv)
@@ -1232,8 +1085,8 @@ salary_no_years_age <- gam(
   data=train_data_s,
   method="ML"
 )
-#H0: country is not significant
-#H1: country is significant, 
+#H0: years and age is not significant
+#H1: years and age is significant, 
 anova_years_age<- anova(salary_no_years_age, salary_no_country, test = "Chisq") #remove country, p value>0.05
 
 summary(salary_no_years_age)
@@ -1249,20 +1102,7 @@ summary(final_GAM_salary)
 
 plot(final_GAM_salary)
 
-saveRDS(list(
-  salary_add = salary_add,
-  salary_no_gender = salary_no_gender,
-  salary_no_visa = salary_no_visa,
-  salary_no_field = salary_no_field,
-  salary_no_country = salary_no_country,
-  salary_no_years_age = salary_no_years_age,
-  final_GAM_salary = final_GAM_salary,
-  anova_gender = anova_gender,
-  anova_visa = anova_visa,
-  anova_field = anova_field,
-  anova_country = anova_country,
-  anova_years_age = anova_years_age
-), "GAM_salary_models.rds")
+#interaction model
 
 GAM_interaction<- gam(Salary~ s(GPA)+ Internship_Experience + Education_Level+ University_Ranking+ Language_Proficiency+ GPA:Internship_Experience+
                                                    Internship_Experience:University_Ranking + Education_Level:Language_Proficiency, data=train_data_s,
@@ -1273,7 +1113,9 @@ summary(GAM_interaction)
 anova(final_GAM_salary, GAM_interaction, test = "Chisq") #better
 
 plot(GAM_interaction)
-plot(GAM_interaction, residuals = TRUE)
+
+
+#examining the gpa relationship with salary by splitting education level
 
 data_phd<- train_data_s %>%
   filter(Education_Level == "PhD")
@@ -1295,6 +1137,7 @@ GAM_education<- gam(Salary~ s(GPA)+ Internship_Experience + Education_Level+ Uni
 summary(GAM_education)
 plot(GAM_education)
 
+#nothing really change
 
 # GAM predictions
 predict_GAM <- predict(GAM_interaction, newdata=test_data_s)
@@ -1311,9 +1154,5 @@ GAM_BIC<- data.frame(
 
 
 GAM_BIC %>% gt()
-#gam 5216.299 and AIC 5364.680
-#GAM SHOWS higher R2 is better.
-
-
-
-#update R 
+#gam 5216.299 and BIC 5364.680
+#GAM SHOWS higher R2 and lower RMSE.
