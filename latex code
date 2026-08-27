@@ -14,9 +14,9 @@
 \usepackage{enumitem}
 \usepackage{caption}
 \usepackage{titlesec}
-
+\usepackage{parskip}
 \setcounter{secnumdepth}{4}
-
+\usepackage{indentfirst}
 \titleformat{\paragraph}
   {\normalfont\large\bfseries}{\theparagraph}{1em}{}
 \titlespacing*{\paragraph}
@@ -33,7 +33,7 @@
 
 \title{}
 \date{}
-
+\setlength{\parindent}{1.5em}
 \begin{document}
 
 
@@ -46,7 +46,7 @@
 \begin{center}
 \includegraphics[width=8cm]{Uni_Glasgow_1.jpg}
 
-\vspace{1cm}
+
 
 
 {\large\scshape University of Glasgow}\\[2pt]
@@ -54,7 +54,7 @@
 
 \vspace{1.5cm}
 
-{\Huge\bfseries Predictive Modelling and Feature Analysis for Employment Status for International Students in the UK}
+{\Huge\bfseries Predictive Modeling and Feature Analysis of Employment Outcomes of International Students in the UK}
 
 \vspace{1cm}
 
@@ -101,11 +101,11 @@ Employability is one of the most important outcomes of higher education, and for
 
 In some countries, such as China, admissions to a strong master's program is highly competitive, and graduates then enter a competitive domestic job market. In others, such as India, the issue is more about the shortage of strong master's-level programs and institutions paired with weaker salary prospects in the domestic job market. 
 
-The UK is one of the main destinations that students choose. In 2024/25, 685,565 international students were enrolled at UK higher education institutions, making up around 24\% of the total student population (HESA, 2024/25). The UK has a strong higher education system, well-established career support services, and a high number of globally ranked universities. A 2021 survey (HEPI, Kaplan International Pathways, 2021, p.15) covering over 1,000 international students across 118 UK universities, found that 92\% students rated the employability skills they expected to gain were important or very important when choosing where to study, and 82\% said the same about the careers support they expected . This suggests that students are not only choosing the UK for the qualification itself, but for the combination of degree and experience that they believe will make them more competitive both internationally and back in their home countries. 
+The UK is one of the main destinations that students choose. In 2024/25, 685,565 international students were enrolled at UK higher education institutions, making up around 24\% of the total student population (HESA, 2026). The UK has a strong higher education system, well-established career support services, and a high number of globally ranked universities. A 2021 survey (HEPI, Kaplan International Pathways, 2021, p.15) covering over 1,000 international students across 118 UK universities, found that 92\% students rated the employability skills they expected to gain were important or very important when choosing where to study, and 82\% said the same about the careers support they expected . This suggests that students are not only choosing the UK for the qualification itself, but for the combination of degree and experience that they believe will make them more competitive both internationally and back in their home countries. 
 
-HEPI and Kaplan International Pathways (2021, p.16) found that employability is consistently the main reason international students give for studying abroad, and many students in her study also planned or hoped to stay in the UK to work, at least for a period, after finishing their studies. A UK degree and UK work experience are therefore seen by many students as a way to strengthen their position both in the UK job market and in their home country's once they return. 
+HEPI and Kaplan International Pathways (2021, p.16) found that employability is consistently the main reason international students give for studying abroad, and many students in this study also planned or hoped to stay in the UK to work, at least for a period, after finishing their studies. A UK degree and UK work experience are therefore seen by many students as a way to strengthen their position both in the UK job market and in their home country's once they return. However, studying in the UK does not guarantee a lead to strong employment outcomes.
 
-However, studying in the UK does not guarantee a lead to strong employment outcomes. This raises an important question: what actually determines whether an international student is able to find employment after their studies, and what increases their chances of doing so? This dissertation uses data on international students in the UK to examine which factors are associated with employment status after graduation. The findings are intended to help universities better understand the gap between the student experience and the demands of the labor market, so that they can offer more targeted support and guidance. This would allow universities to differentiate themselves not simply as providers of education, but as institutions that genuinely support students' employability and post-graduate career outcomes. It will also help students understand which factors matter the most for their own transition to employment. 
+This raises an important question: what actually determines whether an international student is able to find employment after their studies, and what increases their chances of doing so? This dissertation uses data on international students in the UK to examine which factors are associated with employment status after graduation. The findings are intended to help universities better understand the gap between the student experience and the demands of the labor market, so that they can offer more targeted support and guidance. This would allow universities to differentiate themselves not simply as providers of education, but as institutions that genuinely support students' employability and post-graduate career outcomes. It will also help students understand which factors matter the most for their own transition to employment. 
 
 % ======================================================
 % 2. DATA DESCRIPTION AND EDA
@@ -370,14 +370,14 @@ classified observations i.e. $\text{mean}(y_{\text{test}} = \hat{y})$.
 
 The data was split again into 80\% training set and 20\% test sets, using the same seed for consistency between methods. Employment\_Status was set as a factor to indicate a classification, rather than a regression task.
 
-A full classification tree was fitted using the \texttt{rpart()} function from the \texttt{rpart} package (Boehmke and Greenwell, 2020, hapter 9) with cost complexity $cp=0$, letting it be repeatedly split until every terminal node was pure. This produced a large, overfit tree. The tree was therefore pruned, using the approaches described
+A full classification tree was fitted using the \texttt{rpart()} function from the \texttt{rpart} package (Boehmke and Greenwell, 2020, Chapter 9) with cost complexity $cp=0$, letting it be repeatedly split until every terminal node was pure. This produced a large, overfit tree. The tree was therefore pruned, using the approaches described
 in Section~\ref{sec:methods}: the minimum cross-validated error rule and the 1-SE rule.
 
 Pruning via the minimum-error rule selected $cp=0.0004$, producing a tree with $21$ splits. The 1-SE rule with $19$ splits selected a smaller and less complex tree. A 2-SE variant was also considered, using two standard errors instead of one; this produced a similarly sized tree (18 splits) with negligible difference in predictive performance, so the more standard, commonly used 1-SE tree was retained.
 
 To decide between pruning strategies, and to check whether a single tree was competitive with ensemble methods, four models were compared on test accuracy: the minimum-error tree, the 1-SE tree, bagging, and random forest (fitted using the \texttt{randomForest()} function from the \texttt{randomForest} package (James et al., 2013, p. 329)), both grown on bootstrap samples of the training data, as described in Section~\ref{sec:methods}. Table~\ref{tbl:tree-comparison} shows the minimum-error tree achieved the highest accuracy at 0.9073 and the 1-SE tree close behind at 0.9069.
 
-Despite not achieving the highest accuracy, the 1-SE tree was selected as the model to report in detail, as it offers a substantially simpler partition of the feature space.
+Despite not achieving the highest accuracy, the 1-SE tree was selected as the best-performing classification tree, as it offers a substantially simpler partition of the feature space.
 
 
 \subsubsection{Support Vector Machine (SVM)}
@@ -421,14 +421,13 @@ SVM Model & Accuracy \\
 \midrule\addlinespace[2.5pt]
 Linear Kernel & 0.8539945 \\ 
 Radial Kernel & 0.8709677 \\ 
-Polynomial Gegree 2 Kernel & 0.8715898 \\ 
+Polynomial Degree 2 Kernel & 0.8715898 \\ 
 Polynomial Degree 3 Kernel & 0.8698125 \\ 
 \bottomrule
 \end{tabular}
 
 \end{minipage}
 \end{table}
-
 
 
 
@@ -488,12 +487,10 @@ Unemployed & 1030 & 3450 \\
 
 Table~\ref{tbl:comparison} shows that the pruned classification tree (1SE-rule) achieves the highest accuracy, 0.9069, and leads in all metrics except for sensitivity (recall), where KNN scores higher: 0.9449, compared to 0.8677 for the tree.
 
-This reflects a genuine trade-off between the models. KNN is more willing to predict "Employed", which lets it correctly catch more truly employed graduates. The tree, on contrast, is far more conservative, it only predicts "Employed" when confident, which means it misses more truly employed graduates, but is rarely wrong when it does predict "Employed". 
-
-We therefore proceed to examine the classification tree confusion matrix and the precision-recall curve in more detail below as it is the best-performing model.
+This reflects a genuine trade-off between the models. KNN is more willing to predict \textbf{Employed}, which lets it correctly catch more truly employed graduates. The tree, on contrast, is far more conservative, it only predicts \textbf{Employed} when confident, which means it misses more truly employed graduates, but is rarely wrong when it does predict \textbf{Employed}. We therefore proceed to examine the classification tree confusion matrix and the precision-recall curve in more detail below as it is the best-performing model.
 
 
-Table~\ref{tbl:confusionM-tree} shows the predictions of the 1-SE tree against the true classes on the test set. Of the 3468 graduates who were actually unemployed, only 18 were misclassified as employed, while 1030 of the 7785 actual employed graduates were misclassified as unemployed. The gap between the two numbers 3468 for unemployed vs 7785 for employed looks large, but this is mostly a reflection of class imbalance in the test data. 
+Table~\ref{tbl:confusionM-tree} shows the predictions of the 1-SE tree against the true classes on the test set. Of the 3468 graduates who were actually \textbf{unemployed}, only 18 were misclassified as \textbf{employed}, while 1030 of the 7785 actual \textbf{employed} graduates were misclassified as \textbf{unemployed}. The gap between the two numbers 3468 for unemployed vs 7785 for employed looks large, but this is mostly a reflection of class imbalance in the test data. 
 
 
 
@@ -504,7 +501,7 @@ Figure~\ref{fig:PR} shows the precision-recall curve with an area under the curv
     \centering
     \includegraphics[width=0.7\linewidth]{Rplot02.png}
     \captionsetup{skip=0pt}
-    \caption{Precision-recall curve}
+    \caption{Precision-recall curve of 1-SE pruned tree}
     \label{fig:PR}
 \end{figure}
 \vspace{-5pt}
@@ -519,25 +516,23 @@ The pruned classification tree (1-SE rule) with 39 nodes, selected 19 splits, re
     \caption{Pruned Classification Tree (1-SE Rule)}
     \label{fig:tree-pruned}
 \end{figure}
-
+\newpage
 \subsection{Research Question 3: Which factors are the most important predictors of employment outcomes?}
 \label{sec:RS3}
 
 
-In this section, we investigate the factors are the most important predictors of employment status. To answer this, we identify the best-fitting model using two approaches explained in Section~\ref{sec:methods}: stepwise subset selection and Lasso regression (Hastie et al., 2009, p. 69).  
+In this section, we investigate which factors are the most important predictors of employment status. To answer this, we identify the best-fitting model using two approaches explained in Section~\ref{sec:methods}: stepwise subset selection and Lasso regression (Hastie et al., 2009, p. 69).  
 
 Since employment status is a binary response, we frame this as a logistic regression problem, where the goal is to estimate the probability of being employed versus unemployed. We first constructed a binary response variable, coding "Employed" as 1 and "Unemployed" as 0, and removed the original Employment\_Status variable now that Employment\_binary serves as the response variable. A seed set to 1 to ensure reproducibility of results. Since we are also interested in the predictive accuracy of the resulting model, we also split the data into training and test data sets. 
 
 
 We first fit a full logistic model containing all predictors using the \texttt{glm()} function from the \texttt{stats} package in R and applied stepwise selection with AIC criterion using \texttt{stepAIC()} with default AIC penalty $k=2$. This flagged \textbf{Gender} as a non-significant predictor, with p-values above 0.05 for both the Male and Other categories. To confirm this, we compared the AIC-selected model against a nested model with \texttt{Gender} removed using a likelihood-ratio test (\texttt{anova()}). The nested model was selected and we generated the predictions on the test data and calculated the classification accuracy. As a second stepwise approach, we repeated this procedure using \texttt{stepAIC()} with the BIC criterion (setting $k = \log(n)$, where n is the number of observations), again generating predictions and accuracy on the test data. 
 
-The resulting accuracies were 0.8533724 for the AIC model after removing Gender and 0.8533724 for the BIC model, which are exactly the same.\\
-
 The second approach considered was Lasso regression,  which, as discussed earlier in Section~\ref{sec:methods}, automatically performs variable selection by shrinking the coefficients of non-informative predictors to exactly zero. To fit the LASSO model, the data set was split into training and test data set of the predictor matrix `X` and the response vector `Y` (\texttt{Employment\_binary}). For comparison, we also fitted ridge regression ($\alpha=0$) and elastic net ($\alpha=0.5$) using the same procedure applied to LASSO, though only LASSO results are discussed in detail in this report. Figure~\ref{fig:lasso} shows the coefficient path of the LASSO model fitted with \texttt{glmnet()}, using a binary family and $\alpha=1$ (Hastie et al., 2026).
 \vspace{-10pt}
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.78\linewidth]{Rplot03.png}
+    \includegraphics[width=0.7\linewidth]{Rplot03.png}
     \captionsetup{skip=-5pt}
     \caption{Lasso Model}
     \label{fig:lasso}
@@ -590,7 +585,7 @@ Lasso & 0.8518617 \\
 \begin{minipage}{0.48\linewidth}
 \centering
 \fontsize{12.0pt}{14.0pt}\selectfont
-\caption{Confusion Matrix of Ineraction Model}
+\caption{Confusion Matrix of Interaction Model}
 \label{tbl:interactionConfusion}
 \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lrr}
 \toprule
@@ -618,7 +613,7 @@ To understand Figure~\ref{fig:PRcurveinteraction}, we consider the precision and
     \centering
     \includegraphics[width=0.7\linewidth]{Rplot09.png}
     \captionsetup{skip=-6pt}
-    \caption{PR curve of the interaction model}
+    \caption{Precision-Recall curve of the interaction model}
 \label{fig:PRcurveinteraction}
 \end{figure}
 \vspace{-16pt}
@@ -660,7 +655,7 @@ As a second approach, we fitted a generalized additive model (GAM) using the \te
 
 After fitting the initial additive model, we examined the smooth function plots to check for non-linear relationships between the continuous predictors (\texttt{Age}, \texttt{Years\_Since\_Graduation}, \texttt{GPA}) and \texttt{Salary}. \texttt{GPA} was the only predictor showing a clearly non-linear effect on \texttt{Salary}.
 
-We then examined the model summary and removed non-significant predictors one at a time, confirming each removal with a likelihood-ratio test (\texttt{anova()}) between the reduced and full models. Following this procedure, we sequentially removed \texttt{Gender}, \texttt{Visa\_Type}, \texttt{Field\_of\_Study}, \texttt{Country\_of\_Origin}, and finally the linear continuous terms:  \texttt{Age} and \texttt{Years\_Since\_Graduation}. Finishing with a final model containing \texttt{GPA}, , \texttt{Education\_Level}, \texttt{
+We then examined the model summary and removed non-significant predictors one at a time, confirming each removal with a likelihood-ratio test (\texttt{anova()}) between the reduced and full models. Following this procedure, we sequentially removed \texttt{Gender}, \texttt{Visa\_Type}, \texttt{Field\_of\_Study}, \texttt{Country\_of\_Origin}, and finally the linear continuous terms:  \texttt{Age} and \texttt{Years\_Since\_Graduation}. Finishing with a final model containing \texttt{GPA}, \texttt{Education\_Level}, \texttt{
 Internship\_Experience}, \texttt{University\_Ranking}, and \texttt{Language\_Proficiency}.
 
 For this step-by-step comparison, each candidate model was refitted using \texttt{method = "ML"} rather than \texttt{"REML"}, since \texttt{REML} likelihoods are not valid for comparing models with different predictors, unlike \texttt{ML}. Once the final variable set was settled, the model was refit with \texttt{method = "REML"}.
@@ -668,19 +663,19 @@ For this step-by-step comparison, each candidate model was refitted using \textt
 
 The plot below shows the non linear effect of \texttt{GPA} with \texttt{Salary} (Figure~\ref{fig:salaryGPA}). The estimated smooth term for GPA has an effective degrees of freedom (edf) of approximately 8.70. This is far from the edf$= 1$ that would indicate a linear relationship, confirming a genuinely non-linear, fairly complex relationship between GPA and salary. 
 
-The direction of this relationship is unexpected and non-monotonic: predicted salary is highest at lowest GPA values, drops sharply to minimum around the middle of the range (GPA between 2.5-3.0), then partially recovers before dropping again at the highest GPA values. One plausible, non-statistical explanation is that GPA and career-relevant employability skills are not the same thing. Students who prioritize maximizing their GPA may spend relatively more time on coursework and less time on internships, networking, or other activities employers value. This could explain the initial decline, though not the partial recovers at higher GPA. \\
+The direction of this relationship is unexpected and non-monotonic: predicted salary is highest at lowest GPA values, drops sharply to minimum around the middle of the range (GPA between 2.5-3.0), then partially recovers before dropping again at the highest GPA values. One plausible, non-statistical explanation is that GPA and career-relevant employability skills are not the same thing. Students who prioritize maximizing their GPA may spend relatively more time on coursework and less time on internships, networking, or other activities employers value. This could explain the initial decline, though not the partial recovery at higher GPA. 
 
-We also examined whether allowing for interaction effects changed the model. Using the same interaction terms considered in section ~\ref{sec:RS3} (GPA:Internship\_Experience, Internship\_Experience: University\_Ranking, and Education\_Level:Language\_Proficiency), a likelihood-ratio test indicated that the interaction model provided a significantly better fit than the additive model. Fitting this interaction model, however, changed the shape of the estimated GPA effect quite substantially, as shown in Figure~\ref{fig:GPA}.
+We also examined whether allowing for interaction effects changed the model. Using the same interaction terms considered in section ~\ref{sec:RS3} (GPA:Internship\_Experience, Internship\_Experience: University\_Ranking, and Education\_Level:Language\_Proficiency), a likelihood-ratio test indicated that the interaction model provided a significantly better fit than the additive model. Fitting this interaction model; however, changed the shape of the estimated GPA effect quite substantially, as shown in Figure~\ref{fig:GPA}.
 
 
-\vspace{-30pt}
+\vspace{-10pt}
 \begin{figure}[H]
 \centering
 \begin{subfigure}[t]{0.48\textwidth}
 \centering
 % TODO: insert non-linear GPA smooth term plot (additive model) here
 \includegraphics[width=\linewidth]{Rplot10.png}
-\caption{Salary--GPA non-linear effect (Additive model)}
+\caption{Salary--GPA non-linear effect}
 \label{fig:salaryGPA}
 \end{subfigure}
 \hfill
@@ -693,7 +688,7 @@ We also examined whether allowing for interaction effects changed the model. Usi
 \end{subfigure}
 
 \end{figure}
-
+\newpage
 In the interaction model, predicted salary is high for students with low GPA, and salary declines steadily as GPA increases. Unlike the first model, salary does not go back up for high GPA students, it simply declines and stay low. This means that once internship experience is accounted for it is now the highest-GPA students, not middle GPA students, who have the lowest predicted salary.
 
 A likely reason for the additive model's irregular shape is that GPA's relationship with salary differs by internship experience. For example, GPA may barely affect salary for students with strong internship experience, whereas GPA may affect salary for students with little or no internship experience. Since the additive model fits only a single GPA curve for everyone, it must average across these two cases, producing an unclear shape in Figure~\ref{fig:salaryGPA}. Once the interaction term is added, this averaging is no longer needed, the interaction absorbs the GPA–internship variation, leaving a simpler, monotonically declining GPA effect shown in Figure~\ref{fig:GPA}, where the lowest predicted salaries belong to high GPA students.
@@ -705,7 +700,7 @@ Table~\ref{tbl:GAM-BIC} compared the predictive performance of the interaction G
 \begin{table}[H]
 \centering
 \fontsize{12.0pt}{14.0pt}\selectfont
-\caption{Performance of model -- GAM vs BIC linear model}
+\caption{Model Performance -- GAM vs BIC linear model}
 \label{tbl:GAM-BIC}
 \begin{tabular}{lcc}
 \toprule
@@ -723,7 +718,7 @@ On the test set, the GAM achieved a lower RMSE (5260.54 vs. 5457.11), and a high
 
 
  
-
+\newpage
 % ======================================================
 % 5. CONCLUSIONS
 % ======================================================
@@ -737,23 +732,23 @@ This is evident in the classification results, where the first split in the best
 
 
 
-The salary results complicate this as \texttt{GPA} on its own showed a non-linear, complex relationship with salary, resolved once modeled as an interaction with \texttt{Internship\_Experience}. The two do not act independently but interact, suggesting that academic performance alone may be a weak signal of employability. Similarly, \texttt{Years\_Since\_Graduation} was associated with employment status but not salary. The dataset itself cannot explain this directly, though one hypothesis is that it may reflects accumulated job search experience or labor market familiarity, a signal relevant to finding employment but not how well it pays.
-
-Overall, these findings suggest that no single factor determines employability.
+The salary results complicate this as \texttt{GPA} on its own showed a non-linear, complex relationship with salary, resolved once modeled as an interaction with \texttt{Internship\_Experience}. The two do not act independently but interact, suggesting that academic performance alone may be a weak signal of employability. Similarly, \texttt{Years\_Since\_Graduation} was associated with employment status but not salary. The dataset itself cannot explain this directly, though one hypothesis is that it may reflect accumulated job search experience or labor market familiarity, a signal relevant to finding employment but not how well it pays. Overall, these findings suggest that no single factor determines employability.
 
 
 
 \subsection{Limitations}
 \texttt{Employment\_Status} was imbalanced between classes, so even the best-performing tree still misses a meaningful proportion of truly employed graduates. The dataset was dominated by categorical variables, with few continuous predictors, which may have limited how well relationships such as salary variation could be captured and modeled.
 
-\subsection{Recommendations}
-These findings align closely with those of an employability research internship at the College of Science and Engineering, University of Glasgow, in which I personally participated, examining the gap between students' and employers' expectations about employability. It's qualitative findings and this dissertation's quantitative analysis reinforce one another; both point to the importance of internships. A practical solution is embedding internship within curriculum rather than treating them as optional, and providing careers support tailored to each school or discipline. Together, they give universities a strong evidence base for prioritizing this support.
+\subsection{Further Work \& Recommendations}
+Several extensions could build on these findings. Future work could use more efficient SVM implementations in Python to allow tuning across kernels, which was not feasible here, in R, due to computational cost. The dataset also lacks direct measures of job search, such as number of applications, interviews, or CV tailoring; adding these could help explain and clarify whether \texttt{Years\_Since\_Graduation} truly reflects accumulated job search experience as hypothesized earlier. 
+
+This analysis's findings align closely with those of an employability research internship at the College of Science and Engineering, University of Glasgow, in which I personally participated, examining the gap between students' and employers' expectations about employability. Its qualitative findings and this dissertation's quantitative analysis reinforce one another; both point to the importance of internships. A practical solution is embedding internship within curriculum rather than treating them as optional, and providing careers support tailored to each school or discipline. Together, they give universities a strong evidence base for prioritizing this support.
 
 \vspace{-5pt}
 
 \section{AI Usage }
 \vspace{-5pt}
-I acknowledge the use of Claude, https://claude.ai) as a tool during the preparation of this report. Claude was used to design and format the LateX title age to paraphrase and clarify the language of the analysis, to adjust the sizing and positioning of tables and figures and to convert R output tables into LateX codes using \texttt{as\_latex()}. The tool was used between 26 July till 27 August 2026.
+I acknowledge the use of Claude, https://claude.ai) as a tool during the preparation of this report. Claude was used to design and format the LaTeX title page to paraphrase and clarify the language of the analysis, to adjust the sizing and positioning of tables and figures and to convert R output tables into LaTeX codes using \texttt{as\_latex()}. The tool was used between 26 July till 27 August 2026.
 
 \vspace{-5pt}
 \section{References}
@@ -778,10 +773,12 @@ Boehmke, B. and Greenwell, B. (2020) \textit{Hands-On Machine Learning with R}. 
 Yang, X. (2026) \textit{STATS5099 Data Mining and Machine Learning}. Lecture notes, MSc Data Analytics. University of Glasgow. Unpublished.
 
 \bibitem{glmnet}
-Hastie, T., Qian, J. and Tay, K. (2021) \textit{An Introduction to glmnet}.\\\textit{ https://glmnet.stanford.edu/articles/glmnet.html}
+Hastie, T., Qian, J. and Tay, K. (2026) \textit{An Introduction to glmnet}.\\\textit{ https://glmnet.stanford.edu/articles/glmnet.html}
 
 \bibitem{employability1}
 HEPI \& Kaplan International Pathways (2021), Paying more for less? Careers and employability support for international students at UK universities
 
+\bibitem{employability1}
 
+HESA (2026) UK higher education student numbers fall for second year in a row. \\\textit{https://www.hesa.ac.uk/news/27-01-2026/uk-he-student-numbers-fall-second-year-in-a-row}
 \end{document}
