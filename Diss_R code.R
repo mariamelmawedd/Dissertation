@@ -83,6 +83,7 @@ grid.arrange(p4,p5,p6,p7,p8,p9, ncol=2)
 ggplot(data_uk, aes(x=Employment_Status, y=Salary))+
   geom_boxplot()
 
+data_salary_EDA<- data_uk %>% filter(Employment_Status=="Employed")
 #Salary with numerical variables
 data_numerical<- data_salary_EDA %>% select(Salary, Years_Since_Graduation, GPA, Age)
 
@@ -154,7 +155,7 @@ employment outcomes?
 First we filtered the dataset to only Employed/ Unemployed outcomes, then we
 splitted the datset by 10-fold-cross-validation
 
-We applied 10‑fold cross‑validation to estimate the classification accuracy.
+We applied 10‑fold cross‑validation to estimate the classification accuracy
 
 '''
 
@@ -318,12 +319,17 @@ metrics_table_KNN <- data.frame(
 metrics_table_KNN %>% gt()
 
 
-#confusion matrix using caret
+
+
+#Another way to do confusion matrix
+
+#using caret
 library(caret)
 cm_knn <- confusionMatrix(factor(pred_knn, levels = c("Employed","Unemployed")),
                           factor(y_test, levels = c("Employed","Unemployed")),
                           positive = "Employed")
 
+#used to extract all the metrics used in the comparison table
 cm_knn
 
 
@@ -483,6 +489,9 @@ results <- data.frame(
 
 results %>% gt() 
 
+
+
+#1-SE the chosen model
 pred_1SE_tree<- predict(tree_prune_1se, newdata = test_data_c, type = "class")
 accuracy_1se<- mean(pred_1SE_tree == test_data_c$Employment_Status)
 
@@ -505,21 +514,8 @@ confusionM_tree_table<- data.frame(
     Predicted = "Predicted",
     Employed = "Employed",
     Unemployed = "Unemployed"
-  )
+  ) #used to display the confusion matrix in the report
 
-
-sensitivity<- confusionM_tree[1,1]/(confusionM_tree[1,1]+confusionM_tree[-1,1])
-specificity<- confusionM_tree[-1,-1]/(confusionM_tree[-1,-1]+confusionM_tree[1,-1])
-precision<- confusionM_tree[1,1]/(confusionM_tree[1,1]+confusionM_tree[1,-1])
-F1_score<- 2*((precision*sensitivity)/(precision+sensitivity))
-
-
-metrics_table_tree <- data.frame(
-  Metric_TREE = c("Accuracy", "Sensitivity", "Specificity", "Precision", "F1 Score"),
-  Value  = c(accuracy_1se, sensitivity, specificity, precision, F1_score)
-)
-
-metrics_table_tree %>% gt()
 
 
 library(caret)
@@ -528,7 +524,7 @@ cm_tree<- confusionMatrix(
   factor(pred_1SE_tree, levels = c("Employed","Unemployed")),
   factor(test_data_c$Employment_Status, levels = c("Employed","Unemployed")),
   positive = "Employed"
-)
+) #used to extract all the metrics used in the comparison table
 
 
 #install.packages("PRROC")
@@ -588,6 +584,17 @@ model_svm_poli3<- svm(Employment_Status ~. , data=train_data_c,  type="C-classif
 predsvm_poli3<- predict(model_svm_poli3, newdata = test_data_c, type = "class", probability = TRUE)
 mean(predsvm_poli3 == test_data_c$Employment_Status)  
 
+model_SVM_metric <- data.frame(
+  `SVM Model` = c("Linear Kernel", "Radial Kernel", 
+                  "Polynomial Degree 2 Kernel", "Polynomial Degree 3 Kernel"),
+  Accuracy = c(
+    mean(predsvm == test_data_c$Employment_Status),
+    mean(predsvm_guassian == test_data_c$Employment_Status),
+    mean(predsvm_poli2 == test_data_c$Employment_Status),
+    mean(predsvm_poli3 == test_data_c$Employment_Status)
+  )
+)
+
 model_SVM_metric %>% gt()
 
 '''
@@ -602,7 +609,8 @@ cm_SVM<- confusionMatrix(
   factor(test_data_c$Employment_Status, levels = c("Employed","Unemployed")),
   positive = "Employed"
 )
-cm_SVM
+
+cm_SVM_table<- cm_SVM$table
 
 pred_test_probability_svm<- attr(predsvm_poli2, "probabilities")[, "Employed"]
 
@@ -696,7 +704,7 @@ set.seed(1)
 model_AIC<- stepAIC(full_model, direction = "both")
 summary(model_AIC)   #one time it is giving gender another time it is not
 model_no_gender <- update(model_AIC, . ~ . - Gender)
-anova_AIC_gender<- anova(model_no_gender, model_AIC, test = "Chisq") #remove gender
+anova(model_no_gender, model_AIC, test = "Chisq") #remove gender
 
 model_AIC_no_gender<- model_no_gender
 summary(model_AIC_no_gender)
@@ -704,11 +712,11 @@ predict_AIC_logistic<- ifelse(predict(model_AIC_no_gender, newdata=test_data, ty
 #glm cant output classes it gives probabilities, so convert to classes 0 and 1
 mean(predict_AIC_logistic==test_data$Employment_binary)
 
+
 set.seed(1)
 model_BIC<- step(full_model, k= log(nrow(train_data)), direction = "both")
 summary(model_BIC)
 predict_BIC_logistic<- ifelse(predict(model_BIC, newdata=test_data, type="response") >0.5, 1,0)
-
 mean(predict_BIC_logistic==test_data$Employment_binary) #same model as AIC, same accuracy 
 
 
@@ -733,28 +741,34 @@ Y_train <- y[train_ind ] #y is a vector and not a matrix
 X_test<- x[-train_ind, ]
 Y_test<- y[-train_ind ]
 
-set.seed(1)
-lambda_ridge<- cv.glmnet(X_train, Y_train, alpha=0)
-model_ridge<- glmnet(X_train, Y_train, family = "binomial", alpha=0, lambda = lambda_ridge$lambda.1se)
-#TO PLOT
+
+#TO understand the usage of cross validation
 model_r<- glmnet(X_train, Y_train, family = "binomial", alpha=0)
 plot(model_r, label = TRUE)
 
 set.seed(1)
-lambda_elastic<- cv.glmnet(X_train, Y_train, alpha=0.5)
-model_elastic<- glmnet(X_train, Y_train, family = "binomial", alpha=0.5, lambda = lambda_other$lambda.1se)
-#TO PLOT
+lambda_ridge<- cv.glmnet(X_train, Y_train, alpha=0)
+model_ridge<- glmnet(X_train, Y_train, family = "binomial", alpha=0, lambda = lambda_ridge$lambda.1se)
+
+
+
+#TO TO understand the usage of cross validation
 model_e<- glmnet(X_train, Y_train, family = "binomial", alpha=0.5)
 plot(model_e,label = TRUE)
 
 set.seed(1)
+lambda_elastic<- cv.glmnet(X_train, Y_train, alpha=0.5)
+model_elastic<- glmnet(X_train, Y_train, family = "binomial", alpha=0.5, lambda = lambda_elastic$lambda.1se)
+
+
+
+#TO understand the usage of cross validation, we plot first a lasso with all lambda values
+model_l <- glmnet(X_train, Y_train, family = "binomial", alpha=1)
+plot(model_l, label = TRUE) #this is used in analysis
+
+set.seed(1)
 lambda_lasso<- cv.glmnet(X_train,Y_train,alpha=1)
 model_lasso <- glmnet(X_train, Y_train, family = "binomial", alpha=1, lambda = lambda_lasso$lambda.1se)
-#TO PLOT
-model_l <- glmnet(X_train, Y_train, family = "binomial", alpha=1)
-plot(model_l, label = TRUE)
-
-
 plot(lambda_lasso)
 
 
@@ -789,6 +803,8 @@ names(coef_vals) <- rownames(coef_lasso)
 # Names of variables LASSO shrank to exactly zero
 zero_vars <- names(coef_vals)[coef_vals == 0]
 zero_vars
+
+
 
 #COMPARE LASSO AND BIC
 model_BIC_LASSO <- data.frame(
@@ -826,10 +842,11 @@ model_no_gender <- glm(
   data = train_data,
   family = binomial
 )
-summary(model_no_gender)
+
 #H0: Gender is not significant
 #H1: Gender is significant, choose model_glm
-anova_nogender<- anova(model_no_gender, model_glm, test = "Chisq") #p value >0.05 then we don't reject H0, so remove Gender
+anova(model_no_gender, model_glm, test = "Chisq") #p value >0.05 then we don't reject H0, so remove Gender
+summary(model_no_gender)
 
 model_no_field <- glm(
   Employment_binary ~ . -Age - Gender - Visa_Type -Field_of_Study,
@@ -838,9 +855,9 @@ model_no_field <- glm(
 )
 #H0: field is not significant
 #H1: field is significant, 
-anova_nofield<- anova(model_no_field, model_no_gender, test = "Chisq") #remove field, p value>0.05
-
+anova(model_no_field, model_no_gender, test = "Chisq") #remove field, p value>0.05
 summary(model_no_field)
+
 
 model_no_country <- glm(
   Employment_binary ~ . -Age - Gender - Visa_Type -Field_of_Study -Country_of_Origin,
@@ -849,9 +866,9 @@ model_no_country <- glm(
 )
 #H0: country is not significant
 #H1: country is significant, 
-anova_nocountry<-anova(model_no_country, model_no_field, test = "Chisq") #remove country, p value>0.05
-
+anova(model_no_country, model_no_field, test = "Chisq") #remove country, p value>0.05
 summary(model_no_country)
+
 
 final_Lasso_model<- model_no_country
 summary(final_Lasso_model)
@@ -877,14 +894,14 @@ interaction_model <- glm(
 
 summary(interaction_model)
 
-anova_interaction<- anova(final_Lasso_model, interaction_model, test = "Chisq") #simpler model, then more complicated model
+anova(final_Lasso_model, interaction_model, test = "Chisq") #simpler model, then more complicated model
 #This means the interaction model fits the training data significantly better than the simpler model.
-AIC(final_Lasso_model, interaction_model)
 
 
 predict_final<- ifelse( predict(final_Lasso_model, newdata = test_data, type="response") >0.5, 1, 0)
-predict_interaction<- ifelse( predict(interaction_model, newdata = test_data, type="response") >0.5, 1, 0)
 mean(predict_final==test_data$Employment_binary)  #same as the AIC after removing gender, same as BIC ONE
+
+predict_interaction<- ifelse( predict(interaction_model, newdata = test_data, type="response") >0.5, 1, 0)
 mean(predict_interaction==test_data$Employment_binary)
 
 
@@ -914,7 +931,7 @@ confusionM_logistic_table <- data.frame(
     Employed = "Employed",
     Unemployed = "Unemployed"
   )
-confusionM_logistic_table
+confusionM_logistic_table  #used to display confusion matrix in the report
 
 
 #this gives confusion matrix, without the precision, f1 and others 
@@ -938,8 +955,11 @@ metric_all<- data.frame(
 metric_all %>% gt() 
 
 
-prob_interaction<- predict(interaction_model, newdata = test_data, type = "response")
+
 library(PRROC)
+
+prob_interaction<- predict(interaction_model, newdata = test_data, type = "response")
+
 pr_interaction<- pr.curve(scores.class0 = prob_interaction[test_data$Employment_binary==1],
                           scores.class1 = prob_interaction[test_data$Employment_binary==0],
                           curve = TRUE)
@@ -1105,8 +1125,8 @@ plot(final_GAM_salary)
 #interaction model
 
 GAM_interaction<- gam(Salary~ s(GPA)+ Internship_Experience + Education_Level+ University_Ranking+ Language_Proficiency+ GPA:Internship_Experience+
-                                                   Internship_Experience:University_Ranking + Education_Level:Language_Proficiency, data=train_data_s,
-                                                 method="REML")
+                        Internship_Experience:University_Ranking + Education_Level:Language_Proficiency, data=train_data_s,
+                      method="REML")
 
 #as K increases, the edf increase and the graph becomes more complex more wiggly, byut the shape of the curve doesnt change,s till decreasing 
 summary(GAM_interaction)
